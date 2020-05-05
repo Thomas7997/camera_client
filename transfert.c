@@ -3,10 +3,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#define NB_SUPPRESSIONS 100
+#define NB_SUPPRESSIONS 1000
 #define TAILLE_NOMS_IMAGES_MAX 30
-#define NB_NOMS_MAX_BIG 100
-#define NB_NOMS_MAX_SMALL 100
+#define NB_NOMS_MAX_BIG 1000
+#define NB_NOMS_MAX_SMALL 1000
 
 void init_tab2 (int lines, int chars, char tab[lines][chars]) {
 	int i, j;
@@ -145,25 +145,21 @@ int main (void) {
 
 	char image[31];
 
-	while (1) {
-		system("ls ./images/cloud > ./images/liste.txt");
-		system("ls ./images/gets > ./images/gets.txt");
-		TXT1 = fopen("./images/liste.txt", "r");
-		TXT2 = fopen("./images/gets.txt", "r");
+	system("ls ./images/cloud > ./images/liste.txt");
+	system("ls ./images/gets > ./images/gets.txt");
+	TXT1 = fopen("./images/liste.txt", "r");
+	TXT2 = fopen("./images/gets.txt", "r");
 
-		for (i = 0; i < NB_SUPPRESSIONS; i++) {
-            envois[i] = NB_NOMS_MAX_SMALL+1;
-			suppressions[i] = NB_NOMS_MAX_SMALL+1;
-		}
-
-		comparer_liste_images_f_txt(TXT1, TXT2, suppressions, envois, noms1, noms2);
-		envoyer_lignes(envois, noms2);
-        supprimer_lignes(suppressions, noms2);
-
-		printf ("EXECUTION\n");
-
-		sleep(1);
+	for (i = 0; i < NB_SUPPRESSIONS; i++) {
+		envois[i] = NB_NOMS_MAX_SMALL+1;
+		suppressions[i] = NB_NOMS_MAX_SMALL+1;
 	}
+
+	comparer_liste_images_f_txt(TXT1, TXT2, suppressions, envois, noms1, noms2);
+	envoyer_lignes(envois, noms2);
+	supprimer_lignes(suppressions, noms2);
+	
+	printf ("EXECUTION TRANSFERT FAITE\n");
 
 	return 0;
 }

@@ -3,10 +3,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#define NB_SUPPRESSIONS 10
+#define NB_SUPPRESSIONS 1000
 #define TAILLE_NOMS_IMAGES_MAX 30
-#define NB_NOMS_MAX_BIG 100
-#define NB_NOMS_MAX_SMALL 10
+#define NB_NOMS_MAX_BIG 1000
+#define NB_NOMS_MAX_SMALL 1000
 
 void init_tab2 (int lines, int chars, char tab[lines][chars]) {
 	int i, j;
@@ -107,14 +107,7 @@ void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAI
 		// Commande pour le transfert en sync
 		system(commande);
 
-		// Commande pour envoyer la photo au moment où elle a été prise
-		// On mettra peut etre cette fonction ailleur en comparant un fichier de logs d'envois réussis
-
-		sprintf(commande, "envoicam \"%s\"", noms[envois[i]]);
-
-		printf ("--> %s\n", commande);
-
-		system(commande);
+		// Commande pour supprimer ensuite
 
 		sprintf(commande, "rm \"image/cloud/%s\"", noms[envois[i]]);
 
@@ -139,7 +132,7 @@ void supprimer_lignes (int suppressions[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_
 
 		printf("--> %s\n", commande);
 
-    system(commande);
+    	system(commande);
 
 		i++;
 	}
@@ -149,7 +142,7 @@ int main (void) {
 	char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX];
 	char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 
-  int envois[NB_SUPPRESSIONS];
+  	int envois[NB_SUPPRESSIONS];
 	int suppressions[NB_SUPPRESSIONS]; // Stoque les indices des éléments à supprimer (lignes)
 
 	int i;
@@ -159,26 +152,23 @@ int main (void) {
 	FILE* TXT2 = fopen("./image/liste.txt", "r");
 
 	char image[31];
+	system("ls ./images/cloud > ./images/liste.txt");
+	system("ls ./image/cloud > ./image/liste.txt");
+	TXT1 = fopen("./images/liste.txt", "r");
+	TXT2 = fopen("./image/liste.txt", "r");
 
-	while (1) {
-		system("ls ./images/cloud > ./images/liste.txt");
-		system("ls ./image/cloud > ./image/liste.txt");
-		TXT1 = fopen("./images/liste.txt", "r");
-		TXT2 = fopen("./image/liste.txt", "r");
+	for (i = 0; i < NB_SUPPRESSIONS; i++) {
+	envois[i] = NB_NOMS_MAX_SMALL+1;
+		suppressions[i] = NB_NOMS_MAX_SMALL+1;
+	}
 
-		for (i = 0; i < NB_SUPPRESSIONS; i++) {
-      envois[i] = NB_NOMS_MAX_SMALL+1;
-			suppressions[i] = NB_NOMS_MAX_SMALL+1;
-		}
-
-		comparer_liste_images_f_txt(TXT1, TXT2, suppressions, envois, noms1, noms2);
-		envoyer_lignes(envois, noms2);
+	comparer_liste_images_f_txt(TXT1, TXT2, suppressions, envois, noms1, noms2);
+	envoyer_lignes(envois, noms2);
     supprimer_lignes(suppressions, noms2);
 
-		printf ("EXECUTION\n");
+	printf ("EXECUTION\n");
 
-		sleep(1);
-	}
+	sleep(1);
 
 	return 0;
 }
