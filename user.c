@@ -7,7 +7,7 @@
 
 void lancer_commandes (void) {
 	system("cd ./images/gets;gphoto2 --get-all-files;cd ../../");
-	system("transfert");
+	system("./transfert");
 	
 	// En fonction de la lecture de certains fichiers contenant des commandes, on execute le sync quand l'utilisateur le veut
 	// system("sync");

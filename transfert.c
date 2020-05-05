@@ -40,11 +40,11 @@ void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
 }
 
 // Voir si la nouvelle photo existe dans le cloud
-void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, int *suppressions, int *envois, char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
-	int x1 = 0, x2 = 0, size1, size2, nb_differences = 0;
+void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, FILE* TXT3, int *suppressions, int *envois, char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
+	int x1 = 0, x2 = 0, x3 = 0, size1, size2, size3, nb_differences = 0, nb_differences3 = 0;
 
-	init_tab2(100, TAILLE_NOMS_IMAGES_MAX, noms1);
-	init_tab2(100, TAILLE_NOMS_IMAGES_MAX, noms2);
+	init_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, noms1);
+	init_tab2(NB_NOMS_MAX_SMALL, TAILLE_NOMS_IMAGES_MAX, noms2);
 
 	// Remplir la grande et la petite liste
 
@@ -64,7 +64,17 @@ void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, int *suppressions, int 
 	size2 = x2;
 	x2 = 0;
 
-	int x_envois = 0, x_supp = 0;
+	while (fgets(noms3[x3], 30, TXT3) != NULL) {
+		enlever_mise_ligne(noms3[x3]);
+		x3++;
+	}
+
+	size3 = x3;
+	x3 = 0;
+
+	// A finir
+
+	int x_envois = 0, x_supp = 0, x_supp3 = 0;
 
 	// Comparer la grande et la petite liste
 
@@ -80,7 +90,18 @@ void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, int *suppressions, int 
             }
 		}
 
-		if (nb_differences == x1) {
+		for (x3 = 0; x3 < size3; x3++) {
+			if (strcmp(noms1[x3], noms2[x2]) != 1) {
+				nb_differences3++;
+			}
+
+			else {
+				suppressions[x_supp3] = x2;
+				x_supp3++;
+			}
+		}
+
+		if (nb_differences == x1+x3) {
 			envois[x_envois] = x2; // Indice de ligne
 			x_envois++;
 			nb_differences = 0;
@@ -133,29 +154,27 @@ void supprimer_lignes (int suppressions[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_
 int main (void) {
 	char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX];
 	char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
+	char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 
     int envois[NB_SUPPRESSIONS];
 	int suppressions[NB_SUPPRESSIONS]; // Stoque les indices des éléments à supprimer (lignes)
 
 	int i;
 
-	FILE* TXT1 = fopen("./images/liste.txt", "r");
-
-	FILE* TXT2 = fopen("./images/gets.txt", "r");
-
 	char image[31];
 
 	system("ls ./images/cloud > ./images/liste.txt");
 	system("ls ./images/gets > ./images/gets.txt");
-	TXT1 = fopen("./images/liste.txt", "r");
-	TXT2 = fopen("./images/gets.txt", "r");
+	FILE* TXT1 = fopen("./images/liste.txt", "r");
+	FILE* TXT2 = fopen("./images/gets.txt", "r");
+	FILE* TXT3 = fopen("./image/liste.txt", "r");
 
 	for (i = 0; i < NB_SUPPRESSIONS; i++) {
 		envois[i] = NB_NOMS_MAX_SMALL+1;
 		suppressions[i] = NB_NOMS_MAX_SMALL+1;
 	}
 
-	comparer_liste_images_f_txt(TXT1, TXT2, suppressions, envois, noms1, noms2);
+	comparer_liste_images_f_txt(TXT1, TXT2, TXT3, suppressions, envois, noms1, noms2, noms3);
 	envoyer_lignes(envois, noms2);
 	supprimer_lignes(suppressions, noms2);
 	

@@ -74,10 +74,10 @@ void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, int *suppressions, int 
 				nb_differences++;
 			}
 
-      else {
-        suppressions[x_supp] = x2; // Tableau qui s'applique à la petite liste
-        x_supp++;
-      }
+			else {
+				suppressions[x_supp] = x2; // Tableau qui s'applique à la petite liste
+				x_supp++;
+			}
 		}
 
 		if (nb_differences == x1) {
@@ -158,7 +158,7 @@ int main (void) {
 	TXT2 = fopen("./image/liste.txt", "r");
 
 	for (i = 0; i < NB_SUPPRESSIONS; i++) {
-	envois[i] = NB_NOMS_MAX_SMALL+1;
+		envois[i] = NB_NOMS_MAX_SMALL+1;
 		suppressions[i] = NB_NOMS_MAX_SMALL+1;
 	}
 
@@ -167,8 +167,6 @@ int main (void) {
     supprimer_lignes(suppressions, noms2);
 
 	printf ("EXECUTION\n");
-
-	sleep(1);
 
 	return 0;
 }
