@@ -41,7 +41,7 @@ void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
 
 // Voir si la nouvelle photo existe dans le cloud
 void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, FILE* TXT3, int *suppressions, int *suppressions3, int *envois, char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
-	int x1 = 0, x2 = 0, x3 = 0, size1, size2, size3, nb_differences = 0, nb_differences3 = 0;
+	int x1 = 0, x2 = 0, x3 = 0, size1, size2, size3, trouve, trouve2;
 
 	init_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, noms1);
 	init_tab2(NB_NOMS_MAX_SMALL, TAILLE_NOMS_IMAGES_MAX, noms2);
@@ -74,45 +74,34 @@ void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, FILE* TXT3, int *suppre
 
 	// A finir
 
-	int x_envois = 0, x_envois3 = 0, x_supp = 0, x_supp3 = 0;
+	int x_envois = 0, x_supp = 0;
 
 	// Comparer la grande et la petite liste
 
 	for (x2 = 0; x2 < size2; x2++) {
+		trouve = 0;
+		trouve2 = 0;
+		
 		for (x1 = 0; x1 < size1; x1++) {
-			if (strcmp(noms1[x1], noms2[x2]) != 0) {
-				nb_differences++;
+			if (strcmp(noms1[x1], noms2[x2]) == 0) {
+				trouve = 1;
 			}
-
-            		else {
-                		suppressions[x_supp] = x2; // Tableau qui s'applique à la petite liste
-                		x_supp++;
-            		}
 		}
 
 		for (x3 = 0; x3 < size3; x3++) {
-			if (strcmp(noms3[x3], noms2[x2]) != 0) {
-				nb_differences3++;
-			}
-
-			else {
-				suppressions[x_supp+x_supp3] = x2;
-				x_supp3++;
+			if (strcmp(noms3[x3], noms2[x2]) == 0) {
+				trouve2 = 1;
 			}
 		}
 
-		if (nb_differences == x1) {
-			if (nb_differences3 == x3) {
-				envois[x_envois+x_envois3] = x2;
-				x_envois3++;
-				nb_differences3 = 0;
-			}
+		if (trouve == 1 || trouve2 == 1) {
+			suppressions[x_supp] = x2;
+			x_supp++;
+		}
 
-			else {
-				envois[x_envois] = x2;
-				x_envois++;
-				nb_differences++;
-			}
+		else {
+			envois[x_envois] = x2;
+			x_envois++;
 		}
 	}
 }
