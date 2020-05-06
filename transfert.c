@@ -40,7 +40,7 @@ void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
 }
 
 // Voir si la nouvelle photo existe dans le cloud
-void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, FILE* TXT3, int *suppressions, int *envois, char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
+void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, FILE* TXT3, int *suppressions, int *suppressions3, int *envois, char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
 	int x1 = 0, x2 = 0, x3 = 0, size1, size2, size3, nb_differences = 0, nb_differences3 = 0;
 
 	init_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, noms1);
@@ -74,7 +74,7 @@ void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, FILE* TXT3, int *suppre
 
 	// A finir
 
-	int x_envois = 0, x_supp = 0, x_supp3 = 0;
+	int x_envois = 0, x_envois3 = 0, x_supp = 0, x_supp3 = 0;
 
 	// Comparer la grande et la petite liste
 
@@ -84,29 +84,36 @@ void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, FILE* TXT3, int *suppre
 				nb_differences++;
 			}
 
-            else {
-                suppressions[x_supp] = x2; // Tableau qui s'applique à la petite liste
-                x_supp++;
-            }
+            		else {
+                		suppressions[x_supp] = x2; // Tableau qui s'applique à la petite liste
+                		x_supp++;
+            		}
 		}
 
 		for (x3 = 0; x3 < size3; x3++) {
-			if (strcmp(noms1[x3], noms2[x2]) != 1) {
+			if (strcmp(noms3[x3], noms2[x2]) != 0) {
 				nb_differences3++;
 			}
 
 			else {
-				suppressions[x_supp3] = x2;
+				suppressions[x_supp+x_supp3] = x2;
 				x_supp3++;
 			}
 		}
 
-		if (nb_differences == x1+x3) {
-			envois[x_envois] = x2; // Indice de ligne
-			x_envois++;
-			nb_differences = 0;
-		}
+		if (nb_differences == x1) {
+			if (nb_differences3 == x3) {
+				envois[x_envois+x_envois3] = x2;
+				x_envois3++;
+				nb_differences3 = 0;
+			}
 
+			else {
+				envois[x_envois] = x2;
+				x_envois++;
+				nb_differences++;
+			}
+		}
 	}
 }
 
@@ -132,7 +139,7 @@ void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAI
 	}
 }
 
-void supprimer_lignes (int suppressions[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]) {
+void supprimer_lignes (int suppressions[NB_SUPPRESSIONS], int suppressions3[NB_SUPPRESSIONS], char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]) {
 	int i = 0;
 	char commande[100] = "";
 
@@ -141,14 +148,16 @@ void supprimer_lignes (int suppressions[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_
 
 		printf("SUPPRESSION\n");
 
-		sprintf(commande, "rm -f \"./images/gets/%s\"", noms[suppressions[i]]);
+		sprintf(commande, "rm -f \"./images/gets/%s\"", noms1[suppressions[i]]);
 
 		printf("--> %s\n", commande);
 
-        system(commande);
+        	system(commande);
 
 		i++;
 	}
+
+	i = 0;
 }
 
 int main (void) {
@@ -156,8 +165,9 @@ int main (void) {
 	char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 	char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 
-    int envois[NB_SUPPRESSIONS];
+    	int envois[NB_SUPPRESSIONS];
 	int suppressions[NB_SUPPRESSIONS]; // Stoque les indices des éléments à supprimer (lignes)
+	int suppressions3[NB_SUPPRESSIONS];
 
 	int i;
 
@@ -172,13 +182,14 @@ int main (void) {
 	for (i = 0; i < NB_SUPPRESSIONS; i++) {
 		envois[i] = NB_NOMS_MAX_SMALL+1;
 		suppressions[i] = NB_NOMS_MAX_SMALL+1;
+		suppressions3[i] = NB_NOMS_MAX_SMALL+1;
 	}
 
-	comparer_liste_images_f_txt(TXT1, TXT2, TXT3, suppressions, envois, noms1, noms2, noms3);
+	comparer_liste_images_f_txt(TXT1, TXT2, TXT3, suppressions, suppressions3, envois, noms1, noms2, noms3);
 	envoyer_lignes(envois, noms2);
-	supprimer_lignes(suppressions, noms2);
+	supprimer_lignes(suppressions, suppressions3, noms2);
 	
-	printf ("EXECUTION TRANSFERT FAITE\n");
+	printf ("EXECUTION TRANSFERT FAIT\n");
 
 	return 0;
 }
