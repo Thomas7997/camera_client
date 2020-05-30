@@ -216,10 +216,11 @@ int main (void) {
 	system("ls ./data/images/cloud > ./data/images/liste.txt");
 	system("ls ./data/images/gets > ./data/images/gets.txt");
 	system("ls ./data/image/cloud > ./data/image/liste.txt");
-	
+	system("gphoto2 --list-files > ./data/images/camera-list.txt");
 	FILE* TXT1 = fopen("./data/images/liste.txt", "r");
 	FILE* TXT2 = fopen("./data/images/gets.txt", "r");
 	FILE* TXT3 = fopen("./data/image/liste.txt", "r");
+	FILE* LISTE = fopen("./data/images/camera-list.txt", "r");
 
 	for (i = 0; i < NB_SUPPRESSIONS; i++) {
 		envois[i] = NB_NOMS_MAX_SMALL+1;
@@ -227,7 +228,7 @@ int main (void) {
 		suppressions3[i] = NB_NOMS_MAX_SMALL+1;
 	}
 
-	comparer_liste_images_f_txt(TXT1, TXT2, TXT3, suppressions, suppressions3, envois, noms1, noms2, noms3);
+	comparer_liste_images_f_txt(TXT1, LISTE, TXT3, suppressions, suppressions3, envois, noms1, noms2, noms3);
 	envoyer_lignes(envois, noms2);
 	supprimer_lignes(suppressions, suppressions3, noms2);
 
