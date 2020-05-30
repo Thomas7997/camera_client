@@ -164,9 +164,14 @@ int main (void) {
 
 	comparer_liste_images_f_txt(TXT1, TXT2, suppressions, envois, noms1, noms2);
 	envoyer_lignes(envois, noms2);
-    supprimer_lignes(suppressions, noms2);
+    	supprimer_lignes(suppressions, noms2);
+
+	system("ls ./images/cloud > ./images/liste.txt");
+        system("ls ./image/cloud > ./image/liste.txt");
 
 	printf ("EXECUTION\n");
 
+	
+	
 	return 0;
 }

@@ -162,11 +162,11 @@ int main (void) {
 
 	char image[31];
 
-	system("ls ./images/cloud > ./images/liste.txt");
-	system("ls ./images/gets > ./images/gets.txt");
-	FILE* TXT1 = fopen("./images/liste.txt", "r");
-	FILE* TXT2 = fopen("./images/gets.txt", "r");
-	FILE* TXT3 = fopen("./image/liste.txt", "r");
+	system("ls ./data/images/cloud > ./data/images/liste.txt");
+	system("ls ./data/images/gets > ./data/images/gets.txt");
+	FILE* TXT1 = fopen("./data/images/liste.txt", "r");
+	FILE* TXT2 = fopen("./data/images/gets.txt", "r");
+	FILE* TXT3 = fopen("./data/image/liste.txt", "r");
 
 	for (i = 0; i < NB_SUPPRESSIONS; i++) {
 		envois[i] = NB_NOMS_MAX_SMALL+1;
@@ -177,7 +177,10 @@ int main (void) {
 	comparer_liste_images_f_txt(TXT1, TXT2, TXT3, suppressions, suppressions3, envois, noms1, noms2, noms3);
 	envoyer_lignes(envois, noms2);
 	supprimer_lignes(suppressions, suppressions3, noms2);
-	
+
+	system("ls ./data/images/cloud > ./data/image/liste.txt");
+        system("ls ./data/images/gets > ./data/images/gets.txt");
+	system("ls ./data/image/cloud > ./data/image/liste.txt");
 	printf ("EXECUTION TRANSFERT FAIT\n");
 
 	return 0;
