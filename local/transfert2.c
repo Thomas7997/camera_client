@@ -31,6 +31,9 @@ void afficher_tab2 (int lines, int chars, char tab[lines][chars]) {
 void extraire_noms (FILE* FIC) {
 	char noms[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX];
 	char ligne[TAILLE_NOMS_IMAGES_MAX] = "";
+	char nouvelleLigne[TAILLE_NOMS_IMAGES_MAX] = "";
+	
+	FILE* FICW = fopen("./data/images/camera-list-tmp.txt", "w");
 
 	int i, j, c = 0, x = 0, y = 0;
 
@@ -68,15 +71,16 @@ void extraire_noms (FILE* FIC) {
 
 	for (i = 0; i < NB_NOMS_MAX_BIG; i++) {
 		if (noms[i][0] != 0) {
-			printf ("IMAGE : ");
-
 			for (j = 0; j < TAILLE_NOMS_IMAGES_MAX; j++) {
-				printf ("%c", noms[i][j]);
+				sprintf (nouvelleLigne, "%c", noms[i][j]);
 			}
 
-			printf ("\n");
+			fprintf (FICW, "%s\n", nouvelleLigne);
 		}
 	}	
+
+	system("cat ./data/images/camera-list-tmp.txt > ./data/images/camera-list.txt");
+	system("rm -f ./data/images/camera-list-tmp.txt");
 }
 
 void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
@@ -91,23 +95,14 @@ void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
 }
 
 // Voir si la nouvelle photo existe dans le cloud
-void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, FILE* TXT3, int *suppressions, int *suppressions3, int *envois, char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
-	int x1 = 0, x2 = 0, x3 = 0, size1, size2, size3, trouve, trouve2;
+void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT3, int *suppressions, int *suppressions3, int *envois, char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
+	int x2 = 0, x3 = 0, size2, size3, trouve;
 
-	init_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, noms1);
 	init_tab2(NB_NOMS_MAX_SMALL, TAILLE_NOMS_IMAGES_MAX, noms2);
 
 	// Remplir la grande et la petite liste
 
-	while (fgets(noms1[x1], 30, TXT) != NULL) {
-		enlever_mise_ligne(noms1[x1]);
-		x1++;
-	}
-
-	size1 = x1;
-	x1 = 0;
-
-	while (fgets(noms2[x2], 30, TXT2) != NULL) {
+	while (fgets(noms2[x2], 30, TXT) != NULL) {
 		enlever_mise_ligne(noms2[x2]);
 		x2++;
 	}
@@ -131,21 +126,14 @@ void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT2, FILE* TXT3, int *suppre
 
 	for (x2 = 0; x2 < size2; x2++) {
 		trouve = 0;
-		trouve2 = 0;
-		
-		for (x1 = 0; x1 < size1; x1++) {
-			if (strcmp(noms1[x1], noms2[x2]) == 0) {
+
+		for (x3 = 0; x3 < size3; x3++) {
+			if (strcmp(noms3[x3], noms2[x2]) == 0) {
 				trouve = 1;
 			}
 		}
 
-		for (x3 = 0; x3 < size3; x3++) {
-			if (strcmp(noms3[x3], noms2[x2]) == 0) {
-				trouve2 = 1;
-			}
-		}
-
-		if (trouve == 1 || trouve2 == 1) {
+		if (trouve == 1) {
 			suppressions[x_supp] = x2;
 			x_supp++;
 		}
@@ -168,7 +156,7 @@ void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAI
 
 		printf("TRANSFERT\n");
 
-		sprintf(commande, "mv \"./images/gets/%s\" ./image/cloud", noms[envois[i]]);
+		sprintf(commande, "cd ./image/cloud;gphoto2 --get-file=s\"%s\";cd ../..", noms[envois[i]]);
 
 		printf("--> %s\n", commande);
 
@@ -192,7 +180,7 @@ void supprimer_lignes (int suppressions[NB_SUPPRESSIONS], int suppressions3[NB_S
 
 		printf("--> %s\n", commande);
 
-        	system(commande);
+        system(commande);
 
 		i++;
 	}
@@ -201,7 +189,6 @@ void supprimer_lignes (int suppressions[NB_SUPPRESSIONS], int suppressions3[NB_S
 }
 
 int main (void) {
-	char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX];
 	char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 	char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 
@@ -213,33 +200,26 @@ int main (void) {
 
 	char image[31];
 
-	system("ls ./data/images/cloud > ./data/images/liste.txt");
-	system("ls ./data/images/gets > ./data/images/gets.txt");
 	system("ls ./data/image/cloud > ./data/image/liste.txt");
 	system("gphoto2 --list-files > ./data/images/camera-list.txt");
-	FILE* TXT1 = fopen("./data/images/liste.txt", "r");
-	FILE* TXT2 = fopen("./data/images/gets.txt", "r");
+
 	FILE* TXT3 = fopen("./data/image/liste.txt", "r");
 	FILE* LISTE = fopen("./data/images/camera-list.txt", "r");
 
+	// Il faudra créer un autre fichier avec la liste des historiques et son tableau de noms correspondant
+	/* ici ... */
+
 	for (i = 0; i < NB_SUPPRESSIONS; i++) {
 		envois[i] = NB_NOMS_MAX_SMALL+1;
-		suppressions[i] = NB_NOMS_MAX_SMALL+1;
-		suppressions3[i] = NB_NOMS_MAX_SMALL+1;
 	}
 
-	comparer_liste_images_f_txt(TXT1, LISTE, TXT3, suppressions, suppressions3, envois, noms1, noms2, noms3);
-	envoyer_lignes(envois, noms2);
-	supprimer_lignes(suppressions, suppressions3, noms2);
+	extraire_noms(LISTE);
 
-	system("ls ./data/images/cloud > ./data/image/liste.txt");
-    system("ls ./data/images/gets > ./data/images/gets.txt");
+	comparer_liste_images_f_txt(LISTE, TXT3, suppressions, suppressions3, envois, noms2, noms3);
+	envoyer_lignes(envois, noms2);
+
 	system("ls ./data/image/cloud > ./data/image/liste.txt");
 	printf("EXECUTION TRANSFERT FAIT\n");
-
-	FILE* FIC = fopen("files_list.txt", "r");
-
-	extraire_noms(FIC);
 
 	return 0;
 }

@@ -40,6 +40,9 @@ void verifierCommandeCapture (void) {
 int main () {
 	while (1) {
 		lancer_commandes();
+
+		// Verifier la commande de capture pour les captures à distance plus tard
+
 		usleep(INTERVALLE_DELAI);
 	}
 	
