@@ -28,11 +28,8 @@ void afficher_tab2 (int lines, int chars, char tab[lines][chars]) {
 	}
 }
 
-void extraire_noms (FILE* FIC, char tab[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]) {
-	char ligne[TAILLE_NOMS_IMAGES_MAX] = "";
+void extraire_noms (char text[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char tab[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]) {
 	char dossier[TAILLE_NOMS_IMAGES_MAX] = "";
-
-	char tab2[100][30];
 
 	char nouvelleLigne[TAILLE_NOMS_IMAGES_MAX] = "";
 	
@@ -49,41 +46,41 @@ void extraire_noms (FILE* FIC, char tab[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]
 		}
 	}
 
-	// Capture du dossier principale de stockage des fichiers
-	while (fgets(ligne, TAILLE_NOMS_IMAGES_MAX, FIC) != NULL) {
-		for (j = strlen(ligne)-1; j >= 0; j--) {
-			if (ligne[j] == '«') {
-				break;
-			}
+	while (strcmp(text[i], "") != 0) {
+		printf("ligne : %s\n", text[i]);
 
-			if (esp == 2) {
-				sscanf(trash_buffer, "%d", &file_number);
-			}
+		// On executera ce bloc plus tard, pour la capture de dossier
 
-			else if (esp < 2) {
-				trash_buffer[i] = ligne[j]; // ÉCRIS EN MIRROIR MAIS C'EST PAS GRAVE
-				i++;
-			}
-		}
-	}
+		// for (j = strlen(text[i])-1; j >= 0; j--) {
+		// 	if (text[i][j] == '«') {
+		// 		break;
+		// 	}
 
-	while (fgets(tab2[i], strlen(tab2[i]), FIC) != NULL) {
-		printf("ligne : %s\n", tab2[i]);
-		printf ("ligne[0] : %c\n", tab2[i][0]);
-		if (tab2[i][0] == '#') {
+		// 	if (esp == 2) {
+		// 		sscanf(trash_buffer, "%d", &file_number);
+		// 	}
+
+		// 	else if (esp < 2) {
+		// 		trash_buffer[i] = text[i][j]; // ÉCRIS EN MIRROIR MAIS C'EST PAS GRAVE
+		// 		i++;
+		// 	}
+		// }
+
+		printf ("ligne[0] : %c\n", text[i][0]);
+		if (text[i][0] == '#') {
 			printf ("1\n");
 			// C'est un fichier
-			while (tab2[i][c] != ' ') {
+			while (text[i][c] != ' ') {
 				// On peut stoquer le numéro mais ca ne nous interesse pas
 				c++;
 			}
 
-			while (tab2[i][c] == ' ') {
+			while (text[i][c] == ' ') {
 				c++;
 			}
 
-			while (tab2[i][c] != ' ') {
-				dossier[y] = tab2[i][c];
+			while (text[i][c] != ' ') {
+				dossier[y] = text[i][c];
 				c++;
 				y++;
 			}
@@ -109,10 +106,14 @@ void extraire_noms (FILE* FIC, char tab[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]
 
 	// system("cat ./data/images/camera-list-tmp.txt > ./data/images/camera-list.txt");
 	// system("rm -f ./data/images/camera-list-tmp.txt");
-
-	FIC = fopen("./data/images/camera-list.txt", "r");
+ 
+	FILE * FIC = fopen("./data/images/camera-list.txt", "r");
 
 	i = 0;
+
+	// Actions ici
+
+	fclose(FIC);
 }
 
 void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
@@ -179,7 +180,7 @@ void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAI
 
 		printf("TRANSFERT\n");
 
-		sprintf(commande, "cd ./image/cloud;gphoto2 --get-file=\"%s\";cd ../..", noms[envois[i]]);
+		sprintf(commande, "cd ./image/cloud;gphoto2 --get-file=\"/store_00020001/DCIM/100EOS5D/%s\";cd ../..", noms[envois[i]]);
 
 		printf("--> %s\n", commande);
 
@@ -194,6 +195,8 @@ int main (void) {
 	char noms[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 	char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 
+	char text_analyse[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX];
+
     int envois[NB_SUPPRESSIONS];
 	int suppressions[NB_SUPPRESSIONS]; // Stoque les indices des éléments à supprimer (lignes)
 	int suppressions3[NB_SUPPRESSIONS];
@@ -205,8 +208,10 @@ int main (void) {
 	system("ls ./data/image/cloud > ./data/image/liste.txt");
 	system("gphoto2 --list-files > ./data/images/camera-list.txt");
 
-	FILE* TXT3 = fopen("./data/image/liste.txt", "r");
-	FILE* LISTE = fopen("./data/images/camera-list.txt", "r");
+	FILE* TXT3;
+	TXT3 = fopen("./data/image/liste.txt", "r");
+	FILE* LISTE;
+	LISTE = fopen("./data/images/camera-list.txt", "r");
 
 	// Il faudra créer un autre fichier avec la liste des historiques et son tableau de noms correspondant
 	/* ici ... */
@@ -215,7 +220,13 @@ int main (void) {
 		envois[i] = NB_NOMS_MAX_SMALL+1;
 	}
 
-	extraire_noms(LISTE, noms);
+	i = 0;
+
+	while (fgets(text_analyse[i], TAILLE_NOMS_IMAGES_MAX, LISTE) != NULL) {
+		i++; // Remplir le tableau text_analyse
+	}
+
+	extraire_noms(text_analyse, noms);
 
 	afficher_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, noms);
 
