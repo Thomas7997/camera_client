@@ -147,15 +147,15 @@ int main (void) {
 
 	int i;
 
-	FILE* TXT1 = fopen("./images/liste.txt", "r");
+	FILE* TXT1 = fopen("./data/images/liste.txt", "r");
 
-	FILE* TXT2 = fopen("./image/liste.txt", "r");
+	FILE* TXT2 = fopen("./data/image/liste.txt", "r");
 
 	char image[31];
-	system("ls ./images/cloud > ./images/liste.txt");
-	system("ls ./image/cloud > ./image/liste.txt");
-	TXT1 = fopen("./images/liste.txt", "r");
-	TXT2 = fopen("./image/liste.txt", "r");
+	system("ls ./data/images/cloud > ./data/images/liste.txt");
+	system("ls ./data/image/cloud > ./data/image/liste.txt");
+	TXT1 = fopen("./data/images/liste.txt", "r");
+	TXT2 = fopen("./data/image/liste.txt", "r");
 
 	for (i = 0; i < NB_SUPPRESSIONS; i++) {
 		envois[i] = NB_NOMS_MAX_SMALL+1;
@@ -166,8 +166,8 @@ int main (void) {
 	envoyer_lignes(envois, noms2);
     	supprimer_lignes(suppressions, noms2);
 
-	system("ls ./images/cloud > ./images/liste.txt");
-        system("ls ./image/cloud > ./image/liste.txt");
+	system("ls ./data/images/cloud > ./data/images/liste.txt");
+        system("ls ./data/image/cloud > ./data/image/liste.txt");
 
 	printf ("EXECUTION\n");
 

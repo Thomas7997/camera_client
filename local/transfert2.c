@@ -23,14 +23,17 @@ void afficher_tab2 (int lines, int chars, char tab[lines][chars]) {
 
 	for (i = 0; i < lines; i++) {
 		for (j = 0; j < chars; j++) {
-			printf ("%d", tab[i][j]);
+			printf ("%c", tab[i][j]);
 		}
 	}
 }
 
-void extraire_noms (FILE* FIC) {
-	char noms[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX];
+void extraire_noms (FILE* FIC, char tab[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]) {
 	char ligne[TAILLE_NOMS_IMAGES_MAX] = "";
+	char dossier[TAILLE_NOMS_IMAGES_MAX] = "";
+
+	char tab2[100][30];
+
 	char nouvelleLigne[TAILLE_NOMS_IMAGES_MAX] = "";
 	
 	FILE* FICW = fopen("./data/images/camera-list-tmp.txt", "w");
@@ -42,7 +45,7 @@ void extraire_noms (FILE* FIC) {
 	// INIT TAB2
 	for (i = 0; i < NB_NOMS_MAX_BIG; i++) {
 		for (j = 0; j < TAILLE_NOMS_IMAGES_MAX; j++) {
-			noms[i][j] = 0;
+			tab[i][j] = 0;
 		}
 	}
 
@@ -64,20 +67,23 @@ void extraire_noms (FILE* FIC) {
 		}
 	}
 
-	while (fgets(ligne, 30, FIC) != NULL) {
-		if (ligne[i] == '#') {
+	while (fgets(tab2[i], strlen(tab2[i]), FIC) != NULL) {
+		printf("ligne : %s\n", tab2[i]);
+		printf ("ligne[0] : %c\n", tab2[i][0]);
+		if (tab2[i][0] == '#') {
+			printf ("1\n");
 			// C'est un fichier
-			while (ligne[c] != ' ') {
+			while (tab2[i][c] != ' ') {
 				// On peut stoquer le numéro mais ca ne nous interesse pas
 				c++;
 			}
 
-			while (ligne[c] == ' ') {
+			while (tab2[i][c] == ' ') {
 				c++;
 			}
 
-			while (ligne[c] != ' ') {
-				noms[x][y] = ligne[c];
+			while (tab2[i][c] != ' ') {
+				dossier[y] = tab2[i][c];
 				c++;
 				y++;
 			}
@@ -92,19 +98,21 @@ void extraire_noms (FILE* FIC) {
 	}
 
 	for (i = 0; i < NB_NOMS_MAX_BIG; i++) {
-		if (noms[i][0] != 0) {
+		if (tab[i][0] != 0) {
 			for (j = 0; j < TAILLE_NOMS_IMAGES_MAX; j++) {
-				sprintf (nouvelleLigne, "%c", noms[i][j]);
+				sprintf (nouvelleLigne, "%c", tab[i][j]);
 			}
 
 			fprintf (FICW, "%s\n", nouvelleLigne);
 		}
 	}	
 
-	system("cat ./data/images/camera-list-tmp.txt > ./data/images/camera-list.txt");
+	// system("cat ./data/images/camera-list-tmp.txt > ./data/images/camera-list.txt");
 	// system("rm -f ./data/images/camera-list-tmp.txt");
 
-	FILE* FIC = fopen("./data/images/camera-list.txt", "r");
+	FIC = fopen("./data/images/camera-list.txt", "r");
+
+	i = 0;
 }
 
 void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
@@ -119,18 +127,12 @@ void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
 }
 
 // Voir si la nouvelle photo existe dans le cloud
-void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT3, int *envois, char noms[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
+void comparer_liste_images_f_txt (FILE* TXT3, int *envois, char noms[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
 	int x2 = 0, x3 = 0, size2, size3, trouve;
 
-	init_tab2(NB_NOMS_MAX_SMALL, TAILLE_NOMS_IMAGES_MAX, noms);
+	init_tab2(NB_NOMS_MAX_SMALL, TAILLE_NOMS_IMAGES_MAX, noms3);
 
 	// Remplir la grande et la petite liste
-
-	while (fgets(noms[x2], 30, TXT) != NULL) {
-		enlever_mise_ligne(noms[x2]);
-		printf ("%s\n", noms[x2]);
-		x2++;
-	}
 
 	size2 = x2;
 	x2 = 0;
@@ -213,9 +215,11 @@ int main (void) {
 		envois[i] = NB_NOMS_MAX_SMALL+1;
 	}
 
-	extraire_noms(LISTE);
+	extraire_noms(LISTE, noms);
 
-	comparer_liste_images_f_txt(LISTE, TXT3, envois, noms, noms3);
+	afficher_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, noms);
+
+	comparer_liste_images_f_txt(TXT3, envois, noms, noms3);
 	envoyer_lignes(envois, noms);
 
 	system("ls ./data/image/cloud > ./data/image/liste.txt");
