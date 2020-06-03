@@ -35,7 +35,9 @@ void extraire_noms (FILE* FIC) {
 	
 	FILE* FICW = fopen("./data/images/camera-list-tmp.txt", "w");
 
-	int i, j, c = 0, x = 0, y = 0;
+	int i, j, c = 0, x = 0, y = 0, esp = 0, file_number_analysed = 0, file_number;
+
+	char trash_buffer[TAILLE_NOMS_IMAGES_MAX] = ""; // STOCKER LA FIN DE LA CHAINE DE CARACTÈRES
 
 	// INIT TAB2
 	for (i = 0; i < NB_NOMS_MAX_BIG; i++) {
@@ -44,8 +46,26 @@ void extraire_noms (FILE* FIC) {
 		}
 	}
 
+	// Capture du dossier principale de stockage des fichiers
+	while (fgets(ligne, TAILLE_NOMS_IMAGES_MAX, FIC) != NULL) {
+		for (j = strlen(ligne)-1; j >= 0; j--) {
+			if (ligne[j] == '«') {
+				break;
+			}
+
+			if (esp == 2) {
+				sscanf(trash_buffer, "%d", &file_number);
+			}
+
+			else if (esp < 2) {
+				trash_buffer[i] = ligne[j]; // ÉCRIS EN MIRROIR MAIS C'EST PAS GRAVE
+				i++;
+			}
+		}
+	}
+
 	while (fgets(ligne, 30, FIC) != NULL) {
-		if (ligne[0] == '#') {
+		if (ligne[i] == '#') {
 			// C'est un fichier
 			while (ligne[c] != ' ') {
 				// On peut stoquer le numéro mais ca ne nous interesse pas
@@ -67,6 +87,8 @@ void extraire_noms (FILE* FIC) {
 
 			y = 0;
 		}
+
+		i++;
 	}
 
 	for (i = 0; i < NB_NOMS_MAX_BIG; i++) {
@@ -80,7 +102,9 @@ void extraire_noms (FILE* FIC) {
 	}	
 
 	system("cat ./data/images/camera-list-tmp.txt > ./data/images/camera-list.txt");
-	system("rm -f ./data/images/camera-list-tmp.txt");
+	// system("rm -f ./data/images/camera-list-tmp.txt");
+
+	FILE* FIC = fopen("./data/images/camera-list.txt", "r");
 }
 
 void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
@@ -95,15 +119,16 @@ void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
 }
 
 // Voir si la nouvelle photo existe dans le cloud
-void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT3, int *suppressions, int *suppressions3, int *envois, char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
+void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT3, int *envois, char noms[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
 	int x2 = 0, x3 = 0, size2, size3, trouve;
 
-	init_tab2(NB_NOMS_MAX_SMALL, TAILLE_NOMS_IMAGES_MAX, noms2);
+	init_tab2(NB_NOMS_MAX_SMALL, TAILLE_NOMS_IMAGES_MAX, noms);
 
 	// Remplir la grande et la petite liste
 
-	while (fgets(noms2[x2], 30, TXT) != NULL) {
-		enlever_mise_ligne(noms2[x2]);
+	while (fgets(noms[x2], 30, TXT) != NULL) {
+		enlever_mise_ligne(noms[x2]);
+		printf ("%s\n", noms[x2]);
 		x2++;
 	}
 
@@ -122,30 +147,26 @@ void comparer_liste_images_f_txt (FILE* TXT, FILE* TXT3, int *suppressions, int 
 
 	int x_envois = 0, x_supp = 0;
 
-	// Comparer la grande et la petite liste
+	// Comparer la liste
 
 	for (x2 = 0; x2 < size2; x2++) {
 		trouve = 0;
 
 		for (x3 = 0; x3 < size3; x3++) {
-			if (strcmp(noms3[x3], noms2[x2]) == 0) {
+			if (strcmp(noms3[x3], noms[x2]) == 0) {
 				trouve = 1;
 			}
 		}
 
-		if (trouve == 1) {
-			suppressions[x_supp] = x2;
-			x_supp++;
-		}
-
-		else {
+		if (trouve != 1) {
 			envois[x_envois] = x2;
+			printf ("%d ", x2);
 			x_envois++;
 		}
 	}
 }
 
-// Transférer les nouvelles photo dans l'espace pour la capture
+// Transférer les nouvelles photos dans l'espace pour la capture
 
 void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]) {
 	int i = 0;
@@ -156,7 +177,7 @@ void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAI
 
 		printf("TRANSFERT\n");
 
-		sprintf(commande, "cd ./image/cloud;gphoto2 --get-file=s\"%s\";cd ../..", noms[envois[i]]);
+		sprintf(commande, "cd ./image/cloud;gphoto2 --get-file=\"%s\";cd ../..", noms[envois[i]]);
 
 		printf("--> %s\n", commande);
 
@@ -167,29 +188,8 @@ void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAI
 	}
 }
 
-void supprimer_lignes (int suppressions[NB_SUPPRESSIONS], int suppressions3[NB_SUPPRESSIONS], char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]) {
-	int i = 0;
-	char commande[100] = "";
-
-	while (suppressions[i] != NB_NOMS_MAX_SMALL + 1) {
-		// Copier vers images/cloud et supprimer dans image/cloud
-
-		printf("SUPPRESSION\n");
-
-		sprintf(commande, "rm -f \"./images/gets/%s\"", noms1[suppressions[i]]);
-
-		printf("--> %s\n", commande);
-
-        system(commande);
-
-		i++;
-	}
-
-	i = 0;
-}
-
 int main (void) {
-	char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
+	char noms[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 	char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 
     int envois[NB_SUPPRESSIONS];
@@ -215,8 +215,8 @@ int main (void) {
 
 	extraire_noms(LISTE);
 
-	comparer_liste_images_f_txt(LISTE, TXT3, suppressions, suppressions3, envois, noms2, noms3);
-	envoyer_lignes(envois, noms2);
+	comparer_liste_images_f_txt(LISTE, TXT3, envois, noms, noms3);
+	envoyer_lignes(envois, noms);
 
 	system("ls ./data/image/cloud > ./data/image/liste.txt");
 	printf("EXECUTION TRANSFERT FAIT\n");
