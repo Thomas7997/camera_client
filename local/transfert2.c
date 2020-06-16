@@ -223,8 +223,6 @@ void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAI
 }
 
 int main (void) {
-	char text[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
-
 	char noms[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 	char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 
@@ -255,6 +253,10 @@ int main (void) {
 		i++; // Remplir le tableau text_analyse
 	}
 
+	init_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, text);
+
+    extraire_noms(text_analyse, noms);
+
 	comparer_liste_images_f_txt(TXT3, envois, noms, noms3);
 	envoyer_lignes(envois, noms);
 
@@ -266,10 +268,6 @@ int main (void) {
         printf ("%s", text[i]);
         i++;
     }
-
-	init_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, text);
-
-    extraire_noms(text, noms);
 
     fclose(LISTE);
 	fclose(TXT3);
