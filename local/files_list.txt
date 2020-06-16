@@ -1,3 +1,7 @@
+Le dossier « / » ne contient aucun fichier.                                    
+Le dossier « /store_00020001 » ne contient aucun fichier.
+Le dossier « /store_00020001/DCIM » ne contient aucun fichier.
+Le dossier « /store_00020001/DCIM/100EOS5D » contient 64 fichiers.
 #1     IMG_0483.JPG               rd   101 KB image/jpeg
 #2     IMG_0484.JPG               rd   111 KB image/jpeg
 #3     IMG_0485.JPG               rd   130 KB image/jpeg
@@ -58,4 +62,8 @@
 #58    IMG_0540.JPG               rd  5633 KB image/jpeg
 #59    IMG_0541.JPG               rd  5560 KB image/jpeg
 #60    IMG_0542.JPG               rd  5694 KB image/jpeg
+#61    IMG_0543.JPG               rd  4902 KB image/jpeg
+#62    IMG_0544.JPG               rd  5936 KB image/jpeg
+#63    IMG_0545.JPG               rd  6321 KB image/jpeg
+#64    IMG_0546.JPG               rd  6160 KB image/jpeg
 Le dossier « /store_00020001/MISC » ne contient aucun fichier.

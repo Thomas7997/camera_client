@@ -28,47 +28,45 @@ void afficher_tab2 (int lines, int chars, char tab[lines][chars]) {
 	}
 }
 
+unsigned int len (char *chaine) {
+    int taille = 0;
+
+    while (chaine[taille] != 0 && !(chaine[taille] == ' ' && chaine[taille+1] == ' ')) {
+        // S'il y a plus d'un espace, la boucle s'arrête
+        taille++;
+    }
+
+    return taille;
+}
+
+void afficher_chaine_int (char *chaine) {
+    int i = 0;
+
+    while (chaine[i] != 0) {
+        printf("%d", chaine[i]);
+    }
+
+    printf ("\n");
+}
+
 void extraire_noms (char text[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char tab[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]) {
 	char dossier[TAILLE_NOMS_IMAGES_MAX] = "";
 
-	char nouvelleLigne[TAILLE_NOMS_IMAGES_MAX] = "";
+    char nombre_fichiers_dossier[8] = "";
+
+    unsigned int nombre_fichier_dossier = 0;
 	
 	FILE* FICW = fopen("./data/images/camera-list-tmp.txt", "w");
 
-	int i, j, c = 0, x = 0, y = 0, esp = 0, file_number_analysed = 0, file_number;
+	int i = 0, c = 0, y = 0;
 
-	char trash_buffer[TAILLE_NOMS_IMAGES_MAX] = ""; // STOCKER LA FIN DE LA CHAINE DE CARACTÈRES
-
-	// INIT TAB2
-	for (i = 0; i < NB_NOMS_MAX_BIG; i++) {
-		for (j = 0; j < TAILLE_NOMS_IMAGES_MAX; j++) {
-			tab[i][j] = 0;
-		}
-	}
+    int mx = 0, my = 0, dy = 0;
 
 	while (strcmp(text[i], "") != 0) {
-		printf("ligne : %s\n", text[i]);
-
 		// On executera ce bloc plus tard, pour la capture de dossier
 
-		// for (j = strlen(text[i])-1; j >= 0; j--) {
-		// 	if (text[i][j] == '«') {
-		// 		break;
-		// 	}
-
-		// 	if (esp == 2) {
-		// 		sscanf(trash_buffer, "%d", &file_number);
-		// 	}
-
-		// 	else if (esp < 2) {
-		// 		trash_buffer[i] = text[i][j]; // ÉCRIS EN MIRROIR MAIS C'EST PAS GRAVE
-		// 		i++;
-		// 	}
-		// }
-
-		printf ("ligne[0] : %c\n", text[i][0]);
+        c = 0;
 		if (text[i][0] == '#') {
-			printf ("1\n");
 			// C'est un fichier
 			while (text[i][c] != ' ') {
 				// On peut stoquer le numéro mais ca ne nous interesse pas
@@ -80,40 +78,73 @@ void extraire_noms (char text[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char tab
 			}
 
 			while (text[i][c] != ' ') {
-				dossier[y] = text[i][c];
-				c++;
-				y++;
+				// dossier[y] = text[i][c];
+				tab[mx][my] = text[i][c];
+                my++;
+                c++;
+				// y++;
 			}
 
-			x++;
-			c = 0;
+            fprintf (FICW, "%s\n", tab[mx]);
+
+			mx++;
 
 			y = 0;
 		}
 
+        else {
+            // Capture du dossier si jamais des fichier y sont dedans mais on fera ca plus tard
+            // Stratégie gauche droite
+            c = len(text[i]);
+
+            afficher_chaine_int(text[i]);
+
+            while (text[i][c] != ' ') {
+                c--;
+            }
+
+            c--;
+
+            while (text[i][c] != ' ') {
+                // Verification de la présence d'un nombre en remplissant d'abord
+                nombre_fichiers_dossier[dy] = text[i][c];
+                dy++;
+                c--;
+            }
+
+            dy = 0;
+
+            if (sscanf(nombre_fichiers_dossier, "%d", &nombre_fichier_dossier) == 1) {
+                printf ("Nombre de fichiers dans le dossier : %d\n", nombre_fichier_dossier);
+
+                // C'est un dossier qui contient des fichiers, il faut donc cherches les fichiers
+
+                while (text[i][c] != 175) {
+                    // Placement
+                    c--;
+                    printf ("222\n");
+                }
+
+                c--;
+
+                while (text[i][c] != ' ') {
+                    // Remplissage
+                    printf ("111\n");
+                    dossier[dy] = text[i][c];
+                    dy++;
+                    c--;
+                }
+            }
+        }
+
+        my = 0;
+
 		i++;
 	}
 
-	for (i = 0; i < NB_NOMS_MAX_BIG; i++) {
-		if (tab[i][0] != 0) {
-			for (j = 0; j < TAILLE_NOMS_IMAGES_MAX; j++) {
-				sprintf (nouvelleLigne, "%c", tab[i][j]);
-			}
+	fclose(FICW);
 
-			fprintf (FICW, "%s\n", nouvelleLigne);
-		}
-	}	
-
-	// system("cat ./data/images/camera-list-tmp.txt > ./data/images/camera-list.txt");
-	// system("rm -f ./data/images/camera-list-tmp.txt");
- 
-	FILE * FIC = fopen("./data/images/camera-list.txt", "r");
-
-	i = 0;
-
-	// Actions ici
-
-	fclose(FIC);
+    printf ("%s\n", dossier);
 }
 
 void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
@@ -148,7 +179,7 @@ void comparer_liste_images_f_txt (FILE* TXT3, int *envois, char noms[NB_NOMS_MAX
 
 	// A finir
 
-	int x_envois = 0, x_supp = 0;
+	int x_envois = 0;
 
 	// Comparer la liste
 
@@ -192,18 +223,16 @@ void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAI
 }
 
 int main (void) {
+	char text[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
+
 	char noms[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 	char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 
 	char text_analyse[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX];
 
     int envois[NB_SUPPRESSIONS];
-	int suppressions[NB_SUPPRESSIONS]; // Stoque les indices des éléments à supprimer (lignes)
-	int suppressions3[NB_SUPPRESSIONS];
 
 	int i;
-
-	char image[31];
 
 	system("ls ./data/image/cloud > ./data/image/liste.txt");
 	system("gphoto2 --list-files > ./data/images/camera-list.txt");
@@ -226,15 +255,28 @@ int main (void) {
 		i++; // Remplir le tableau text_analyse
 	}
 
-	extraire_noms(text_analyse, noms);
-
-	afficher_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, noms);
-
 	comparer_liste_images_f_txt(TXT3, envois, noms, noms3);
 	envoyer_lignes(envois, noms);
 
 	system("ls ./data/image/cloud > ./data/image/liste.txt");
-	printf("EXECUTION TRANSFERT FAIT\n");
+
+	i = 0;
+
+    while (fgets(text[i], 149, LISTE)) {
+        printf ("%s", text[i]);
+        i++;
+    }
+
+	init_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, text);
+
+    extraire_noms(text, noms);
+
+    fclose(LISTE);
+	fclose(TXT3);
+
+	afficher_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, noms);
+
+	printf("TRANSFERT FAIT\n");
 
 	return 0;
 }
