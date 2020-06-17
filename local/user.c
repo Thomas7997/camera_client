@@ -9,7 +9,7 @@
 void lancer_commandes (void) {
 	// system("cd ./data/images/gets;gphoto2 --get-all-files;cd ../../..");
 	printf ("Transmission\n");
-	system("./transfert");
+	system("./transfert2");
 	
 	// En fonction de la lecture de certains fichiers contenant des commandes, on execute le sync quand l'utilisateur le veut
 	// system("sync");

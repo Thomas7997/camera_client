@@ -39,16 +39,6 @@ unsigned int len (char *chaine) {
     return taille;
 }
 
-void afficher_chaine_int (char *chaine) {
-    int i = 0;
-
-    while (chaine[i] != 0) {
-        printf("%d", chaine[i]);
-    }
-
-    printf ("\n");
-}
-
 void extraire_noms (char text[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char tab[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]) {
 	char dossier[TAILLE_NOMS_IMAGES_MAX] = "";
 
@@ -96,8 +86,6 @@ void extraire_noms (char text[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char tab
             // Capture du dossier si jamais des fichier y sont dedans mais on fera ca plus tard
             // Stratégie gauche droite
             c = len(text[i]);
-
-            afficher_chaine_int(text[i]);
 
             while (text[i][c] != ' ') {
                 c--;
@@ -159,15 +147,12 @@ void enlever_mise_ligne (char chaine[TAILLE_NOMS_IMAGES_MAX]) {
 }
 
 // Voir si la nouvelle photo existe dans le cloud
-void comparer_liste_images_f_txt (FILE* TXT3, int *envois, char noms[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX]) {
-	int x2 = 0, x3 = 0, size2, size3, trouve;
+int comparer_liste_images_f_txt (FILE* TXT3, int *envois, char noms[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], char noms3[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX], int size2) {
+	int x2 = 0, x3 = 0, size3, trouve;
 
 	init_tab2(NB_NOMS_MAX_SMALL, TAILLE_NOMS_IMAGES_MAX, noms3);
 
 	// Remplir la grande et la petite liste
-
-	size2 = x2;
-	x2 = 0;
 
 	while (fgets(noms3[x3], 30, TXT3) != NULL) {
 		enlever_mise_ligne(noms3[x3]);
@@ -194,24 +179,27 @@ void comparer_liste_images_f_txt (FILE* TXT3, int *envois, char noms[NB_NOMS_MAX
 
 		if (trouve != 1) {
 			envois[x_envois] = x2;
-			printf ("%d ", x2);
 			x_envois++;
 		}
 	}
+
+	return x_envois;
 }
 
 // Transférer les nouvelles photos dans l'espace pour la capture
 
-void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX]) {
-	int i = 0;
+void envoyer_lignes (int envois[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], int nb_envois) {
+	int i;
 	char commande[100] = "";
 
-	while (envois[i] != NB_NOMS_MAX_SMALL + 1) {
+	for (i = 0; i < nb_envois; i++) {
 		// Copier vers images/cloud et supprimer dans image/cloud
+
+		if (strcmp(noms[envois[i]],"") == 0) break;
 
 		printf("TRANSFERT\n");
 
-		sprintf(commande, "cd ./image/cloud;gphoto2 --get-file=\"/store_00020001/DCIM/100EOS5D/%s\";cd ../..", noms[envois[i]]);
+		sprintf(commande, "cd ./data/images/cloud;gphoto2 --get-file=\"/store_00020001/DCIM/100EOS5D/%s\";cd ../../..", noms[envois[i]]);
 
 		printf("--> %s\n", commande);
 
@@ -232,11 +220,11 @@ int main (void) {
 
 	int i;
 
-	system("ls ./data/image/cloud > ./data/image/liste.txt");
+	system("ls ./data/images/cloud > ./data/images/liste.txt");
 	system("gphoto2 --list-files > ./data/images/camera-list.txt");
 
 	FILE* TXT3;
-	TXT3 = fopen("./data/image/liste.txt", "r");
+	TXT3 = fopen("./data/images/liste.txt", "r");
 	FILE* LISTE;
 	LISTE = fopen("./data/images/camera-list.txt", "r");
 
@@ -252,27 +240,23 @@ int main (void) {
 	while (fgets(text_analyse[i], TAILLE_NOMS_IMAGES_MAX, LISTE) != NULL) {
 		i++; // Remplir le tableau text_analyse
 	}
+    	
+	extraire_noms(text_analyse, noms);
 
-	init_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, text);
-
-    extraire_noms(text_analyse, noms);
-
-	comparer_liste_images_f_txt(TXT3, envois, noms, noms3);
-	envoyer_lignes(envois, noms);
+	int nb_envois = comparer_liste_images_f_txt(TXT3, envois, noms, noms3, i);
+	envoyer_lignes(envois, noms, nb_envois);
 
 	system("ls ./data/image/cloud > ./data/image/liste.txt");
 
 	i = 0;
 
-    while (fgets(text[i], 149, LISTE)) {
-        printf ("%s", text[i]);
+    while (fgets(text_analyse[i], 149, LISTE)) {
+        printf ("%s", text_analyse[i]);
         i++;
     }
 
-    fclose(LISTE);
+    	fclose(LISTE);
 	fclose(TXT3);
-
-	afficher_tab2(NB_NOMS_MAX_BIG, TAILLE_NOMS_IMAGES_MAX, noms);
 
 	printf("TRANSFERT FAIT\n");
 
