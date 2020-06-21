@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define INTERVALLE_DELAI 500
+#define INTERVALLE_DELAI 50000
 
 void lancer_commandes (void) {
 	// system("cd ./data/images/gets;gphoto2 --get-all-files;cd ../../..");

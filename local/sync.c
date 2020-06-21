@@ -138,7 +138,7 @@ void supprimer_lignes (int suppressions[NB_SUPPRESSIONS], char noms[NB_NOMS_MAX_
 	}
 }
 
-int main (void) {
+int main (int argc, char **argv) {
 	char noms1[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX];
 	char noms2[NB_NOMS_MAX_SMALL][TAILLE_NOMS_IMAGES_MAX];
 
@@ -150,6 +150,15 @@ int main (void) {
 	FILE* TXT1 = fopen("./data/images/liste.txt", "r");
 
 	FILE* TXT2 = fopen("./data/image/liste.txt", "r");
+
+
+	if (strcmp(argv[1], "mv") == 0) {
+		system("mv ./data/images/cloud/* ./data/image/cloud");
+		system("ls ./data/image/cloud > ./data/image/liste.txt");
+		system("ls ./data/images/cloud > ./data/images/liste.txt");
+
+		return 0;
+	}
 
 	char image[31];
 	system("ls ./data/images/cloud > ./data/images/liste.txt");

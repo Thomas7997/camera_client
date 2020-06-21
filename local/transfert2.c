@@ -223,6 +223,8 @@ int main (void) {
 	system("ls ./data/images/cloud > ./data/images/liste.txt");
 	system("gphoto2 --list-files > ./data/images/camera-list.txt");
 
+	// Il faudra aussi faire la comparaison avec la liste des fichiers sync (image/).
+
 	FILE* TXT3;
 	TXT3 = fopen("./data/images/liste.txt", "r");
 	FILE* LISTE;
