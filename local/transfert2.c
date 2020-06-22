@@ -166,23 +166,17 @@ int comparer_liste_images_f_txt (int *envois, char noms[NB_NOMS_MAX_SMALL][TAILL
 			}
 		}
 
-		if (trouve != 1) {
-			// Continuer de chercher
+		// Continuer de chercher
+		// Pour optimiser le code, il faudrait convertir les for en while pour éviter de consommer trop d'énergie en fixant des conditions d'arrêts de boucles.
 
-			for (x3 = 0; x3 < size3; x3++) {
-				if (strcmp(noms3[x3], noms[x2]) == 0) {
-					trouve = 1;
-					break; // Ca ne sert à rien de continuer la boucle
-				}
-			}
-
-			if (trouve != 1) {
-				envois[x_envois] = x1;
-				x_envois++;
+		for (x3 = 0; x3 < size3; x3++) {
+			if (strcmp(noms3[x3], noms[x2]) == 0) {
+				trouve = 1;
+				break; // Ca ne sert à rien de continuer la boucle
 			}
 		}
 
-		else {
+		if (trouve != 1) {
 			envois[x_envois] = x1;
 			x_envois++;
 		}
