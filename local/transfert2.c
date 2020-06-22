@@ -69,15 +69,11 @@ void extraire_noms (char text[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX], char tab
 
 			while (text[i][c] != ' ') {
 				// dossier[y] = text[i][c];
-				tab[mx][my] = text[i][c];
-                my++;
-                c++;
+				tab[mx][my++] = text[i][c++];
 				// y++;
 			}
 
-            fprintf (FICW, "%s\n", tab[mx]);
-
-			mx++;
+            		fprintf (FICW, "%s\n", tab[mx++]);
 
 			y = 0;
 		}
@@ -160,8 +156,9 @@ int comparer_liste_images_f_txt (int *envois, char noms[NB_NOMS_MAX_SMALL][TAILL
 		trouve = 0;
 
 		for (x2 = 0; x2 < size2; x2++) {
-			if (strcmp(noms2[x2], noms[x2]) == 0) {
+			if (strncmp(noms2[x2], noms[x1], strlen(noms[x1])) == 0) {
 				trouve = 1;
+				printf("%d\n", trouve);
 				break; // Ca ne sert à rien de continuer la boucle
 			}
 		}
@@ -169,16 +166,16 @@ int comparer_liste_images_f_txt (int *envois, char noms[NB_NOMS_MAX_SMALL][TAILL
 		// Continuer de chercher
 		// Pour optimiser le code, il faudrait convertir les for en while pour éviter de consommer trop d'énergie en fixant des conditions d'arrêts de boucles.
 
-		for (x3 = 0; x3 < size3; x3++) {
-			if (strcmp(noms3[x3], noms[x2]) == 0) {
+		for (x3 = 0; x3 < size3; x3++) {	
+			if (strncmp(noms3[x3], noms[x1], strlen(noms[x1])) == 0) {
 				trouve = 1;
+				printf("%d", trouve);
 				break; // Ca ne sert à rien de continuer la boucle
 			}
 		}
 
 		if (trouve != 1) {
-			envois[x_envois] = x1;
-			x_envois++;
+			envois[x_envois++] = x1;
 		}
 	}
 
@@ -214,11 +211,12 @@ int main (void) {
 
 	char text_analyse[NB_NOMS_MAX_BIG][TAILLE_NOMS_IMAGES_MAX];
 
-    int envois[NB_SUPPRESSIONS];
+    	int envois[NB_SUPPRESSIONS];
 
 	int i, j = 0, k = 0;
 
 	system("ls ./data/images/cloud > ./data/images/liste.txt");
+	system("ls ./data/image/cloud > ./data/image/liste.txt");
 	system("gphoto2 --list-files > ./data/images/camera-list.txt");
 
 	// Il faudra aussi faire la comparaison avec la liste des fichiers sync (image/).
@@ -247,33 +245,35 @@ int main (void) {
 
 	j = 0;
 
-	while (fgets(text_analyse[i], TAILLE_NOMS_IMAGES_MAX, LISTE) != NULL) {
-		i++; // Remplir le tableau text_analyse
+	while (fgets(text_analyse[i++], TAILLE_NOMS_IMAGES_MAX, LISTE) != NULL) {
+		// Remplir le tableau text_analyse
 	}
 
-	while (fgets(noms2[j], TAILLE_NOMS_IMAGES_MAX, IMAGE) != NULL) {
-		j++; // Remplir le tableau de noms pour le dossier image/
+	while (fgets(noms2[j++], TAILLE_NOMS_IMAGES_MAX, IMAGE) != NULL) {
+		// Remplir le tableau de noms pour le dossier image/
 	}
 
-	while (fgets(noms3[k], TAILLE_NOMS_IMAGES_MAX, IMAGES) != NULL) {
-		k++; // Remplir le tableau de noms pour le dossier images/
+	while (fgets(noms3[k++], TAILLE_NOMS_IMAGES_MAX, IMAGES) != NULL) {
+		 // Remplir le tableau de noms pour le dossier images/
 	}
-    	
+
 	extraire_noms(text_analyse, noms);
 
 	int nb_envois = comparer_liste_images_f_txt(envois, noms, noms2, noms3, i, j, k);
+	printf ("%d\n", nb_envois);
 	envoyer_lignes(envois, noms, nb_envois);
 
 	system("ls ./data/image/cloud > ./data/image/liste.txt");
+	system("ls ./data/images/cloud > ./data/image/liste.txt");
 
 	i = 0;
 
-    while (fgets(text_analyse[i], 149, LISTE)) {
-        printf ("%s", text_analyse[i]);
-        i++;
-    }
+    	while (fgets(text_analyse[i], 149, LISTE)) {
+        	printf ("%s", text_analyse[i]);
+        	i++;
+    	}
 
-    fclose(LISTE);
+    	fclose(LISTE);
 	fclose(IMAGES);
 	fclose(IMAGE);
 
