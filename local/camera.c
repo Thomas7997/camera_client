@@ -13,36 +13,57 @@
 #include <gphoto2/gphoto2-widget.h>
 #include <gphoto2/gphoto2-filesys.h>
 #include <gphoto2/gphoto2-result.h>
+#include <gphoto2/gphoto2-port-result.h>
+#include <gphoto2/gphoto2-port.h>
+#include <gphoto2/gphoto2-port-log.h>
+#include <gphoto2/gphoto2-port-result.h>
+#include <gphoto2/gphoto2-port-info-list.h>
+#include <gphoto2/gphoto2-port-portability.h>
+#include <gphoto2/gphoto2-port-library.h>
+
+#ifndef GPHOTO_PORT_INFO_H
+#define GPHOTO_PORT_INFO_H
+
+struct _GPPortInfo {
+ 	GPPortType type;        
+        char *name;             
+        char *path;             
+        /* Private */
+        char *library_filename; 
+};
+
+#endif
 
 int main () {
-	CameraFilePath path = { "TEST.jpg", "/" };
-	CameraAbilities abilities = {
-		"Canon EOS 1300D",
-		GP_DRIVER_STATUS_PRODUCTION,
-		GP_PORT_USB,
-		38400
-	};
-	printf("1\n");
-	CameraList *list[5];
-
 	// CAPTURES_TYPES : GP_CAPTURE_IMAGE || GP_CAPTURE_MOVIE || GP_CAPTURE_SOUND
 
 	Camera *camera;
-	GPContext* context = gp_context_new(); 	
 
-	gp_camera_new (&camera);
+	struct _GPPortInfo port_info;
+	
+	printf ("1");
 
-	gp_camera_set_abilities(camera, abilities); 	
+	port_info.type = GP_PORT_USB ;
 
-	camera = list[0];
+	strcpy(port_info.name,"usb:");
 
-	printf("1\n");
+	strcpy(port_info.path,"usb:001,004");
 
-	gp_camera_init(camera, context);
+	GPPort* port;
 
-	printf("1\n");
+	char data[100000] = "";
 
-	gp_camera_capture(camera, GP_CAPTURE_IMAGE, &path, context);
+	gp_port_new(&port);
+
+	printf ("2");
+
+	gp_port_set_info(port, port_info);
+
+	printf ("1");
+
+	gp_port_read(port, data, 100000);	
+
+	printf ("%s\n", data);
 
 	return 0;
 }
