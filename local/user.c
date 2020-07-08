@@ -4,12 +4,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#define INTERVALLE_DELAI 50000
-
+#define INTERVALLE_DELAI 5000
 void lancer_commandes (void) {
 	// system("cd ./data/images/gets;gphoto2 --get-all-files;cd ../../..");
-	printf ("Transmission\n");
-	system("./transfert2");
+	printf ("TRIAGE\n");
+	system("./manage");
 	
 	// En fonction de la lecture de certains fichiers contenant des commandes, on execute le sync quand l'utilisateur le veut
 	// system("sync");
