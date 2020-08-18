@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define MAX 80 
+#define PORT 3000 
+#define SA struct sockaddr 
 
 #define MAX_CAPTURES 10000
 #define TAILLE_NOM 30
@@ -65,6 +68,7 @@ void transform_noms (char liste[MAX_CAPTURES][TAILLE_NOM], int nombre_new, char 
     int i = 0, j, x;
     char ext[5] = "";
     int nombre_ex, nombre;
+    char commande[100] = "";
 
     printf("nombre_new : %d\n", nombre_new);
 
@@ -84,19 +88,23 @@ void transform_noms (char liste[MAX_CAPTURES][TAILLE_NOM], int nombre_new, char 
 
 	while (liste[i][j] != 't') {
 	    nombre_str[x++] = liste[i][j--];
-        }
+    }
 
-        mirroir(ext);       
+    mirroir(ext);       
 	mirroir(nombre_str); 
 
 	nombre_ex = atoi(nombre_str);
-        nombre = nombre_ex + nombre_new;
+    nombre = nombre_ex + nombre_new;
 
-        sprintf(nouvelleListe[i], "IMG_%d.%s", nombre, ext);
+    sprintf(nouvelleListe[i], "IMG_%d.%s", nombre, ext);
 
 	printf ("FIC : %s\n", nouvelleListe[i]);
 	
-        i++;
+    sprintf(commande, "http -f POST localhost:8000 name=%s\n", nouvelleListe[i]);
+
+    system(commande);
+
+    i++;
 	
 	// A confirmer en testant
     
@@ -109,8 +117,10 @@ void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURE
     char commande[100] = "";
 
     while (strcmp(liste[i], "") != 0) {
-        sprintf (commande, "mv ./data/capture/%s ./data/capture/cloud/%s;mv ./data/capture/cloud/%s ./data/images/cloud", old[i], liste[i], liste[i++]);
+        sprintf(commande, "mv ./data/capture/%s ./data/capture/cloud/%s;mv ./data/capture/cloud/%s ./data/images/cloud", old[i], liste[i], liste[i]);
     	system(commande);
+        // Envoyer le nom du nouveau du nouveau fichier transféré au socket
+        i++;
     }
 }
 
