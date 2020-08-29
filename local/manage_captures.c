@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #define MAX 80 
-#define PORT 3000 
-#define SA struct sockaddr 
 
 #define MAX_CAPTURES 10000
 #define TAILLE_NOM 30
@@ -16,110 +14,96 @@ void vider_buffer (char *buffer) {
     }
 }
 
-int last_num (char liste[MAX_CAPTURES][TAILLE_NOM]) {
-    int nombre = 0, i = 0, j, tmp_nb = 0, x;
-    char nombre_str[10] = "";
-
-    while (strcmp(liste[i], "") != 0) {
-	    vider_buffer(nombre_str);
-
-	    x = 0;
-	
-	   // Pour se situer
-
-            j = strlen(liste[i]) - 1;
-            while (liste[i][j] != '.') {
-                j--;
-	    }
-
-	    j--;
-
-	    while (liste[i][j] != '_') {
-                nombre_str[x++] = liste[i][j--];
-            }
-
-	    i++;
-
-
-            mirroir (nombre_str);
-
-            sscanf(nombre_str, "%d", &tmp_nb);
-
-	    if (tmp_nb > nombre) {
-                nombre = tmp_nb;
-            }
-    }
-
-    return nombre; // Nombre maximum
-}
-
-void mirroir (char *chaine) {
-    int i;
-    char car;
-
-    for (i = 0; i < strlen(chaine) / 2; i++) {
-        car = chaine[strlen(chaine) - i - 1];
-        chaine[strlen(chaine) - i - 1] = chaine[i];
-        chaine[i] = car;
-    }
-}
-
-void transform_noms (char liste[MAX_CAPTURES][TAILLE_NOM], int nombre_new, char nouvelleListe[MAX_CAPTURES][TAILLE_NOM]) {
-    int i = 0, j, x;
-    char ext[5] = "";
-    int nombre_ex, nombre;
-    char commande[100] = "";
-
-    printf("nombre_new : %d\n", nombre_new);
-
-    char nombre_str[10] = "";
-
-    while (strcmp(liste[i],"") != 0) {
-        x = 0;
-        j = strlen(liste[i]) - 1;
-
-        while (liste[i][j] != '.') {
-            ext[x++] = liste[i][j--];
+void afficher_tab2 (char tab[MAX_CAPTURES][TAILLE_NOM]) {
+    for (int i = 0; i < MAX_CAPTURES; i++) {
+        for (int j = 0; j < TAILLE_NOM; j++) {
+            printf ("%c", tab[i][j]);
         }
-
-        j--;
-        x = 0;
-	vider_buffer(nombre_str);
-
-	while (liste[i][j] != 't') {
-	    nombre_str[x++] = liste[i][j--];
+        printf ("\n");
     }
+}
 
-    mirroir(ext);       
-	mirroir(nombre_str); 
+// Il faut enlever l'extension
+void transform_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char nouvelleListe[MAX_CAPTURES][TAILLE_NOM], int size) {
+    int i = 0, j;
 
-	nombre_ex = atoi(nombre_str);
-    nombre = nombre_ex + nombre_new;
-
-    sprintf(nouvelleListe[i], "IMG_%d.%s", nombre, ext);
-
-	printf ("FIC : %s\n", nouvelleListe[i]);
-	
-    sprintf(commande, "http -f POST localhost:8000 name=%s\n", nouvelleListe[i]);
-
-    system(commande);
-
-    i++;
-	
-	// A confirmer en testant
-    
+    for (i = 0; i < size; i++) {
+        j = 0;
+        while (liste[i][j] != '.') {
+            nouvelleListe[i][j] = liste[i][j];
+            printf ("%c", nouvelleListe[i][j]);
+            j++;
+        }
+        printf ("\n");
     }
 }
 
 void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURES][TAILLE_NOM]) {
-    int i = 0;
+    int i = 0, j;
 
-    char commande[100] = "";
+    char commande[250] = "";
+    char path[50] = "";
+    printf ("1\n");
 
-    while (strcmp(liste[i], "") != 0) {
-        sprintf(commande, "mv ./data/capture/%s ./data/capture/cloud/%s;mv ./data/capture/cloud/%s ./data/images/cloud", old[i], liste[i], liste[i]);
-    	system(commande);
+    while (liste[i][0] != 0) {
+        sprintf(commande, "base64 ./data/images/tmp/%s > ./data/datas/tmp/%s.txt", old[i], liste[i]);
+        // sprintf(commande, "mv ./data/capture/%s ./data/capture/cloud/%s;mv ./data/capture/cloud/%s ./data/images/cloud", old[i], liste[i], liste[i]);
+    	// system(commande);
         // Envoyer le nom du nouveau du nouveau fichier transféré au socket
+        system(commande);
+        
+        printf ("2\n");
+
+        sprintf(path, "./data/datas/tmp/%s.txt", liste[i]);
+
+        FILE * FIC = fopen(path, "r");
+        char * base64 = malloc(sizeof(char)*10000000);
+
+        printf ("3\n");
+
+        j = 0;
+
+        char c;
+
+        if (FIC == NULL) {
+            printf ("FICHIER INCORRECTE\n%s\n", path);
+            exit(1);
+        }
+
+        while (!feof(FIC)) {
+            // Remplissage
+            c = fgetc(FIC);
+            if (c != '\n') {
+                base64[j] = c;
+            }
+            // printf("%c", base64[j]);
+            j++;
+        }
+
+        base64[j-2] = 0;
+
+        free(FIC);
+
+        printf ("4\n");
+
+        char * envoi = malloc(sizeof(char)*10000000);
+
+        strcpy(envoi, "");
+
+        sprintf(envoi, "curl -d '{\"data\":\"data:image/jpeg;base64,%s\"}' -H \"Content-Type: application/json\" -X POST http://localhost:8000/transfert/photo\nrm -f ./data/datas/tmp/%s.txt ./data/images/tmp/%s", base64, liste[i], old[i]);
+
+        // Peut etre vider le buffer avant avec une fonction créée.
+
+        FILE * SCRIPT = fopen("data/tmp/script.sh", "w");
+        fprintf(SCRIPT, "%s", envoi);
+
+        system(envoi);
+        system("chmod +x data/tmp/script.sh");
+        system("bash data/tmp/script.sh");
+        fclose(FIC);
+        free(envoi);
+        fclose(SCRIPT);
+        
         i++;
     }
 }
@@ -129,24 +113,22 @@ void enlever_last_car(char *chaine) {
 }
 
 int main (void) {
-    system("cd data/capture;ls cloud/capt* > liste.txt;cd ../..");
-    system("cd data/images;ls cloud > liste.txt;cd ../..");
+    system("cd data/images/tmp;ls capt* > ../liste.txt;cd ../../..");
 
-    FILE * CAPTURES = fopen("./data/capture/liste.txt", "r");
-    FILE * PHOTOS = fopen("./data/images/liste.txt", "r");
+    FILE * CAPTURES = fopen("./data/images/liste.txt", "r");
+
+    printf ("1\n");
 
     char liste_captures[MAX_CAPTURES][TAILLE_NOM];
-    char liste_anciens[MAX_CAPTURES][TAILLE_NOM];
     char nouvelles_captures[MAX_CAPTURES][TAILLE_NOM];
 
-    int i, j;
+    int i, j, number = 0;
 
     for (i = 0; i < MAX_CAPTURES; i++) {
         for (j = 0; j < TAILLE_NOM; j++) {
             liste_captures[i][j] = 0;
-            liste_anciens[i][j] = 0;
             nouvelles_captures[i][j] = 0;
-	}
+	    }
     }
 
     i = 0;
@@ -154,28 +136,26 @@ int main (void) {
     while (fgets(liste_captures[i], TAILLE_NOM, CAPTURES) != NULL) {
         // Remplissage
         enlever_last_car(liste_captures[i++]);
+        number++;
     }
 
-    if (strcmp(liste_captures[i],"ls: cannot access 'cloud/capt*': No such file or directory") == 0) {
-	return 1;
+    if (strcmp(liste_captures[i], "ls: cannot access 'cloud/capt*': No such file or directory") == 0) {
+	    return 1;
     }
 
     i = 0;
 
-    while (fgets(liste_anciens[i], TAILLE_NOM, PHOTOS) != NULL) {
-        // Remplissage
-        enlever_last_car(liste_anciens[i++]);
-    }
+    printf ("1\n");
 
-    transform_noms(liste_captures, last_num(liste_anciens), nouvelles_captures);
+    transform_noms(liste_captures, nouvelles_captures, number);
+
+    printf("%d\n", number);
 
     transferer_noms(nouvelles_captures, liste_captures);
 
     fclose(CAPTURES);
-    fclose(PHOTOS);
 
-    system("ls ./data/images/cloud > ./data/images/liste.txt");
-    system("ls ./data/capture/cloud > ./data/capture/liste.txt");
+    system("ls ./data/images/tmp > ./data/images/liste.txt");
 
     return 0;
 }
