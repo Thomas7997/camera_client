@@ -1,12 +1,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <curl/curl.h>
 #define MAX 80 
 
 #define MAX_CAPTURES 10000
 #define TAILLE_NOM 30
 
 void mirroir (char *chaine);
+
+void send_base64_request (char *base64) {
+    CURL *curl;
+    CURLcode res;
+
+    char * request_string = calloc(10000000, sizeof(char));
+    sprintf(request_string, "data=%s", base64);
+    
+    curl_global_init(CURL_GLOBAL_ALL);
+    
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/transfert/photo");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_string);
+    
+        res = curl_easy_perform(curl); 
+        if(res != CURLE_OK)
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+        curl_easy_strerror(res));
+    
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
+}
 
 void vider_buffer (char *buffer) {
     for (int i = 0; i < strlen(buffer); i++) {
@@ -38,6 +64,18 @@ void transform_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char nouvelleListe[MA
     }
 }
 
+void linearize (char *base, char **lines) {
+    int i = 0, j = 0, x = 0;
+
+    while (lines[i][0] != 0) {
+        j = 0;
+        while (lines[i][j] != 0 && lines[i][j+1] != '\n') {
+            base[x++] = lines[i][j++];
+        }
+        i++;
+    }
+}
+
 void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURES][TAILLE_NOM]) {
     int i = 0, j;
 
@@ -57,51 +95,81 @@ void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURE
         sprintf(path, "./data/datas/tmp/%s.txt", liste[i]);
 
         FILE * FIC = fopen(path, "r");
-        char * base64 = malloc(sizeof(char)*10000000);
+        char ** lines = calloc(1000000, sizeof(char*));
+
+        for (int x = 0; x < 1000000; x++) {
+            lines[x] = calloc(100, sizeof(char));
+        }
 
         printf ("3\n");
 
         j = 0;
-
-        char c;
 
         if (FIC == NULL) {
             printf ("FICHIER INCORRECTE\n%s\n", path);
             exit(1);
         }
 
-        while (!feof(FIC)) {
+        char c;
+
+        int z = 0;
+
+        while (fgets(lines[j], 100, FIC)) {
             // Remplissage
-            c = fgetc(FIC);
-            if (c != '\n') {
-                base64[j] = c;
-            }
-            // printf("%c", base64[j]);
+            printf("%s\n", lines[j]);
             j++;
         }
 
+        printf ("1\n");
+
+        char * base64 = calloc(10000000, sizeof(char));
+
+        printf ("11\n");
+
+        linearize(base64, lines);
+
         base64[j-2] = 0;
 
-        free(FIC);
+        fclose(FIC);
 
         printf ("4\n");
 
-        char * envoi = malloc(sizeof(char)*10000000);
+        char * envoi = calloc(10000000, sizeof(char));
 
         strcpy(envoi, "");
 
-        sprintf(envoi, "curl -d '{\"data\":\"data:image/jpeg;base64,%s\"}' -H \"Content-Type: application/json\" -X POST http://localhost:8000/transfert/photo\nrm -f ./data/datas/tmp/%s.txt ./data/images/tmp/%s", base64, liste[i], old[i]);
+        // sprintf(envoi, "curl -d '{\"data\":\"data:image/jpeg;base64,%s\"}' -H \"Content-Type: application/json\" -X POST http://localhost:8000/transfert/photo\nrm -f ./data/datas/tmp/%s.txt ./data/images/tmp/%s", base64, liste[i], old[i]);
+
+        sprintf(envoi, "rm -f ./data/datas/tmp/%s.txt ./data/images/tmp/%s", liste[i], old[i]);
+
+        send_base64_request(base64);
+        system(envoi);
 
         // Peut etre vider le buffer avant avec une fonction créée.
 
-        FILE * SCRIPT = fopen("data/tmp/script.sh", "w");
+        for (int x = 0; x < 1000000; x++) {
+            free(lines[x]);
+            lines[x] = NULL;
+        }
+
+        FILE * SCRIPT = fopen("data/tmp/transfert.sh", "w");
         fprintf(SCRIPT, "%s", envoi);
 
-        system(envoi);
-        system("chmod +x data/tmp/script.sh");
-        system("bash data/tmp/script.sh");
+        system("bash ./commands/transfert.sh");
+
+        // FILE * COMMANDE = fopen("commands/transfert.txt", "w");
+        // fprintf(COMMANDE, "1");
+        // fclose(COMMANDE);
+
+        system("clear");
+
         fclose(FIC);
         free(envoi);
+        free(lines);
+        free(base64);
+        lines = NULL;
+        envoi = NULL;
+        base64 = NULL;
         fclose(SCRIPT);
         
         i++;

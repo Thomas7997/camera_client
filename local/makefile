@@ -19,7 +19,7 @@ capture.o : capture.c
 	gcc -c -Wall capture.c
 
 MANAGE : manage_captures.o
-	gcc -o manage manage_captures.o
+	gcc -o manage manage_captures.o -lcurl
 
 CAPTURE : capture.o
 	gcc -o capture capture.o
