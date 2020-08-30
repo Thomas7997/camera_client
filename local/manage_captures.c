@@ -124,6 +124,8 @@ void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURE
 
         char * base64 = calloc(10000000, sizeof(char));
 
+        FILE * LOG = fopen("./log.txt", "w");
+
         printf ("11\n");
 
         linearize(base64, lines);
@@ -134,16 +136,16 @@ void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURE
 
         printf ("4\n");
 
-        char * envoi = calloc(10000000, sizeof(char));
-
-        strcpy(envoi, "");
-
         // sprintf(envoi, "curl -d '{\"data\":\"data:image/jpeg;base64,%s\"}' -H \"Content-Type: application/json\" -X POST http://localhost:8000/transfert/photo\nrm -f ./data/datas/tmp/%s.txt ./data/images/tmp/%s", base64, liste[i], old[i]);
 
-        sprintf(envoi, "rm -f ./data/datas/tmp/%s.txt ./data/images/tmp/%s", liste[i], old[i]);
+        // sprintf(envoi, "rm -f ./data/datas/tmp/%s.txt ./data/images/tmp/%s", liste[i], old[i]);
+
+        printf ("%s\n", base64);
+
+        fprintf(LOG, "%s\n", base64);
+        fclose(LOG);
 
         send_base64_request(base64);
-        system(envoi);
 
         // Peut etre vider le buffer avant avec une fonction créée.
 
@@ -152,25 +154,11 @@ void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURE
             lines[x] = NULL;
         }
 
-        FILE * SCRIPT = fopen("data/tmp/transfert.sh", "w");
-        fprintf(SCRIPT, "%s", envoi);
-
-        system("bash ./commands/transfert.sh");
-
-        // FILE * COMMANDE = fopen("commands/transfert.txt", "w");
-        // fprintf(COMMANDE, "1");
-        // fclose(COMMANDE);
-
-        system("clear");
-
         fclose(FIC);
-        free(envoi);
         free(lines);
         free(base64);
         lines = NULL;
-        envoi = NULL;
         base64 = NULL;
-        fclose(SCRIPT);
         
         i++;
     }
