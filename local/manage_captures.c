@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <curl/curl.h>
+#include <time.h>
 #define MAX 80 
 
 #define MAX_CAPTURES 10000
@@ -10,12 +11,12 @@
 
 void mirroir (char *chaine);
 
-void send_base64_request (char *base64) {
+void send_request (char *name) {
     CURL *curl;
     CURLcode res;
 
     char * request_string = calloc(10000000, sizeof(char));
-    sprintf(request_string, "data=%s", base64);
+    sprintf(request_string, "name=%s", name);
     
     curl_global_init(CURL_GLOBAL_ALL);
     
@@ -77,88 +78,27 @@ void linearize (char *base, char **lines) {
 }
 
 void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURES][TAILLE_NOM]) {
-    int i = 0, j;
+    int i = 0;
 
     char commande[250] = "";
-    char path[50] = "";
     printf ("1\n");
 
+    char * title = calloc(100, sizeof(char));
+
+    time_t seconds;
+    time(&seconds);
+
+    sprintf(title, "media_%ld.jpg", seconds);
+
     while (liste[i][0] != 0) {
-        sprintf(commande, "base64 ./data/images/tmp/%s > ./data/datas/tmp/%s.txt", old[i], liste[i]);
-        // sprintf(commande, "mv ./data/capture/%s ./data/capture/cloud/%s;mv ./data/capture/cloud/%s ./data/images/cloud", old[i], liste[i], liste[i]);
-    	// system(commande);
-        // Envoyer le nom du nouveau du nouveau fichier transféré au socket
+        sprintf(commande, "mv ./data/images/tmp/%s ./data/images/tmp/%s;mv ./data/images/tmp/%s /home/thomas/camera_server/public", old[i], title, title);
+
+        // Envoyer le nom du nouveau fichier transféré au socket
         system(commande);
-        
-        printf ("2\n");
 
-        sprintf(path, "./data/datas/tmp/%s.txt", liste[i]);
-
-        FILE * FIC = fopen(path, "r");
-        char ** lines = calloc(1000000, sizeof(char*));
-
-        for (int x = 0; x < 1000000; x++) {
-            lines[x] = calloc(100, sizeof(char));
-        }
-
-        printf ("3\n");
-
-        j = 0;
-
-        if (FIC == NULL) {
-            printf ("FICHIER INCORRECTE\n%s\n", path);
-            exit(1);
-        }
-
-        char c;
-
-        int z = 0;
-
-        while (fgets(lines[j], 100, FIC)) {
-            // Remplissage
-            printf("%s\n", lines[j]);
-            j++;
-        }
-
-        printf ("1\n");
-
-        char * base64 = calloc(10000000, sizeof(char));
-
-        FILE * LOG = fopen("./log.txt", "w");
-
-        printf ("11\n");
-
-        linearize(base64, lines);
-
-        base64[j-2] = 0;
-
-        fclose(FIC);
-
-        printf ("4\n");
-
-        // sprintf(envoi, "curl -d '{\"data\":\"data:image/jpeg;base64,%s\"}' -H \"Content-Type: application/json\" -X POST http://localhost:8000/transfert/photo\nrm -f ./data/datas/tmp/%s.txt ./data/images/tmp/%s", base64, liste[i], old[i]);
-
-        // sprintf(envoi, "rm -f ./data/datas/tmp/%s.txt ./data/images/tmp/%s", liste[i], old[i]);
-
-        printf ("%s\n", base64);
-
-        fprintf(LOG, "%s\n", base64);
-        fclose(LOG);
-
-        send_base64_request(base64);
-
-        // Peut etre vider le buffer avant avec une fonction créée.
-
-        for (int x = 0; x < 1000000; x++) {
-            free(lines[x]);
-            lines[x] = NULL;
-        }
-
-        fclose(FIC);
-        free(lines);
-        free(base64);
-        lines = NULL;
-        base64 = NULL;
+        send_request(title);
+        free(title);
+        title = NULL;
         
         i++;
     }
