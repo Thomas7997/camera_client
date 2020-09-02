@@ -9,8 +9,6 @@
 #define MAX_CAPTURES 10000
 #define TAILLE_NOM 30
 
-void mirroir (char *chaine);
-
 void send_request (char *name) {
     CURL *curl;
     CURLcode res;
@@ -33,6 +31,7 @@ void send_request (char *name) {
         curl_easy_cleanup(curl);
     }
     curl_global_cleanup();
+    printf ("\n");
 }
 
 void vider_buffer (char *buffer) {
@@ -81,11 +80,10 @@ void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURE
     int i = 0;
 
     char commande[250] = "";
-    printf ("1\n");
 
     char * title = calloc(100, sizeof(char));
 
-    time_t seconds;
+    time_t seconds; 
     time(&seconds);
 
     sprintf(title, "media_%ld.jpg", seconds);
@@ -113,8 +111,6 @@ int main (void) {
 
     FILE * CAPTURES = fopen("./data/images/liste.txt", "r");
 
-    printf ("1\n");
-
     char liste_captures[MAX_CAPTURES][TAILLE_NOM];
     char nouvelles_captures[MAX_CAPTURES][TAILLE_NOM];
 
@@ -135,23 +131,20 @@ int main (void) {
         number++;
     }
 
-    if (strcmp(liste_captures[i], "ls: cannot access 'cloud/capt*': No such file or directory") == 0) {
+    if (strcmp(liste_captures[0], "ls: cannot access 'capt*': No such file or directory") == 0) {
+        printf ("OK\n");
 	    return 1;
     }
 
     i = 0;
 
-    printf ("1\n");
-
     transform_noms(liste_captures, nouvelles_captures, number);
-
-    printf("%d\n", number);
 
     transferer_noms(nouvelles_captures, liste_captures);
 
     fclose(CAPTURES);
 
-    system("ls ./data/images/tmp > ./data/images/liste.txt");
+    system("cd data/images/tmp;ls capt* > ../liste.txt;cd ../../..");
 
     return 0;
 }

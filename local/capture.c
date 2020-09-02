@@ -1,20 +1,21 @@
 #include<stdio.h>
 #include<unistd.h>
 #include<stdlib.h>
+#include<string.h>
 
 int camera_enabled (void) {
 	int etat = 0;
 
 	system("gphoto2 --auto-detect > data/tmp/camera.txt");
 	FILE * FIC = fopen("data/tmp/camera.txt", "r");
-	FILE * MOD = fopen("model/detect.txt");
+	FILE * MOD = fopen("model/detect.txt", "r");
 
-	char * content = malloc(sizeof(char)*1000);
-	char * model = malloc(sizeof(char)*1000);
+	char * content = calloc(1000, sizeof(char));
+	char * model = calloc(1000, sizeof(char));
 	char c;
 	int j = 0;
 
-	while (!feof(content)) {
+	while (!feof(FIC)) {
 		c = fgetc(FIC);
 		content[j] = c;
 		j++;
@@ -22,15 +23,15 @@ int camera_enabled (void) {
 
 	j = 0;
 
-	while (!feof(model)) {
+	while (!feof(MOD)) {
 		c = fgetc(MOD);
 		model[j] = c;
 		j++;
 	}
 
-	if (strcmp(content, model) == 0) (
+	if (strcmp(content, model) != 0) {
 		etat = 1;
-	)
+	}
 
 	free(content);
 	free(model);
@@ -41,7 +42,7 @@ int camera_enabled (void) {
 }
 
 void listen_camera (void) {
-	system("cd data/images/tmp;gphoto2 --wait-event-and-download=36000");
+	system("cd data/images/tmp;gphoto2 --wait-event-and-download=36000s");
 }
 
 int main (void) {
@@ -54,8 +55,23 @@ int main (void) {
 	// J'applique l'ancien mode de fonctionnement des tâches en attendant le développement des middlewares
 
 	while (1) {
-		listen_camera();
-		sleep(36000);
+		if (camera_enabled() == 1) {
+			// Activer LED de succès
+			// Envoyer un signal à l'application
+
+			while (1) {
+				listen_camera();
+				sleep(36000);
+			}
+
+			break;
+		}
+
+		else {
+			// Activer LED d'erreur
+			// Envoyer un signal à l'application
+			printf ("En attente de l'activation de la caméra.\n");
+		}
 	}
 
 	return 0;
