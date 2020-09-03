@@ -255,11 +255,6 @@ int main (void) {
 				sleep(36000);
 			}
 
-			// Vider les fichiers temporaires
-			system("rm -f data/tmp/claim.txt");
-			system("rm -f data/tmp/kill.txt");
-			system("rm -f data/tmp/detect.txt");
-
 			break;
 		}
 
@@ -271,6 +266,11 @@ int main (void) {
 			// Activer LED d'erreur
 			// Envoyer un signal à l'application
 			printf ("En attente de l'activation de la caméra.\n");
+
+			// Vider les fichiers temporaires
+			system("rm -f data/tmp/claim.txt");
+			system("rm -f data/tmp/kill.txt");
+			system("rm -f data/tmp/detect.txt");
 		}
 	}
 
