@@ -199,8 +199,6 @@ int camera_enabled (int * exit_script) {
 		}
 	}
 
-	printf ("1\n");	
-
 	for (int i = 0; i < 5000; i++) {
 		free(lines[i]);
 		lines[i] = NULL;
@@ -225,7 +223,11 @@ int camera_enabled (int * exit_script) {
 	fclose(DETECT);
 	fclose(CLAIM);
 	fclose(CLAIM_CONTENT);
-	printf ("1\n");
+
+	// Vider les fichiers temporaires
+	system("rm -f data/tmp/claim.txt");
+	system("rm -f data/tmp/kill.txt");
+	system("rm -f data/tmp/detect.txt");
 
 	return etat;
 }
@@ -266,11 +268,6 @@ int main (void) {
 			// Activer LED d'erreur
 			// Envoyer un signal à l'application
 			printf ("En attente de l'activation de la caméra.\n");
-
-			// Vider les fichiers temporaires
-			system("rm -f data/tmp/claim.txt");
-			system("rm -f data/tmp/kill.txt");
-			system("rm -f data/tmp/detect.txt");
 		}
 	}
 

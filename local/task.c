@@ -11,9 +11,6 @@ int main (void) {
         printf ("%d\n", command);
         if (command == 1) {
             // Sauvegarder le LOG
-            
-            // Commander l'action de gérer
-            system("echo \"1\" > commands/manage.txt");
 
             // Effectuer l'action
             system("./capture");
@@ -28,6 +25,6 @@ int main (void) {
         }
 
         fclose(CAPTURE);
-        usleep(5000);
+        sleep(1);
     }
 }
