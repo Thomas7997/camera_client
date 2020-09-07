@@ -59,17 +59,21 @@ void kill_process (char ** lines, unsigned int size, char pid[100][10]) {
 			x = 0;
 			j = 0;
 
-			while (lines[i][j++] != 's') {
+			while (lines[i][j] != 's') {
 				// Avancement
+				printf ("%c", lines[i][j]);
+				j++;
 			}
 
 			while (lines[i][j] == ' ') {
 				// Avancement
+				printf ("%c", lines[i][j]);
 				j++;
 			}
 
 			while (lines[i][j] != ' ') {
 				pid[y][x] = lines[i][j];
+				printf ("%c", lines[i][j]);
 				x++;
 				j++;
 			}
@@ -79,15 +83,15 @@ void kill_process (char ** lines, unsigned int size, char pid[100][10]) {
 	}
 }
 
-int camera_enabled (int * exit_script) {
+int camera_enabled (int * exit_script, FILE * LOG) {
 	int etat = 0;
 
 	system("gphoto2 --auto-detect > data/tmp/camera.txt");
 	system("gphoto2 --debug --debug-logfile=\"data/tmp/claim.txt\" --summary");
 	FILE * FIC = fopen("data/tmp/camera.txt", "r");
 	FILE * DETECT = fopen("model/detect.txt", "r");
-
 	// Pour la phase de test
+
 	FILE * CLAIM = fopen("model/claim.txt", "r");
 	FILE * CLAIM_CONTENT = fopen("data/tmp/claim.txt", "r");
 
@@ -145,6 +149,7 @@ int camera_enabled (int * exit_script) {
 		if (claim_status != -1) {
 			etat = 1;
 			printf("STATUS OK\n");
+			fprintf(LOG, "STATUS OK\n");
 		}
 
 		else if (claim_status == -1) {
@@ -159,6 +164,7 @@ int camera_enabled (int * exit_script) {
 			j =  0;
 
 			printf("STATUS ERROR\n");
+			fprintf(LOG, "STATUS ERROR\nAnalyse des tâches.\n");
 			system("ps aux | grep gphoto2 > data/tmp/kill.txt");
 
 			FILE * KILL = fopen("data/tmp/kill.txt", "r");
@@ -175,6 +181,7 @@ int camera_enabled (int * exit_script) {
 				}
 			}
 
+			fprintf(LOG, "Destruction des tâches.\n");
 			kill_process(kill_lines, j, pid);
 
 			j = 0;
@@ -182,12 +189,13 @@ int camera_enabled (int * exit_script) {
 			char * commande = calloc(100, sizeof(char));
 
 			while (pid[j][0] != 0) {
+				fprintf(LOG, "Destruction de la tâche au PID %s.\n", pid[j]);
 				sprintf(commande, "kill %s", pid[j++]);
 				system(commande);
-				printf ("COMMANDE : %s\n", commande);
 			}
 
 			fclose(KILL);
+
 			free(commande);
 			commande = NULL;
 
@@ -233,11 +241,56 @@ int camera_enabled (int * exit_script) {
 }
 
 void listen_camera (void) {
-	system("cd data/images/tmp;gphoto2 --wait-event-and-download=36000s;cd ../../..");
+	system("cd data/images/tmp;gphoto2 --wait-event-and-download=36000s --debug-logfile=\"../tmp/capture.txt\";cd ../../..");
+}
+
+int check_errors_exec (void) {
+	FILE * LOG = fopen("data/tmp/capture.txt", "r");
+	FILE * MODEL = fopen("model/shutdown.txt", "r");
+	int status = 0;
+	char ** lines = calloc(1000, sizeof(char*));
+	int i;
+	char * model = calloc(1000, sizeof(char));
+
+	for (i = 0; i < 1000; i++) {
+		lines[i] = calloc(500, sizeof(char));
+	}
+
+	while (fgets(lines[i++], 499, LOG));
+
+	i = 0;
+
+	while (lines[i][0] != 0) {
+		if (strncmp(lines[i], model, 44)) {
+			status = -1;
+			break;
+		}
+	}
+
+	for (i = 0; i < 1000; i++) {
+		free(lines[i]);
+		lines[i] = NULL;
+	}
+
+	// Suppression du contenu du fichier (libérer de la mémoire)
+	system("echo \"\" > data/tmp/capture.txt");
+
+	free(lines);
+	lines = NULL;
+	free(model);
+	model = NULL;
+	fclose(LOG);
+	fclose(MODEL);
+
+	return status;
 }
 
 int main (void) {
 	int exit_script = 0;
+	int status = 0;
+
+	FILE * LOG = fopen("data/log/capture.txt", "a");
+	FILE * STATUS = fopen("data/status/camera_connected.txt", "w");
 
 	// J'ai créé deux tâches qu'il faudra gérer et organiser avec FreeRTOS car on est sur un middleware
 
@@ -248,7 +301,13 @@ int main (void) {
 	// J'applique l'ancien DETECTe de fonctionnement des tâches en attendant le développement des middlewares
 
 	while (1) {
-		if (camera_enabled(&exit_script) == 1) {
+		fprintf(LOG, "Obtention du status de la caméra.\n");
+		status = camera_enabled(&exit_script, LOG);
+		fprintf(STATUS, "%d\n", status);
+
+		if (status == 1) {
+			fprintf(LOG, "Caméra connectée.\nLancement du script.\n");
+
 			// Activer LED de succès
 			// Envoyer un signal à l'application
 
@@ -260,16 +319,21 @@ int main (void) {
 			break;
 		}
 
-		else if (exit_script == 1) {
-			return 1;
-		}
-
 		else {
+			if (exit_script == 1) {
+				fprintf(LOG, "Arrêt du script.\n");
+				return 1;
+			}
+
 			// Activer LED d'erreur
 			// Envoyer un signal à l'application
+			fprintf(LOG, "En attente de l'activation de la caméra.\n");
 			printf ("En attente de l'activation de la caméra.\n");
 		}
 	}
+
+	fclose(LOG);
+	fclose(STATUS);
 
 	return 0;
 }
