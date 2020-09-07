@@ -241,53 +241,13 @@ int camera_enabled (int * exit_script, FILE * LOG) {
 }
 
 void listen_camera (void) {
-	system("cd data/images/tmp;gphoto2 --wait-event-and-download=36000s --debug-logfile=\"../tmp/capture.txt\";cd ../../..");
-}
-
-int check_errors_exec (void) {
-	FILE * LOG = fopen("data/tmp/capture.txt", "r");
-	FILE * MODEL = fopen("model/shutdown.txt", "r");
-	int status = 0;
-	char ** lines = calloc(1000, sizeof(char*));
-	int i;
-	char * model = calloc(1000, sizeof(char));
-
-	for (i = 0; i < 1000; i++) {
-		lines[i] = calloc(500, sizeof(char));
-	}
-
-	while (fgets(lines[i++], 499, LOG));
-
-	i = 0;
-
-	while (lines[i][0] != 0) {
-		if (strncmp(lines[i], model, 44)) {
-			status = -1;
-			break;
-		}
-	}
-
-	for (i = 0; i < 1000; i++) {
-		free(lines[i]);
-		lines[i] = NULL;
-	}
-
-	// Suppression du contenu du fichier (libérer de la mémoire)
-	system("echo \"\" > data/tmp/capture.txt");
-
-	free(lines);
-	lines = NULL;
-	free(model);
-	model = NULL;
-	fclose(LOG);
-	fclose(MODEL);
-
-	return status;
+	system("cd data/images/tmp;gphoto2 --debug --wait-event-and-download=36000s --debug-logfile=\"../../tmp/capture.txt\";cd ../../..");
 }
 
 int main (void) {
 	int exit_script = 0;
 	int status = 0;
+	int disconnect_status = 0;
 
 	FILE * LOG = fopen("data/log/capture.txt", "a");
 	FILE * STATUS = fopen("data/status/camera_connected.txt", "w");
@@ -315,8 +275,6 @@ int main (void) {
 				listen_camera();
 				sleep(36000);
 			}
-
-			break;
 		}
 
 		else {

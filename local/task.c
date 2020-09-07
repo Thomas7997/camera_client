@@ -7,24 +7,30 @@ int main (void) {
 
     while (1) {
         FILE * CAPTURE = fopen("commands/capture.txt", "r");
+
+        int last = 0, command = -1;
+
         fscanf(CAPTURE, "%d", &command);
         printf ("%d\n", command);
+
         if (command == 1) {
             // Sauvegarder le LOG
 
             // Effectuer l'action
-            system("./capture");
-        }
-
-        else if (command == 0) {
-            // Sauvegarder le LOG
+            if (last == 0) {
+                last = command;
+                system("./capture");
+                printf("LANCÉ.\n");
+            }
         }
 
         else {
-            system("echo \"0\" > commands/capture.txt");
+
         }
 
         fclose(CAPTURE);
         sleep(1);
     }
+
+    return 0;
 }

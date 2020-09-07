@@ -1,4 +1,4 @@
-all : MANAGE TRANSFERT2 SYNC USER ARCHITECTURE CONSTRUCTION
+all : MANAGE TRANSFERT2 SYNC USER ARCHITECTURE CONSTRUCTION CAPTURE_EXEC CAPTURE_ERRORS
 
 sync.o : sync.c 
 	gcc -c -Wall sync.c
@@ -18,6 +18,12 @@ user.o : user.c
 capture.o : capture.c
 	gcc -c -Wall capture.c
 
+capture_exec.o : capture_exec.c
+	gcc -c -Wall capture_exec.c
+
+capture_errors.o : capture_errors.c
+	gcc -c -Wall capture_errors.c
+
 MANAGE : manage_captures.o
 	gcc -o manage manage_captures.o -lcurl
 
@@ -32,6 +38,12 @@ SYNC : sync.o
 
 USER : user.o 
 	gcc -o user user.o
+
+CAPTURE_EXEC : capture_exec.o
+	gcc -o capture_exec capture_exec.o
+
+CAPTURE_ERRORS : capture_errors.o
+	gcc -o capture_errors capture_errors.o
 
 ARCHITECTURE : architecture.o 
 	gcc -o architecture architecture.o
