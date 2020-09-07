@@ -55,25 +55,24 @@ void kill_process (char ** lines, unsigned int size, char pid[100][10]) {
 	for (i = 0; i < size; i++) {
 		lastcar = find_last(lines[i]);
 
-		if (lastcar == '.') {
+		if (lastcar != '2') {
 			x = 0;
 			j = 0;
 
-			while (lines[i][j] != 's') {
+			while (lines[i][j] != ' ') {
 				// Avancement
-				printf ("%c", lines[i][j]);
 				j++;
 			}
 
+			j++;
+
 			while (lines[i][j] == ' ') {
 				// Avancement
-				printf ("%c", lines[i][j]);
 				j++;
 			}
 
 			while (lines[i][j] != ' ') {
 				pid[y][x] = lines[i][j];
-				printf ("%c", lines[i][j]);
 				x++;
 				j++;
 			}
@@ -190,7 +189,7 @@ int camera_enabled (int * exit_script, FILE * LOG) {
 
 			while (pid[j][0] != 0) {
 				fprintf(LOG, "Destruction de la tâche au PID %s.\n", pid[j]);
-				sprintf(commande, "kill %s", pid[j++]);
+				sprintf(commande, "kill -9 %s", pid[j++]);
 				system(commande);
 			}
 
@@ -205,6 +204,11 @@ int camera_enabled (int * exit_script, FILE * LOG) {
 		else {
 			// On verra s'il y aura d'autres status à ajouter
 		}
+	}
+
+	else {
+		// Caméra non connectée
+		status = -2;
 	}
 
 	for (int i = 0; i < 5000; i++) {
@@ -244,6 +248,31 @@ void listen_camera (void) {
 	system("cd data/images/tmp;gphoto2 --debug --wait-event-and-download=36000s --debug-logfile=\"../../tmp/capture.txt\";cd ../../..");
 }
 
+void send_request (int status) {
+    CURL *curl;
+    CURLcode res;
+
+    char * request_string = calloc(10000000, sizeof(char));
+    sprintf(request_string, "status=%d", status);
+    
+    curl_global_init(CURL_GLOBAL_ALL);
+    
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/transfert/status");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_string);
+    
+        res = curl_easy_perform(curl); 
+        if(res != CURLE_OK)
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+        curl_easy_strerror(res));
+    
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
+    printf ("\n");
+}
+
 int main (void) {
 	int exit_script = 0;
 	int status = 0;
@@ -265,11 +294,13 @@ int main (void) {
 		status = camera_enabled(&exit_script, LOG);
 		fprintf(STATUS, "%d\n", status);
 
+		send_request(status);
+
 		if (status == 1) {
 			fprintf(LOG, "Caméra connectée.\nLancement du script.\n");
 
 			// Activer LED de succès
-			// Envoyer un signal à l'application
+			// Envoyer un signal à l'application	
 
 			while (1) {
 				listen_camera();
