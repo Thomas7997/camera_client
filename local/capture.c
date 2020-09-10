@@ -84,11 +84,10 @@ void kill_process (char ** lines, unsigned int size, char pid[100][10]) {
 }
 
 int camera_enabled (int * exit_script, FILE * LOG) {
+	FILE * FIC = fopen("data/tmp/camera.txt", "r");
 	int etat = 0;
 
-	system("gphoto2 --auto-detect > data/tmp/camera.txt");
 	system("gphoto2 --debug --debug-logfile=\"data/tmp/claim.txt\" --summary");
-	FILE * FIC = fopen("data/tmp/camera.txt", "r");
 	FILE * DETECT = fopen("model/detect.txt", "r");
 	// Pour la phase de test
 
@@ -143,73 +142,77 @@ int camera_enabled (int * exit_script, FILE * LOG) {
 		j++;
 	}
 
-	claim_status = find(lines, claim, j);
+	// claim_status = find(lines, claim, j);
 
 	if (strcmp(content, model) != 0) {
-		if (claim_status != -1) {
-			etat = 1;
-			printf("STATUS OK\n");
-			fprintf(LOG, "STATUS OK\n");
-		}
-
-		else if (claim_status == -1) {
-			// Laisser l'état à 0
-
-			// ECRIRE DANS LE LOG
-
-			// EVENTUELLEMENT ALLUMER UNE LED
-
-			// Lancer le script pour écraser le processus de gphoto2 qui est mal lancé
-
-			j =  0;
-
-			printf("STATUS ERROR\n");
-			fprintf(LOG, "STATUS ERROR\nAnalyse des tâches.\n");
-			system("ps aux | grep gphoto2 > data/tmp/kill.txt");
-
-			FILE * KILL = fopen("data/tmp/kill.txt", "r");
-
-			while (fgets(kill_lines[j], 249, KILL)) {
-				j++;
-			}
-
-			char pid[100][10];
-
-			for (int y = 0; y < 100; y++) {
-				for (int w = 0; w < 10; w++) {
-					pid[y][w] = 0;
-				}
-			}
-
-			fprintf(LOG, "Destruction des tâches.\n");
-			kill_process(kill_lines, j, pid);
-
-			j = 0;
-
-			char * commande = calloc(100, sizeof(char));
-
-			while (pid[j][0] != 0) {
-				fprintf(LOG, "Destruction de la tâche au PID %s.\n", pid[j]);
-				sprintf(commande, "kill -9 %s", pid[j++]);
-				system(commande);
-			}
-
-			fclose(KILL);
-
-			free(commande);
-			commande = NULL;
-
-			*exit_script = 1;
-		}
+		etat = 1;
+		*exit_script = 0;
 		
-		else {
-			// On verra s'il y aura d'autres status à ajouter
-		}
+		// if (claim_status != -1) {
+		// 	etat = 1;
+		// 	printf("STATUS OK\n");
+		// 	fprintf(LOG, "STATUS OK\n");
+		// }
+
+		// else if (claim_status == -1) {
+		// 	// Laisser l'état à 0
+
+		// 	// ECRIRE DANS LE LOG
+
+		// 	// EVENTUELLEMENT ALLUMER UNE LED
+
+		// 	// Lancer le script pour écraser le processus de gphoto2 qui est mal lancé
+
+		// 	j =  0;
+
+		// 	printf("STATUS ERROR\n");
+		// 	fprintf(LOG, "STATUS ERROR\nAnalyse des tâches.\n");
+		// 	system("ps aux | grep gphoto2 > data/tmp/kill.txt");
+
+		// 	FILE * KILL = fopen("data/tmp/kill.txt", "r");
+
+		// 	while (fgets(kill_lines[j], 249, KILL)) {
+		// 		j++;
+		// 	}
+
+		// 	char pid[100][10];
+
+		// 	for (int y = 0; y < 100; y++) {
+		// 		for (int w = 0; w < 10; w++) {
+		// 			pid[y][w] = 0;
+		// 		}
+		// 	}
+
+		// 	fprintf(LOG, "Destruction des tâches.\n");
+		// 	kill_process(kill_lines, j, pid);
+
+		// 	j = 0;
+
+		// 	char * commande = calloc(100, sizeof(char));
+
+		// 	while (pid[j][0] != 0) {
+		// 		fprintf(LOG, "Destruction de la tâche au PID %s.\n", pid[j]);
+		// 		sprintf(commande, "kill -9 %s", pid[j++]);
+		// 		system(commande);
+		// 	}
+
+		// 	fclose(KILL);
+
+		// 	free(commande);
+		// 	commande = NULL;
+
+		// 	*exit_script = 1;
+		// }
+		
+		// else {
+		// }
 	}
 
 	else {
 		// Caméra non connectée
 		etat = -2;
+		*exit_script = 1;
+		system("gphoto2 --auto-detect > data/tmp/camera.txt");
 	}
 
 	for (int i = 0; i < 5000; i++) {
@@ -232,7 +235,6 @@ int camera_enabled (int * exit_script, FILE * LOG) {
 	content = NULL;
 	claim_content = NULL;
 	claim = NULL;
-	fclose(FIC);
 	fclose(DETECT);
 	fclose(CLAIM);
 	fclose(CLAIM_CONTENT);
@@ -280,6 +282,8 @@ int main (void) {
 	int disconnect_status = 0;
 	int request_sent = 0;
 
+	system("gphoto2 --auto-detect > data/tmp/camera.txt");
+
 	system("echo \"\" > data/tmp/capture.txt");
 	FILE * LOG = fopen("data/log/capture.txt", "a");
 	FILE * STATUS = fopen("data/status/camera_connected.txt", "w");
@@ -313,10 +317,7 @@ int main (void) {
 		else {
 			if (exit_script == 1) {
 				fprintf(LOG, "Arrêt du script.\n");
-				if (request_sent != 1) {
-					send_request(-2);
-					request_sent = 1;
-				}
+				send_request(-2);
 			}
 
 			// Activer LED d'erreur

@@ -12,8 +12,38 @@ void cut_line (char * cutted, char * line) {
 		y++;
 		x++;
 	}
+}
 
-	return;
+int cut_lines (char ** line, unsigned int size, char * model, char * model2) {
+	int x, y, i, status = 0;
+	char * cutted = calloc(1000, sizeof(char));
+
+	for (i = 0; i < size; i++) {
+		x = 0;
+		y = 9;
+		while (line[i][y] != 0) {
+			cutted[x] = line[i][y];
+			y++;
+			x++;
+		}
+
+		if (strncmp(model, cutted, 99) == 0) {
+			status = -2;
+			printf("%s\n\n%s\n", model2, cutted);
+			break;
+		}
+
+		else if (strncmp(model2, cutted, 16) == 0) {
+			status = -1;
+			printf("%s\n\n%s\n", model2, cutted);
+			break;
+		}
+	}
+
+	free(cutted);
+	cutted = NULL;
+
+	return status;
 }
 
 void send_request (int status) {
@@ -41,41 +71,69 @@ void send_request (int status) {
     printf ("\n");
 }
 
-int check_errors_exec (void) {
+void clean_lines (void) {
+	FILE * FIC = fopen("data/tmp/capture.txt", "w");
+	fprintf(FIC, "");
+	fclose(FIC);
+}
+
+int check_errors_exec (int * iter) {
 	FILE * LOG = fopen("data/tmp/capture.txt", "r");
 	FILE * MODEL = fopen("model/shutdown.txt", "r");
-	FILE * MODEL2 = fopen("model/claim.txt", "r");
-	FILE * MODEL3 = fopen("model/change.txt", "r");
+	FILE * MODEL2 = fopen("model/context.txt", "r");
+	int printed = 0;
+
 	int status = 0;
-	int i;
+	int i = 0;
 	char * model = calloc(1000, sizeof(char));
 	char * line = calloc(1000, sizeof(char));
 	char * message = calloc(1000, sizeof(char));
 	char * model2 = calloc(1000, sizeof(char));
-	char * model3 = calloc(1000, sizeof(char));
+	char ** lines = calloc(100000, sizeof(char*));
+
+	for (int i = 0; i < 100000; i++) {
+		lines[i] = calloc(1000, sizeof(char));
+	}
 
 	fgets(model, 1000, MODEL);
 	fgets(model2, 1000, MODEL2);
-	fgets(model3, 1000, MODEL3);
 
-	while (fgets(line, 999, LOG)) {
-		cut_line(message, line);
-		// printf("%s\n", message);
-		if (strncmp(model, message, 99) == 0) {
-			status = -2;
-			printf("%s\n\n%s\n", model2, message);
-			break;
-		}
-
-		else if (strncmp(model2, message, 333) == 0 || strncmp(model3, message, 89) == 0) {
-			status = -1;
-			printf("%s\n\n%s\n", model2, message);
-			break;
-		}
+	while (fgets(lines[i++], 999, LOG) != NULL) {
+		*iter += 1;
 	}
+
+	printf ("1\n");
+	status = cut_lines(lines, i, model, model2);
+	printf ("1\n");
+
+	// while (fgets(line, 999, LOG) != NULL) {
+	// 	if (printed == 0) {
+	// 		printf ("%s,%d\n", line, printed);
+	// 		printed = 1;
+	// 	}
+
+	// 	cut_line(message, line);
+	// 	// printf("%s\n", message);
+	// 	if (strncmp(model, message, 99) == 0) {
+	// 		status = -2;
+	// 		printf("%s\n\n%s\n", model2, message);
+	// 		break;
+	// 	}
+
+	// 	else if (strncmp(model2, message, 16) == 0) {
+	// 		status = -1;
+	// 		printf("%s\n\n%s\n", model2, message);
+	// 		break;
+	// 	}
+	// }
 
 	// Suppression du contenu du fichier (libérer de la mémoire)
 	// system("echo \"\" > data/tmp/capture.txt");
+
+	for (int i = 0; i < 100000; i++) {
+		free(lines[i]);
+		lines[i] = NULL;
+	}
 
 	free(line);
 	line = NULL;
@@ -85,18 +143,18 @@ int check_errors_exec (void) {
 	message = NULL;
 	free(model2);
 	model2 = NULL;
-	free(model3);
-	model3 = NULL;
 	fclose(LOG);
 	fclose(MODEL);
 	fclose(MODEL2);
-	fclose(MODEL3);
+	free(lines);
+	lines = NULL;
 
 	return status;
 }
 
-int manage_errors(int * status) {
-	*status = check_errors_exec();
+int manage_errors(int * status, int * iter) {
+	*status = check_errors_exec(iter);
+	printf ("%d\n", *status);
 	int exit_status = 0;
 	if (*status == -1 || *status == -2) {
 		exit_status = 1;
@@ -112,10 +170,15 @@ void reset_log (void) {
 int main (void) {
     int exit_script = 0;
 	int status = 0;
+	int line_nb = 0;
 	FILE * LOG = fopen("data/log/capture_errors.txt", "a");
 
     while (1) {
-        exit_script = manage_errors(&status);
+        exit_script = manage_errors(&status, &line_nb);
+		if (line_nb > 60000) {
+			line_nb = 0;
+			clean_lines();
+		}
 
         if (exit_script == 1) {
             // fprintf(SCRIPT, "0\n");
@@ -123,8 +186,9 @@ int main (void) {
 			send_request(status);
 			// Cette action ne doit pas être répétée trois fois de suite
 			system("systemctl --user restart capture");
-			reset_log();
-			sleep(3);
+			line_nb = 0;
+			// reset_log();
+			usleep(50000);
         }
 
         else {
