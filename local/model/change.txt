@@ -1,0 +1,1 @@
+gp_context_error            (0): Canon EOS Get Changes failed (0x2002: PTP General Error)

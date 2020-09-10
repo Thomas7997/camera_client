@@ -28,7 +28,7 @@ MANAGE : manage_captures.o
 	gcc -o manage manage_captures.o -lcurl
 
 CAPTURE : capture.o
-	gcc -o capture capture.o
+	gcc -o capture capture.o -lcurl
 
 TRANSFERT2 : transfert2.o
 	gcc -o transfert2 transfert2.o
@@ -43,7 +43,7 @@ CAPTURE_EXEC : capture_exec.o
 	gcc -o capture_exec capture_exec.o
 
 CAPTURE_ERRORS : capture_errors.o
-	gcc -o capture_errors capture_errors.o
+	gcc -o capture_errors capture_errors.o -lcurl
 
 ARCHITECTURE : architecture.o 
 	gcc -o architecture architecture.o

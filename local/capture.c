@@ -2,6 +2,7 @@
 #include<unistd.h>
 #include<stdlib.h>
 #include<string.h>
+#include <curl/curl.h>
 
 int find (char ** lines, char * model, unsigned int nb_lines) {
 	int y = 9, i = 0, j = 0;
@@ -208,7 +209,7 @@ int camera_enabled (int * exit_script, FILE * LOG) {
 
 	else {
 		// Caméra non connectée
-		status = -2;
+		etat = -2;
 	}
 
 	for (int i = 0; i < 5000; i++) {
@@ -252,7 +253,7 @@ void send_request (int status) {
     CURL *curl;
     CURLcode res;
 
-    char * request_string = calloc(10000000, sizeof(char));
+    char * request_string = calloc(1000, sizeof(char));
     sprintf(request_string, "status=%d", status);
     
     curl_global_init(CURL_GLOBAL_ALL);
@@ -277,7 +278,9 @@ int main (void) {
 	int exit_script = 0;
 	int status = 0;
 	int disconnect_status = 0;
+	int request_sent = 0;
 
+	system("echo \"\" > data/tmp/capture.txt");
 	FILE * LOG = fopen("data/log/capture.txt", "a");
 	FILE * STATUS = fopen("data/status/camera_connected.txt", "w");
 
@@ -294,10 +297,9 @@ int main (void) {
 		status = camera_enabled(&exit_script, LOG);
 		fprintf(STATUS, "%d\n", status);
 
-		send_request(status);
-
 		if (status == 1) {
 			fprintf(LOG, "Caméra connectée.\nLancement du script.\n");
+			send_request(1);
 
 			// Activer LED de succès
 			// Envoyer un signal à l'application	
@@ -311,7 +313,10 @@ int main (void) {
 		else {
 			if (exit_script == 1) {
 				fprintf(LOG, "Arrêt du script.\n");
-				return 1;
+				if (request_sent != 1) {
+					send_request(-2);
+					request_sent = 1;
+				}
 			}
 
 			// Activer LED d'erreur
