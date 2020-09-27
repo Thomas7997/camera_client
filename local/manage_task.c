@@ -7,27 +7,29 @@ int main (void) {
 
     while (1) {
         FILE * MANAGE = fopen("commands/manage.txt", "r");
+        FILE * ARG = fopen("commands/arg.txt", "r");
 
-        fscanf(MANAGE, "%d", &command);
-        printf ("%d\n", command);
-        if (command == 1) {
-            // SAUVEGARDER LE LOG
-        
-            // EFFECTUER L'ACTION
-            system("./manage");
+        char arg = calloc(100, sizeof(char));
+        int auto = 0;
+
+        if (strcmp(arg, "select") == 0) {
+            // Transfert par sélection
+            system("./manage_selected");
         }
 
-        else if (command == 0) {
-            // SAUVEGARDER LE LOG
+        else if (strcmp(arg, "auto") == 0) {
+            // Transfert auto
+            system("./manage");
         }
 
         else {
             // ECRIRE LE FICHIER
-            system("echo \"0\" > commands/manage.txt");
+            // Attendre que le transfert s'active
         }
 
         fclose(MANAGE);
-
+        fclose(ARG);
+        free(arg);
         usleep(5000);
     }
 

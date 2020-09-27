@@ -9,6 +9,7 @@
 #define MAX_CAPTURES 10000
 #define TAILLE_NOM 30
 
+// Envoi de la photo
 void send_request (char *name) {
     CURL *curl;
     CURLcode res;
@@ -76,6 +77,7 @@ void linearize (char *base, char **lines) {
     }
 }
 
+// Pour l'envoi
 void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURES][TAILLE_NOM]) {
     int i = 0;
 
@@ -106,8 +108,16 @@ void enlever_last_car(char *chaine) {
     chaine[strlen(chaine)-1] = 0;
 }
 
+void select_medias () {
+    system("cd data/images/cloud;ls *.JPG > ../cloud.txt;cd ../../..");
+    FILE * CLOUD = fopen("./data/images/cloud.txt", "r");
+
+    fclose(CLOUD);
+}
+
 int main (void) {
-    FILE * CAPTURES = fopen("./data/images/liste.txt", "r");
+    system("cd data/images/gets;ls *.JPG > ../gets.txt;cd ../../..");
+    FILE * GETS = fopen("./data/images/gets.txt", "r");
 
     char liste_captures[MAX_CAPTURES][TAILLE_NOM];
     char nouvelles_captures[MAX_CAPTURES][TAILLE_NOM];
@@ -129,20 +139,22 @@ int main (void) {
         number++;
     }
 
-    if (strcmp(liste_captures[0], "ls: cannot access 'capt*': No such file or directory") == 0) {
+    if (strcmp(liste_captures[0], "ls: cannot access '*.JPG': No such file or directory") == 0) {
         printf ("OK\n");
 	    return 1;
     }
 
     i = 0;
 
+    
+
     transform_noms(liste_captures, nouvelles_captures, number);
 
     transferer_noms(nouvelles_captures, liste_captures);
 
-    fclose(CAPTURES);
+    fclose(GETS);
 
-    system("cd data/images/tmp;ls capt* > ../liste.txt;cd ../../..");
+    system("cd data/images/gets;ls *.JPG > ../gets.txt;cd ../../..");
 
     return 0;
 }
