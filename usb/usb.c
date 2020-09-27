@@ -7,6 +7,7 @@
 #include <gphoto2/gphoto2-port-library.h>
 #include <gphoto2/gphoto2-port-log.h>
 #include "gphoto2-port-info.h"
+#include <gphoto2/ptp/ptp.h>
 
 void handleError(int status) {
     printf ("%s\n", gp_port_result_as_string(status));
