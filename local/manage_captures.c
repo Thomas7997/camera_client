@@ -64,42 +64,32 @@ void transform_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char nouvelleListe[MA
     }
 }
 
-void linearize (char *base, char **lines) {
-    int i = 0, j = 0, x = 0;
-
-    while (lines[i][0] != 0) {
-        j = 0;
-        while (lines[i][j] != 0 && lines[i][j+1] != '\n') {
-            base[x++] = lines[i][j++];
-        }
-        i++;
-    }
-}
-
 void transferer_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char old[MAX_CAPTURES][TAILLE_NOM]) {
     int i = 0;
 
     char commande[250] = "";
-
     char * title = calloc(100, sizeof(char));
-
     time_t seconds; 
-    time(&seconds);
-
-    sprintf(title, "media_%ld.jpg", seconds);
+    FILE * HISTORIQUE = fopen("data/images/historique.txt", "w");
 
     while (liste[i][0] != 0) {
+        time(&seconds);
+
+        sprintf(title, "media_%ld.jpg", seconds);
+
         sprintf(commande, "mv ./data/images/tmp/%s ./data/images/tmp/%s;mv ./data/images/tmp/%s /home/thomas/camera_server/public", old[i], title, title);
+
 
         // Envoyer le nom du nouveau fichier transféré au socket
         system(commande);
 
         send_request(title);
-        free(title);
-        title = NULL;
         
         i++;
     }
+
+    free(title);
+    title = NULL;
 }
 
 void enlever_last_car(char *chaine) {
@@ -129,7 +119,7 @@ int main (void) {
         number++;
     }
 
-    if (strcmp(liste_captures[0], "ls: cannot access 'capt*': No such file or directory") == 0) {
+    if (strncmp(liste_captures[0], "ls: cannot access 'capt*': No such file or directory", 52) == 0) {
         printf ("OK\n");
 	    return 1;
     }
