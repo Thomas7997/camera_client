@@ -11,6 +11,8 @@
 
 // Envoi de la photo
 void send_request (char *name) {
+    printf("Requêtes\n");
+    
     CURL *curl;
     CURLcode res;
 
@@ -78,11 +80,21 @@ void linearize (char *base, char **lines) {
 }
 
 int compare_file_historique (char * file, char ** historique, int lines) {
+    int i;
 
+    for (i = 0; i < lines; i++) {
+        if (strcmp(historique[i], file) == 0) {
+           return 1; 
+        }
+    }
+
+    return 0;
 }
 
 // Pour l'envoi
 void transferer_noms (char ** liste, char ** old) {
+    printf ("Transferts\n\n\n");
+
     int i = 0;
 
     char commande[250] = "";
@@ -93,8 +105,7 @@ void transferer_noms (char ** liste, char ** old) {
     time_t seconds; 
     time(&seconds);
 
-    FILE * HISTORIQUE = fopen("data/images/historique.txt", "w");
-    FILE * RHISTORIQUE = fopen("data/images/historique.txt", "r");
+    FILE * HISTORIQUE = fopen("data/images/historique.txt", "a+");
 
     char ** hist_lines = calloc(MAX_CAPTURES, sizeof(char*));
 
@@ -106,14 +117,14 @@ void transferer_noms (char ** liste, char ** old) {
 
     x = 0;
 
-    while (fgets(hist_lines[x++], TAILLE_NOM, RHISTORIQUE));
+    while (fgets(hist_lines[x++], TAILLE_NOM, HISTORIQUE));
 
     char * current_file = calloc(TAILLE_NOM, sizeof(char));
 
     while (liste[i][0] != 0) {
         // Il y aura peut être besoin d'insérer les lignes précédentes dans cette boucle
 
-        sprintf(current_file, "%s.JPG", liste[i]);
+        sprintf(current_file, "%s", liste[i]);
 
         file_transfered = compare_file_historique(current_file, hist_lines, x);
 
@@ -121,6 +132,8 @@ void transferer_noms (char ** liste, char ** old) {
             sprintf(title, "media_%ld.jpg", seconds);
 
             sprintf(commande, "mv ./data/images/tmp/%s ./data/images/tmp/%s;mv ./data/images/tmp/%s /home/thomas/camera_server/public", old[i], title, title);
+
+            printf ("%s\n", commande);
 
             // Envoyer le nom du nouveau fichier transféré au socket
             system(commande);
@@ -142,7 +155,7 @@ void transferer_noms (char ** liste, char ** old) {
     free(title);
     title = NULL;
     fclose(HISTORIQUE);
-    fclose(RHISTORIQUE);
+    free(hist_lines);
 }
 
 void enlever_last_car(char *chaine) {
@@ -157,10 +170,13 @@ void select_medias () {
 }
 
 void getFiles (void) {
-    system("cd data/images/gets;gphoto2 --get-all-files;ls *.JPG > ../gets.txt;cd ../../..");
+    system("cd data/images/gets;rm -f *;gphoto2 --get-all-files;ls *.JPG > ../gets.txt;cd ../../..");
 }
 
+// A modifier
 unsigned int parseRating (char ** lines, int size) {
+    printf ("Parsing Rates\n");
+
     unsigned int i, x, y;
     int result;
 
@@ -177,6 +193,7 @@ unsigned int parseRating (char ** lines, int size) {
         x++;
 
         if (strncmp(buf, "Rating", 6) == 0) {
+            printf ("%s\n", buf);
             y = 0;
             strcpy(buf, "");
             while (lines[i][x] != 0) {
@@ -200,9 +217,11 @@ unsigned int parseRating (char ** lines, int size) {
 
 unsigned int getRating (char * file) {
     char commande[200] = "";
+    printf ("Rating\n%s\nsize : %d\n", file, strlen(file));
 
-    sprintf(commande, "cd data/images/gets;exiftool -filename -imagesize -exif:fnumber -xmp:all %s.JPG > ../tmp/exif.txt;cd ../../..", file);
+    sprintf(commande, "./rates.sh %s", file);
     system(commande);
+    printf ("%s\n", commande);
 
     FILE * RATING = fopen("data/images/tmp/exif.txt", "r");
 
@@ -215,10 +234,16 @@ unsigned int getRating (char * file) {
     // Lecture
     int x = 0;
 
+    printf ("Getting lines\n");
+
     // Remplissage
-    while (fgets(lignes[x++], 999, RATING));
+    while (fgets(lignes[x], 999, RATING)) {
+        printf ("%s\n", lignes[x++]);
+    }
 
     unsigned int rating = parseRating(lignes, x);
+
+    printf ("Finished\n");
 
     for (int i = 0; i < 10; i++) {
         free(lignes[i]);
@@ -231,6 +256,8 @@ unsigned int getRating (char * file) {
 }
 
 int eachFileRating (char ** liste, char ** transferts, unsigned int size) {
+    printf("For each rating\n");
+
     // Traiter chaque image
     int i, rating = -1, x = 0;
     FILE * RATING = fopen("data/images/rating.txt", "w");
@@ -251,7 +278,7 @@ int eachFileRating (char ** liste, char ** transferts, unsigned int size) {
 }
 
 int main (void) {
-    getFiles();
+    // getFiles();
     FILE * GETS = fopen("./data/images/gets.txt", "r");
 
     char ** liste_captures = calloc(MAX_CAPTURES, sizeof(char*));
@@ -281,7 +308,7 @@ int main (void) {
 
     i = 0;
     
-    int transferts_nb = eachFileRating(nouvelles_captures, transferts, number);
+    int transferts_nb = eachFileRating(liste_captures, transferts, number);
 
     transform_noms(transferts, nouvelles_captures, transferts_nb);
 
