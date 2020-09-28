@@ -216,11 +216,13 @@ unsigned int parseRating (char ** lines, int size) {
 }
 
 unsigned int getRating (char * file) {
-    char commande[200] = "";
+    char * commande = calloc(300, sizeof(char));
     printf ("Rating\n%s\nsize : %d\n", file, strlen(file));
 
     sprintf(commande, "./rates.sh %s", file);
+    // sprintf(commande, "cd data/images/gets;echo $(exiftool -filename -imagesize -exif:fnumber -xmp:all %s) > ../tmp/exif.txt;cd ../../..", file);
     system(commande);
+    // execl("/bin/bash", "bash", "-c", commande, (char *) NULL);
     printf ("%s\n", commande);
 
     FILE * RATING = fopen("data/images/tmp/exif.txt", "r");
@@ -251,6 +253,7 @@ unsigned int getRating (char * file) {
 
     fclose(RATING);
     free(lignes);
+    free(commande);
 
     return rating;
 }
