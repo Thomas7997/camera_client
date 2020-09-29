@@ -174,6 +174,7 @@ void getFiles (void) {
 }
 
 // A modifier
+/*
 unsigned int parseRating (char ** lines, int size) {
     printf ("Parsing Rates\n");
 
@@ -214,12 +215,17 @@ unsigned int parseRating (char ** lines, int size) {
     free(buf);
     return -1;
 }
+*/
+
+unsigned int parseRating (char ** lines) {
+    return lines[1][strlen(lines[1])];
+}
 
 unsigned int getRating (char * file) {
     char * commande = calloc(300, sizeof(char));
     printf ("Rating\n%s\nsize : %d\n", file, strlen(file));
 
-    sprintf(commande, "./rates.sh %s", file);
+    sprintf(commande, "cd data/images/gets;exiv2 %s -g Rating > ../tmp/exif.txt;cd ../../..", file);
     // sprintf(commande, "cd data/images/gets;echo $(exiftool -filename -imagesize -exif:fnumber -xmp:all %s) > ../tmp/exif.txt;cd ../../..", file);
     system(commande);
     // execl("/bin/bash", "bash", "-c", commande, (char *) NULL);
@@ -243,7 +249,7 @@ unsigned int getRating (char * file) {
         printf ("%s\n", lignes[x++]);
     }
 
-    unsigned int rating = parseRating(lignes, x);
+    unsigned int rating = parseRating(lignes);
 
     printf ("Finished\n");
 

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cd data/images/gets;echo $(exiftool -filename -imagesize -exif:fnumber -xmp:all $1) > ../tmp/exif.txt;cd ../../..
+cd data/images/gets;echo $(exiv2 $1 -g Rating > ../exif.txt) > ../tmp/exif.txt;cd ../../..
