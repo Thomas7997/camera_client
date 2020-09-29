@@ -221,6 +221,7 @@ unsigned int parseRating (char ** lines) {
     return lines[1][strlen(lines[1])];
 }
 
+/*
 unsigned int getRating (char * file) {
     char * commande = calloc(300, sizeof(char));
     printf ("Rating\n%s\nsize : %d\n", file, strlen(file));
@@ -230,14 +231,6 @@ unsigned int getRating (char * file) {
     system(commande);
     // execl("/bin/bash", "bash", "-c", commande, (char *) NULL);
     printf ("%s\n", commande);
-
-    FILE * RATING = fopen("data/images/tmp/exif.txt", "r");
-
-    char ** lignes = calloc(10, sizeof(char*));
-
-    for (int i = 0; i < 10; i++) {
-        lignes[i] = calloc(1000, sizeof(char));
-    }
 
     // Lecture
     int x = 0;
@@ -263,25 +256,63 @@ unsigned int getRating (char * file) {
 
     return rating;
 }
+*/
+
+void parseRatings (unsigned int * ratings, char ** lines, unsigned int size) {
+    // A coder
+}
 
 int eachFileRating (char ** liste, char ** transferts, unsigned int size) {
     printf("For each rating\n");
 
-    // Traiter chaque image
-    int i, rating = -1, x = 0;
-    FILE * RATING = fopen("data/images/rating.txt", "w");
+    char * commande = calloc(10000, sizeof(char));
+    char * nom = calloc(15, sizeof(char));
+    int * ratings = calloc(size, sizeof(int));
 
-    for (i = 0; i < size; i++) {
-        rating = getRating(liste[i]);
+    sprintf(commande, "cd data/images/gets;exiv2 ");
 
-        if (rating == 5) {
-            transferts[x++] = liste[i];
-        }
-
-        fprintf(RATING, "%s : %d\n", liste[i], rating);
+    for (int i = 0; i < size; i++) {
+        sprintf(nom, "%s ", liste[i]);
+        strcat(commande, nom);
     }
 
+    sprintf(commande, "%s > ../tmp/exif.txt", commande);
+
+    system(commande);
+
+    // Traiter chaque image
+    int i, rating = -1, x = 0;
+
+    FILE * RATING = fopen("data/images/rating.txt", "w");
+    FILE * RATINGS = fopen("data/images/tmp/exif.txt", "r");
+
+    char ** lignes = calloc(10000, sizeof(char*));
+
+    for (int i = 0; i < 10; i++) {
+        lignes[i] = calloc(100, sizeof(char));
+    }
+
+    parseRatings(ratings, lignes, size);
+
+    for (i = 0; i < size; i++) {
+        // Pour chaque rating recu
+        if (ratings[i] == 5) {
+            transferts[x++] = liste[i];
+        }
+    }
+
+    fprintf(RATING, "%s : %d\n", liste[i], rating);
+
     fclose(RATING);
+    fclose(RATINGS);
+
+    for (int i = 0; i < 10000; i++) {
+        free(lignes[i]);
+    }
+
+    free(lignes);
+    free(commande);
+    free(nom);
 
     return x;
 }
