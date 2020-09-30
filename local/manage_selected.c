@@ -92,18 +92,13 @@ int compare_file_historique (char * file, char ** historique, int lines) {
 }
 
 // Pour l'envoi
-void transferer_noms (char ** liste, char ** old) {
+void transferer_noms (char ** liste) {
     printf ("Transferts\n\n\n");
 
     int i = 0;
 
     char commande[250] = "";
     int file_transfered = 0;
-
-    char * title = calloc(100, sizeof(char));
-
-    time_t seconds; 
-    time(&seconds);
 
     FILE * HISTORIQUE = fopen("data/images/historique.txt", "a+");
 
@@ -129,9 +124,7 @@ void transferer_noms (char ** liste, char ** old) {
         file_transfered = compare_file_historique(current_file, hist_lines, x);
 
         if (file_transfered == 0) {
-            sprintf(title, "media_%ld.jpg", seconds);
-
-            sprintf(commande, "mv ./data/images/tmp/%s ./data/images/tmp/%s;mv ./data/images/tmp/%s /home/thomas/camera_server/public", old[i], title, title);
+            sprintf(commande, "mv ./data/images/gets/%s /home/thomas/camera_server/public", liste[i]);
 
             printf ("%s\n", commande);
 
@@ -139,9 +132,9 @@ void transferer_noms (char ** liste, char ** old) {
             system(commande);
 
             // ÉCIRE DANS L'HISTORIQUE DES TRANSFERTS
-            fprintf(HISTORIQUE, "%s\n", title);
+            fprintf(HISTORIQUE, "%s\n", liste[i]);
 
-            send_request(title);
+            send_request(liste[i]);
             
             i++;
         }
@@ -152,8 +145,6 @@ void transferer_noms (char ** liste, char ** old) {
     }
 
     free(current_file);
-    free(title);
-    title = NULL;
     fclose(HISTORIQUE);
     free(hist_lines);
 }
@@ -170,7 +161,8 @@ void select_medias () {
 }
 
 void getFiles (void) {
-    system("cd data/images/gets;rm -f *;gphoto2 --get-all-files;ls *.JPG > ../gets.txt;cd ../../..");
+    // system("cd data/images/gets;rm -f *;gphoto2 --get-all-files;ls *.JPG > ../gets.txt;cd ../../..");
+    system("cd data/images/gets;ls *.JPG > ../gets.txt;cd ../../..");
 }
 
 // A modifier
@@ -299,7 +291,9 @@ int eachFileRating (char ** liste, char ** transferts, unsigned int size) {
 
     sprintf(commande, "cd data/images/gets;exiv2 -g Rating %s > ../tmp/exif.txt;cd ../../..", files);
 
+    printf ("Lancement de la commande.\n");
     system(commande);
+    printf ("Commande lancée.\n");
 
     // Traiter chaque image
     int i = 0, rating = -1, x = 0;
@@ -343,7 +337,7 @@ int eachFileRating (char ** liste, char ** transferts, unsigned int size) {
 }
 
 int main (void) {
-    // getFiles();
+    getFiles();
     FILE * GETS = fopen("./data/images/gets.txt", "r");
 
     char ** liste_captures = calloc(MAX_CAPTURES, sizeof(char*));
@@ -375,9 +369,9 @@ int main (void) {
     
     int transferts_nb = eachFileRating(liste_captures, transferts, number);
 
-    transform_noms(transferts, nouvelles_captures, transferts_nb);
+    // transform_noms(transferts, nouvelles_captures, transferts_nb);
 
-    transferer_noms(nouvelles_captures, transferts);
+    transferer_noms(transferts);
 
     fclose(GETS);
 

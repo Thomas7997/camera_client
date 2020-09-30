@@ -54,7 +54,8 @@ void transform_noms (char liste[MAX_CAPTURES][TAILLE_NOM], char nouvelleListe[MA
     int i = 0, j;
 
     for (i = 0; i < size; i++) {
-        j = 0;
+        j = 2;
+
         while (liste[i][j] != '.') {
             nouvelleListe[i][j] = liste[i][j];
             printf ("%c", nouvelleListe[i][j]);

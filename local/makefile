@@ -1,4 +1,10 @@
-all : MANAGE TRANSFERT2 SYNC USER ARCHITECTURE CONSTRUCTION CAPTURE_EXEC CAPTURE_ERRORS
+all : MANAGE TRANSFERT2 SYNC USER ARCHITECTURE CONSTRUCTION CAPTURE_EXEC CAPTURE_ERRORS MANAGE_SELECTED
+
+manage_selected.o : manage_selected.c
+	gcc -c -Wall manage_selected.c
+
+MANAGE_SELECTED : manage_selected.o
+	gcc -o -Wall manage_selected.o -lcurl
 
 sync.o : sync.c 
 	gcc -c -Wall sync.c
