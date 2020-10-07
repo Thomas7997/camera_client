@@ -162,52 +162,8 @@ void select_medias () {
 
 void getFiles (void) {
     // system("cd data/images/gets;rm -f *;gphoto2 --get-all-files;ls *.JPG > ../gets.txt;cd ../../..");
-    system("cd data/images/gets;ls *.JPG > ../gets.txt;cd ../../..");
+    system("gphoto2 --list-files > data/images/gets.txt");
 }
-
-// A modifier
-/*
-unsigned int parseRating (char ** lines, int size) {
-    printf ("Parsing Rates\n");
-
-    unsigned int i, x, y;
-    int result;
-
-    char * buf = calloc(100, sizeof(char));
-
-    for (i = 0; i < size; i++) {
-        x = 0;
-        y = 0;
-
-        while (lines[i][x] != ':') {
-            buf[y++] = lines[i][x++];
-        }
-
-        x++;
-
-        if (strncmp(buf, "Rating", 6) == 0) {
-            printf ("%s\n", buf);
-            y = 0;
-            strcpy(buf, "");
-            while (lines[i][x] != 0) {
-                buf[y++] = lines[i][x++];
-            }
-
-            y = strlen(lines[i]);
-
-            // sscanf(lines[i], "%d", &result);
-            sscanf(buf, "%d", &result);
-            return result;
-            break;
-        }
-
-        strcpy(buf, "");
-    }
-
-    free(buf);
-    return -1;
-}
-*/
 
 unsigned int parseRating (char * line) {
     int i;
@@ -271,7 +227,139 @@ void parseRatings (unsigned int * ratings, char ** lines, unsigned int size) {
     free(line);
 }
 
-int eachFileRating (char ** liste, char ** transferts, unsigned int size) {
+// A finir car ca ne fonctionne que sur le premier élément (dossier)
+int select_dir (unsigned char * dossier, FILE * File) {
+    int k=0;
+    int l=0;
+    int r=0;
+    char TAB1[TMaxL]="";
+    char tmp[100]={0};
+    int tab[TMax]={0};
+    char code[TMax]="";
+    char TAB2[10]="Le dossier";
+    char TAB3[5]="aucun";
+    File = fopen("files.txt", "r");
+    if (File == NULL) {
+        exit(0);
+    }
+   
+    int rado=0;
+    int longueur=0;
+    for(int aze=0; aze<50000; aze++) {
+        fgets(tmp,2000,File);
+        while(tmp[rado]!=0) { 
+            TAB1[longueur]=tmp[rado];
+            longueur=longueur+1;
+            rado=rado+1;
+        }
+
+        for(int zer=0; zer < 100; zer++) {
+            tmp[zer]=0;
+        }
+        
+        rado=0;
+    }
+
+    int x, c, same = 1;
+
+    for (c = 0; c < longueur; c++) {
+        same = 1;
+        for (x = 0; x < 10; x++) {
+            if (TAB1[c+x] != TAB2[x]) {
+                same = 0;
+                break;
+            }
+        }
+
+        if (same == 1) {
+            tab[k]=c+5;
+            k=k+1;
+        }
+    }
+
+    int g=0;
+    for(int rty=0;rty<k;rty++) {
+        g=tab[rty];
+        for (int h=0; h<60; h++) {
+            same = 1;
+            for (int y = 0; y < 4; y++) {
+                if(TAB1[g+h+y]!=TAB3[y]) {
+                    same = 0;
+                    break;
+                }
+            }
+
+            if (same == 1) {
+                tab[rty]=0;
+            }
+        }
+    }
+    int q=0;
+    int t=0;
+
+    char * result = calloc(100, sizeof(char));
+
+    for(int s=0; s < k; s++) {
+        if(tab[s]!=0) {
+            // printf("%c",tab[s]);
+            t=tab[s];
+            for (int a=0; a<100; a++) {
+                if (TAB1[t+a]=='/') {
+                    while (TAB1[t+a+q]!='c') {
+                        code[q]=TAB1[t+a+q];
+                        q++;
+                    }
+                    goto label;
+                }
+            }
+        }
+    }
+
+    label: {
+        for (int i = 0; i < strlen(code)-3; i++) {
+            result[i] = code[i];
+        }
+        
+        printf("%s", result);
+        printf("\n");
+    }
+
+    free(result);
+        
+    return 0;
+}
+
+unsigned int read_dir_list (unsigned char ** dirs, unsigned int nb) {
+
+}
+
+unsigned int read_file_list (unsigned char ** files, unsigned char ** lines, unsigned int nb, unsigned int start) {
+    unsigned int line_size, x = 0, i, y;
+
+    // Parser la liste de fichiers
+    for (i = start; i < lines_nb; i++) {
+        if (lines[i][0] == '#') {
+            for (y = 7; y <= 12; y++) {
+                files[x++][y-7] = lines[i][y];
+            }
+        }
+    }
+
+    return x+1;
+}
+
+unsigned int blockerize (unsigned char *** block, unsigned char ** files, unsigned char ** dirs, unsigned int files_nb, unsigned int dirs_nb) {
+    /* ... */
+    // Tout unir dans un block
+}
+
+unsigned int get_files_and_dirs (char *** dirs, char ** lines, unsigned int nb) {
+    // Executer read_dir_list, read_file_list puis blockerize ...
+    unsigned int lines = 0;
+    return lines+1;
+}
+
+int eachFileRating (char *** dirs, char ** transferts, unsigned int size) {
     printf("For each rating\n");
 
     char * commande = calloc(10000, sizeof(char));
@@ -282,14 +370,13 @@ int eachFileRating (char ** liste, char ** transferts, unsigned int size) {
 
     int * ratings = calloc(size, sizeof(int));
 
+    system("echo \"\" > ../tmp/exif.txt");
+
     for (int i = 0; i < size; i++) {
-        sprintf(nom, "%s ", liste[i]);
-        strcat(commande, nom);
+        // Commande
+        sprintf(commande, "./exiv_xmp %s >> ../tmp/exif.txt", dirs[y][i]);
+        system(commande);
     }
-
-    strcpy(files, commande);
-
-    sprintf(commande, "cd data/images/gets;exiv2 -g Rating %s > ../tmp/exif.txt;cd ../../..", files);
 
     printf ("Lancement de la commande.\n");
     system(commande);
@@ -343,6 +430,7 @@ int main (void) {
     char ** liste_captures = calloc(MAX_CAPTURES, sizeof(char*));
     char ** transferts = calloc(MAX_CAPTURES, sizeof(char*));
     char ** nouvelles_captures = calloc(MAX_CAPTURES, sizeof(char*));
+    char *** dirs = calloc(MAX_CAPTURES, sizeof(char**));
 
     int i, j, number = 0;
 
@@ -350,6 +438,10 @@ int main (void) {
         liste_captures[i] = calloc(TAILLE_NOM, sizeof(char));
         transferts[i] = calloc(TAILLE_NOM, sizeof(char));
         nouvelles_captures[i] = calloc(TAILLE_NOM, sizeof(char));
+        dirs[i] = calloc(MAX_CAPTURES, sizeof(char*));
+        for (int z = 0; z < MAX_CAPTURES; z++) {
+            dirs[i][z] = calloc(TAILLE_NOM, sizeof(char));
+        }
     }
 
     i = 0;
@@ -360,14 +452,11 @@ int main (void) {
         number++;
     }
 
-    if (strcmp(liste_captures[0], "ls: cannot access '*.JPG': No such file or directory") == 0) {
-        printf ("OK\n");
-	    return 1;
-    }
-
     i = 0;
-    
-    int transferts_nb = eachFileRating(liste_captures, transferts, number);
+
+
+    unsigned int files_nb = get_files_and_dirs(dirs, liste_captures, number);
+    int transferts_nb = eachFileRating(dirs, transferts, files_nb);
 
     // transform_noms(transferts, nouvelles_captures, transferts_nb);
 
@@ -379,11 +468,16 @@ int main (void) {
         free(liste_captures[i]);
         free(transferts[i]);
         free(nouvelles_captures[i]);
+        for (int z = 0; z < TAILLE_NOM; z++) {
+            free(dirs[i][z]);
+        }
+        free(dirs[i]);
     }
 
     free(liste_captures);
     free(transferts);
     free(nouvelles_captures);
+    free(dirs);
 
     return 0;
 }
