@@ -126,7 +126,7 @@ void transferer_noms (char ** liste) {
         file_transfered = compare_file_historique(current_file, hist_lines, x);
 
         if (file_transfered == 0) {
-            sprintf(commande, "mv ./data/images/gets/%s /home/thomas/camera_server/public", liste[i]);
+            sprintf(commande, "gphoto2 --get-file=\"%s\";mv ./data/images/gets/%s /home/thomas/camera_server/public", liste[i], liste[i]);
 
             printf ("%s\n", commande);
 
@@ -356,7 +356,6 @@ unsigned int get_files_and_dirs (char *** dirs_b, char ** lines, unsigned int nb
     unsigned int ref_line;
     char ** files = calloc(10000, sizeof(char*));
     char ** dirs = calloc(10000, sizeof(char*));
-    unsigned int lines_nb = read_dir_list(dirs, lines, nb, &ref_line), tmp_size;
     unsigned int x, y, z;
 
     for (int i = 0; i < 10000; i++) {
@@ -364,11 +363,15 @@ unsigned int get_files_and_dirs (char *** dirs_b, char ** lines, unsigned int nb
         dirs[i] = calloc(100, sizeof(char));
     }
 
+    unsigned int lines_nb = read_dir_list(dirs, lines, nb, &ref_line), tmp_size, tmp_y = 0;
+
     for (x = 0; x < lines_nb; x++) {
         tmp_size = read_file_list(files, lines, nb, ref_line, z); // ref_line est la ligne où commencer
         for (y = 0; y < tmp_size; y++) {
-            strcpy(dirs_b[x][y],files[x+y]);
+            strcpy(dirs_b[x][y], "");
+            sprintf(dirs_b[x][y], "%s/%s", dirs[x], dirs[tmp_size+y]);
         }
+        tmp_y += tmp_size;
         z += tmp_size-1;
     }
 
