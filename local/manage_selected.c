@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <curl/curl.h>
 #include <time.h>
-#define MAX 80 
+#define MAX 80
 
 #define MAX_CAPTURES 100000
 #define TAILLE_NOM 100
@@ -21,6 +21,7 @@ void send_request (char *name) {
 
     char * request_string = calloc(10000000, sizeof(char));
     sprintf(request_string, "name=%s", name);
+
     
     curl_global_init(CURL_GLOBAL_ALL);
     
@@ -165,7 +166,7 @@ void select_medias () {
 
 void getFiles (void) {
     // system("cd data/images/gets;rm -f *;gphoto2 --get-all-files;ls *.JPG > ../gets.txt;cd ../../..");
-    system("gphoto2 --list-files > data/images/gets.txt");
+    system("./rates.sh");
 }
 
 unsigned int parseRating (char * line) {
@@ -233,11 +234,11 @@ void parseRatings (unsigned int * ratings, char ** lines, unsigned int size) {
 
 // A finir car ca ne fonctionne que sur le premier élément (dossier)
 
-int select_dir (unsigned char * dossier, FILE * File) {
+int select_dir (unsigned char * dossiers, FILE * File) {
     int k=0;
     int l=0;
     int r=0;
-    char TAB1[TMaxL]="";
+    char TAB1[TMaxL] = "";
     char tmp[100]={0};
     int tab[TMax]={0};
     char code[TMax]="";
@@ -334,32 +335,47 @@ int select_dir (unsigned char * dossier, FILE * File) {
     return 0;
 }
 
+void clearBufLast (char * buf, unsigned int len, unsigned int nb) {
+    int i;
+
+    for (i = len; i >= len - nb; i--)
+        buf[i] = 0;
+    return;
+}
+
 unsigned int read_dir_list (char ** dirs, char ** lines, unsigned int nb, unsigned int * ref) {
     int i, j, x = 0, o = 0, y;
     char * current_line = calloc(100, sizeof(char));
+    char key = 0;
 
     for (i = 0; i < nb; i++) {
         if (lines[i][0] != '#') {
             printf ("%s\n", lines[i]);
             strcpy(current_line, "");
-            y = 0;
+            y = 1;
             j = 0;
-            while (lines[i][j++] != '«');
-            j++;
+            current_line[0] = '/';
+            while (lines[i][j++] != '/');
 
-            while (lines[i][j] != ' ') {
+            while (lines[i][j] != 'n' && lines[i][j] != 'c') {
                 current_line[y++] = lines[i][j++];
             }
 
-            printf ("%s\n%d\n", current_line, j);
+            key = current_line[y-1];
+            clearBufLast(current_line, y, 5);
 
-            if (lines[i][j+2] == 'c') {
-                printf ("%s\n", current_line);
+            printf ("%s\n%d\n", current_line, y);
+
+            if (key == 'c') {
                 strcpy(dirs[x++], current_line);
             }
 
-            else if (lines[i][j+2] != 'n') {
-                printf ("Index error : %c\n", lines[i][j+2]);
+            else if (key != 'n') {
+                printf ("Index error : %c\n", key);
+            }
+
+            else {
+                printf ("Vide\n");
             }
         }
     }
@@ -496,7 +512,6 @@ int eachFileRating (char *** dirs, char ** transferts, unsigned int * dir_sizes,
 }
 
 int main (void) {
-    printf ("\uAE\n");
     getFiles();
     FILE * GETS = fopen("./data/images/gets.txt", "r");
 

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cd data/images/gets;echo $(exiv2 $1 -g Rating > ../exif.txt) > ../tmp/exif.txt;cd ../../..
+gphoto2 --list-files > data/images/gets.txt
