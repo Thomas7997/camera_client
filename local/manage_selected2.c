@@ -10,7 +10,30 @@
 #define TAILLE_NOM 100
 #define TMaxL 1000
 #define TMax 100
-#define MAX_DIRS 20
+#define MIN_DIRS 10
+
+struct _Dossier {
+    char * title;
+    char ** images;
+    unsigned int nb_images;
+    unsigned int ref_line;
+};
+
+typedef struct _Dossier Dossier;
+
+void add_dossier (Dossier * dossiers, char ** images, unsigned int index) {
+    unsigned int x = 0;
+
+    while (images[x][0] != 0) {
+        strcpy(dossiers[index].images[x], images[x++]);
+    }
+}
+
+unsigned int read_dirs (char ** dirs, char ** lines, unsigned int nb, unsigned int * nb_lines) {
+    unsigned int x = 3;
+
+    return x;
+}
 
 // Envoi de la photo
 void send_request (char *name) {
@@ -88,7 +111,7 @@ int compare_file_historique (char * file, char ** historique, int lines) {
 
     for (i = 0; i < lines; i++) {
         if (strcmp(historique[i], file) == 0) {
-           return 1; 
+           return 1;
         }
     }
 
@@ -338,49 +361,32 @@ void clearBufLast (char * buf, unsigned int len, unsigned int nb) {
     return;
 }
 
-unsigned int read_dir_list (char ** dirs, char ** lines, unsigned int nb, unsigned int * ref) {
-    int i, j, x = 0, o = 0, y;
-    char * current_line = calloc(100, sizeof(char));
-    char key = 0;
+unsigned int read_dir_list (char ** lines, unsigned int nb, Dossier * dossiers) {
+    char ** dirs = calloc(MIN_DIRS, sizeof(char*));
+    unsigned int * ref_lines = calloc(MIN_DIRS, sizeof(unsigned int));
 
-    for (i = 0; i < nb; i++) {
-        if (lines[i][0] != '#') {
-            printf ("%s\n", lines[i]);
-            strcpy(current_line, "");
-            y = 1;
-            j = 0;
-            current_line[0] = '/';
-            while (lines[i][j++] != '/');
-
-            while (lines[i][j] != 'n' && lines[i][j] != 'c') {
-                current_line[y++] = lines[i][j++];
-            }
-
-            key = current_line[y-1];
-            clearBufLast(current_line, y, 5);
-
-            printf ("%s\n%d\n", current_line, y);
-
-            if (key == 'c') {
-                strcpy(dirs[x++], current_line);
-            }
-
-            else if (key != 'n') {
-                printf ("Index error : %c\n", key);
-            }
-
-            else {
-                printf ("Vide\n");
-            }
-        }
+    for (int i = 0; i < MIN_DIRS; i++) {
+        dirs[i] = calloc(100, sizeof(char));
     }
 
-    free(current_line);
+    unsigned int dirs_nb = read_dirs(dirs, lines, nb, ref_lines);
+    
+    for (int i = 0; i < dirs_nb; i++) {
+        strcpy(dossiers[i].title, dirs[i]);
+        dossiers[i].ref_line = ref_lines[i];
+    }
 
-    return x+1; // Nombre de dossiers contenant des fichiers
+    for (int i = 0; i < MIN_DIRS; i++) {
+        free(dirs[i]);
+    }
+
+    free(dirs);
+    free(ref_lines);
+
+    return dirs_nb; // Nombre de dossiers contenant des fichiers
 }
 
-unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsigned int starts, unsigned int start) {
+unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsigned int starts) {
     unsigned int line_size, x = 0, i, y;
 
     // Parser la liste de fichiers
@@ -398,43 +404,42 @@ unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsi
     return x+1;
 }
 
-unsigned int get_files_and_dirs (char *** dirs_b, char ** lines, unsigned int nb, unsigned int * sizes_list) {
+unsigned int get_files_and_dirs (Dossier * dirs_b, char ** lines, unsigned int nb, unsigned int * sizes_list) {
     // Executer read_dir_list, read_file_list puis blockerize ...
     unsigned int ref_line;
     char ** files = calloc(10000, sizeof(char*));
-    char ** dirs = calloc(10000, sizeof(char*));
     unsigned int x, y, z;
 
     printf ("Parsing ...\n");
 
     for (int i = 0; i < 10000; i++) {
-        files[i] = calloc(100, sizeof(char));
-        dirs[i] = calloc(100, sizeof(char));
+        files[i] = malloc(100*sizeof(char));
     }
 
-    unsigned int lines_nb = read_dir_list(dirs, lines, nb, &ref_line), tmp_size, tmp_y = 0;
+    unsigned int lines_nb = read_dir_list(lines, nb, dirs_b), tmp_size, tmp_y = 0;
 
     for (x = 0; x < lines_nb; x++) {
-        tmp_size = read_file_list(files, lines, nb, ref_line, z); // ref_line est les lignes où commencer
-        for (y = 0; y < tmp_size; y++) {
-            strcpy(dirs_b[x][y], "");
-            sprintf(dirs_b[x][y], "%s/%s", dirs[x], dirs[tmp_size+y]);
+        for (int i = 0; i < 10000; i++) {
+            for (int j = 0; j < 100; j++) {
+                files[i][j] = 0;
+            }
         }
-        tmp_y += tmp_size;
-        z += tmp_size-1;
+
+        tmp_size = read_file_list(files, lines, nb, dirs_b[x].ref_line); // ref_line est la lignes où commencer
+        add_dossier(dirs_b, files, x++);
+        // tmp_y += tmp_size;
+        // z += tmp_size-1;
     }
 
     for (int i = 0; i < 10000; i++) {
         free(files[i]);
-        free(dirs[i]);
     }
 
     free(files);
-    free(dirs);
     return lines_nb+1;
 }
 
-int eachFileRating (char *** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs) {
+int eachFileRating (Dossier * dossiers, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs) {
     printf("For each rating\n");
     int y = 0;
 
@@ -452,7 +457,7 @@ int eachFileRating (char *** dirs, char ** transferts, unsigned int * dir_sizes,
     for (int y = 0; y < nb_dirs; y++) {
         for (int i = 0; i < dir_sizes[y]; i++) {
             // Commande
-            sprintf(commande, "./exiv_xmp %s >> ../tmp/exif.txt", dirs[y][i]);
+            sprintf(commande, "./exiv_xmp %s >> ../tmp/exif.txt", dossiers[y].images[i]);
             printf ("%s\n", commande);
             system(commande);
         }
@@ -483,10 +488,10 @@ int eachFileRating (char *** dirs, char ** transferts, unsigned int * dir_sizes,
             // Pour chaque rating recus
 
             if (ratings[i+y] == 5) {
-                strcpy(transferts[x++], dirs[y][i]);
+                strcpy(transferts[x++], dossiers[y].images[i]);
             }
 
-            fprintf(RATING, "%s : %d\n", dirs[y][i], ratings[i+y]);
+            fprintf(RATING, "%s : %d\n", dossiers[y].images[i], ratings[i+y]);
         }
     }
 
@@ -513,7 +518,6 @@ int main (void) {
     char ** liste_captures = calloc(MAX_CAPTURES, sizeof(char*));
     char ** transferts = calloc(MAX_CAPTURES, sizeof(char*));
     char ** nouvelles_captures = calloc(MAX_CAPTURES, sizeof(char*));
-    char *** dirs = calloc(MAX_DIRS, sizeof(char**));
     unsigned int * dir_sizes = calloc(1000, sizeof(unsigned int));
 
     int i, j, number = 0;
@@ -523,14 +527,6 @@ int main (void) {
         transferts[i] = calloc(TAILLE_NOM, sizeof(char));
         nouvelles_captures[i] = calloc(TAILLE_NOM, sizeof(char));
     }
-
-    for (int s = 0; s < MAX_DIRS; s++) {
-        dirs[i] = calloc(MAX_CAPTURES, sizeof(char*));
-        for (int z = 0; z < MAX_CAPTURES; z++) {
-            dirs[i][z] = calloc(TAILLE_NOM, sizeof(char));
-        }
-    }
-    
 
     i = 0;
 
@@ -544,8 +540,10 @@ int main (void) {
 
     printf ("1\n");
 
-    unsigned int files_nb = get_files_and_dirs(dirs, liste_captures, number, dir_sizes);
-    int transferts_nb = eachFileRating(dirs, transferts, dir_sizes, files_nb);
+    Dossier * dossiers = calloc(MIN_DIRS, sizeof(Dossier));
+
+    unsigned int files_nb = get_files_and_dirs(dossiers, liste_captures, number, dir_sizes);
+    int transferts_nb = eachFileRating(dossiers, transferts, dir_sizes, files_nb);
 
     // transform_noms(transferts, nouvelles_captures, transferts_nb);
 
@@ -559,18 +557,12 @@ int main (void) {
         free(nouvelles_captures[i]);
     }
 
-    for (int s = 0; s < MAX_DIRS; s++) {
-        for (int z = 0; z < MAX_CAPTURES; z++) {
-            free(dirs[i][z]);
-        }
-        free(dirs[i]);
-    }
-
+    free(dossiers);
     free(liste_captures);
     free(transferts);
     free(nouvelles_captures);
-    free(dirs);
     free(dir_sizes);
+    free(dossiers);
 
     return 0;
 }

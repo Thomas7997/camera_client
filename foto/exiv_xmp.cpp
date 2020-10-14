@@ -60,14 +60,9 @@ int main(int argc, char** argv)
 
     gp_camera_new (&camera);
     status = gp_camera_init(camera, context);
-    handleError(status);
     status = gp_file_new(&file);
-    handleError(status);
     status = gp_camera_file_get(camera, argv[1], argv[2], GP_FILE_TYPE_NORMAL, file, context);
-    handleError(status);
     status = gp_file_get_data_and_size (file, (const char**) &data, &size);
-
-    std::cout << size;
 
     // const std::vector<uint8_t> bytes = std::vector<uint8_t> vec(str.begin(), str.end());
 
@@ -76,8 +71,6 @@ int main(int argc, char** argv)
 
   Exiv2::XmpParser::initialize();
   ::atexit(Exiv2::XmpParser::terminate);
-
-  std::cout << data << "\n";
  
   try
   {
@@ -108,14 +101,14 @@ int main(int argc, char** argv)
     for (Exiv2::XmpData::const_iterator md = xmpData.begin();
          md != xmpData.end(); ++md) 
       {
-        std::cout << std::setfill(' ') << std::left
-                  << std::setw(44)
-                  << md->key() << " "
-                  << std::setw(9) << std::setfill(' ') << std::left
-                  << md->typeName() << " "
-                  << std::dec << std::setw(3)
-                  << std::setfill(' ') << std::right
-                  << md->count() << "  "
+        std::cout //<< std::setfill(' ') << std::left
+        //           << std::setw(44)
+        //           << md->key() << " "
+        //           << std::setw(9) << std::setfill(' ') << std::left
+        //           << md->typeName() << " "
+        //           << std::dec << std::setw(3)
+        //           << std::setfill(' ') << std::right
+        //           << md->count() << "\n"
                   << std::dec << md->toString()
                   << std::endl;
       }
@@ -130,3 +123,5 @@ catch (Exiv2::AnyError& e)
     return -1;
   }
 }
+
+// Compilation : g++ -o exiv_xmp exiv_xmp.cpp -lexiv2 -lgphoto2 -lgphoto2_port
