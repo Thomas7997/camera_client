@@ -517,7 +517,6 @@ int main (void) {
 
     char ** liste_captures = calloc(MAX_CAPTURES, sizeof(char*));
     char ** transferts = calloc(MAX_CAPTURES, sizeof(char*));
-    char ** nouvelles_captures = calloc(MAX_CAPTURES, sizeof(char*));
     unsigned int * dir_sizes = calloc(1000, sizeof(unsigned int));
 
     int i, j, number = 0;
@@ -525,7 +524,6 @@ int main (void) {
     for (i = 0; i < MAX_CAPTURES; i++) {
         liste_captures[i] = calloc(TAILLE_NOM, sizeof(char));
         transferts[i] = calloc(TAILLE_NOM, sizeof(char));
-        nouvelles_captures[i] = calloc(TAILLE_NOM, sizeof(char));
     }
 
     i = 0;
@@ -538,14 +536,10 @@ int main (void) {
 
     i = 0;
 
-    printf ("1\n");
-
     Dossier * dossiers = calloc(MIN_DIRS, sizeof(Dossier));
 
     unsigned int files_nb = get_files_and_dirs(dossiers, liste_captures, number, dir_sizes);
     int transferts_nb = eachFileRating(dossiers, transferts, dir_sizes, files_nb);
-
-    // transform_noms(transferts, nouvelles_captures, transferts_nb);
 
     transferer_noms(transferts);
 
@@ -554,13 +548,11 @@ int main (void) {
     for (i = 0; i < MAX_CAPTURES; i++) {
         free(liste_captures[i]);
         free(transferts[i]);
-        free(nouvelles_captures[i]);
     }
 
     free(dossiers);
     free(liste_captures);
     free(transferts);
-    free(nouvelles_captures);
     free(dir_sizes);
     free(dossiers);
 
