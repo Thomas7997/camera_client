@@ -27,8 +27,8 @@ capture_exec.o : capture_exec.c
 capture_errors.o : capture_errors.c
 	gcc -c -Wall capture_errors.c
 
-MANAGE_SELECTED : manage_selected.o
-	gcc -o manage_selected manage_selected.o -lcurl
+MANAGE_SELECTED : manage_selected.c
+	gcc -o manage_selected manage_selected.c -lcurl
 
 MANAGE : manage_captures.o
 	gcc -o manage manage_captures.o -lcurl

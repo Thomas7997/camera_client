@@ -8,7 +8,7 @@
 
 #define MAX_CAPTURES 100000
 #define TAILLE_NOM 100
-#define TMaxL 1000
+#define TMaxL 1500000
 #define TMax 100
 #define MIN_DIRS 10
 
@@ -21,18 +21,18 @@ struct _Dossier {
 
 typedef struct _Dossier Dossier;
 
+void clearBufLast (char * buf, unsigned int len, unsigned int nb) {
+    int i;
+
+    for (i = len; i >= len - nb; i--)
+        buf[i] = 0;
+    return;
+}
+
 void add_dossier (Dossier * dossiers, char ** images, unsigned int index) {
     unsigned int x = 0;
 
-    while (images[x][0] != 0) {
-        strcpy(dossiers[index].images[x], images[x++]);
-    }
-}
-
-unsigned int read_dirs (char ** dirs, char ** lines, unsigned int nb, unsigned int * nb_lines) {
-    unsigned int x = 3;
-
-    return x;
+    dossiers[index].images = images;
 }
 
 // Envoi de la photo
@@ -77,6 +77,179 @@ void afficher_tab2 (char ** tab) {
         }
         printf ("\n");
     }
+}
+
+
+unsigned int load_dossiers (char ** dossiers, const char * path, unsigned int * refs) {
+    int k=0; //nb de fois ou on detecte les mots "le dossier"
+    int l=0;
+    int r=0;
+    char TAB1[TMaxL] = ""; // va contenir tt le file.txt
+    char tmp[100]={0};
+    int tab[TMax]={0}; //liée  a k contient les indice de ou les mots "le dossier" sont dans le TAB1
+    char code[TMax]=""; //contient les noms des dossiers separés par "+%+"
+    char code1[500]="";                    
+    char TAB2[10]= "Le dossier";
+    char TAB3[5]="aucun";
+    unsigned int * ks = calloc(10, sizeof(unsigned int));
+
+    FILE * File;
+    File = fopen(path, "r");
+    if (File == NULL) {
+        exit(0);
+    }
+  
+    int rado = 0;
+    int longeur = 0;
+    // boucle for pour mettre dans TAB1 
+    for(int aze=0; aze<50000; aze++) {
+        fgets(tmp,2000,File);
+        while(tmp[rado] != 0) { 
+            TAB1[longeur] = tmp[rado];
+            longeur = longeur+1;
+            rado = rado + 1;
+        }
+
+        for(int zer=0; zer<100; zer++) {
+            tmp[zer] = 0;
+        }
+
+        rado=0;
+    }
+
+    // compare "le dossier" et TAB1[X] parcour tout TAB1
+
+    for(int c = 0;c < longeur; c++) {
+        if(TAB1[c]==TAB2[0]) {
+        if(TAB1[c+1]==TAB2[1]) {
+        if(TAB1[c+2]==TAB2[2]) {
+            if(TAB1[c+3]==TAB2[3])
+            {
+                if(TAB1[c+4]==TAB2[4])
+                {if(TAB1[c+5]==TAB2[5])
+                {if(TAB1[c+6]==TAB2[6])
+                   {if(TAB1[c+7]==TAB2[7])
+
+                   {
+                    if(TAB1[c+8]==TAB2[8])
+                     {
+                        if(TAB1[c+9]==TAB2[9])    {  
+                           
+                            tab[k]=c+3;                   
+                             k=k+1;
+    }}} }}}}}}}}
+
+    int g=0;
+    for(int rty=0;rty<k;rty++) {
+        g=tab[rty];
+        for (int h=0;h<60;h++) {
+            if(TAB1[g+h]==TAB3[0]) {
+                if(TAB1[g+1+h]==TAB3[1]) {
+                    if(TAB1[g+h+2]==TAB3[2]) {
+                            if(TAB1[g+h+3]==TAB3[3]) {
+                                tab[rty]=0; 
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    int q=0;
+    int t=0;
+    int qsd=0;
+    unsigned int x = 0;
+    unsigned int y = 0;
+    unsigned int xk = 0;
+
+    for(int s=0;s<k;s++) {
+        if(tab[s] != 0) {
+            ks[xk++] = s;
+            strcpy(code, "");
+            // printf("%d  ,,",tab[s]);
+            t = tab[s];
+            qsd=0;
+            for (int a=0;a<15;a++) {
+                if(TAB1[t+a]=='/') {
+                    y = 0;
+                    while(TAB1[t+a+qsd+2]!=' ') { 
+                        code[q]=TAB1[t+a+qsd];
+                        printf ("%c", code[q]);
+                        dossiers[x][y++] = code[q];
+                        qsd++;  
+                        q=q+1;
+                    }
+                    printf ("1\n");
+                    x++;
+                }
+            }
+
+            // code[q]='+';code[q+1]='%';code[q+2]='+';q=q+3;
+        }
+    }
+
+    t=0;
+    int klm=0;
+    int fdj=0;
+    for(int jkl=0;jkl<k;jkl++) {
+        if(tab[jkl]!=0) {
+            printf("%d\n",tab[jkl]);
+            klm=tab[jkl];
+            for (int hjk=0;hjk<100;hjk++) {	
+                if(TAB1[klm+hjk]=='#') {
+                    while (TAB1[klm+hjk+fdj]!='I') {   
+                        code1[t]=TAB1[klm+hjk+fdj];
+                        fdj++;
+                        t++;
+                    }
+                }
+                fdj=0;
+            }
+        }
+    }
+
+    // for(int u=0;u<10000;u++) {
+    //     printf("%c",code1[u]);
+    // }
+
+
+    unsigned int u = 0;
+    char * number = calloc(5, sizeof(char));
+
+    x = 0;
+
+    printf ("1\n");
+
+    while (code1[u] != 0) {
+        // printf ("%c", code1[u]);
+        strcpy(number, "");
+        if (code1[u-1] == '#') {
+            y = 0;
+            while (code1[u] != ' ') {
+                number[y++] = code1[u];
+                // printf ("%c", code1[u]);
+                u++;
+            }
+
+            sscanf(number, "%d", &refs[x]);
+
+            // Calcul
+            refs[x] = refs[x] + ks[x];
+            x++;
+        }
+        
+        u++;
+    }
+
+    printf("1\n");
+
+    free(number);
+    free(ks);
+    fclose(File);
+
+    printf("%d\n", x);
+
+    return x;
 }
 
 // Il faut enlever l'extension
@@ -242,9 +415,7 @@ void parseRatings (unsigned int * ratings, char ** lines, unsigned int size) {
     int i = 0, x = 0;
 
     while (i < size) { // OU x < size
-        ratings[x] = parseRating(lines[i]);
-        printf ("%d\n", x++);
-        
+        ratings[x] = parseRating(lines[i]);        
         i++;
     }
 }
@@ -353,15 +524,7 @@ int select_dir (unsigned char * dossiers, FILE * File) {
     return 0;
 }
 
-void clearBufLast (char * buf, unsigned int len, unsigned int nb) {
-    int i;
-
-    for (i = len; i >= len - nb; i--)
-        buf[i] = 0;
-    return;
-}
-
-unsigned int read_dir_list (char ** lines, unsigned int nb, Dossier * dossiers) {
+unsigned int read_dir_list (Dossier * dossiers) {
     char ** dirs = calloc(MIN_DIRS, sizeof(char*));
     unsigned int * ref_lines = calloc(MIN_DIRS, sizeof(unsigned int));
 
@@ -369,11 +532,12 @@ unsigned int read_dir_list (char ** lines, unsigned int nb, Dossier * dossiers) 
         dirs[i] = calloc(100, sizeof(char));
     }
 
-    unsigned int dirs_nb = read_dirs(dirs, lines, nb, ref_lines);
+    unsigned int dirs_nb = load_dossiers(dirs, "files.txt", ref_lines);
     
     for (int i = 0; i < dirs_nb; i++) {
-        strcpy(dossiers[i].title, dirs[i]);
+        dossiers[i].title = dirs[i];
         dossiers[i].ref_line = ref_lines[i];
+        printf("%s, %d\n", dossiers[i].title, dossiers[i].ref_line);
     }
 
     for (int i = 0; i < MIN_DIRS; i++) {
@@ -392,7 +556,7 @@ unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsi
     // Parser la liste de fichiers
     for (i = starts; i < nb; i++) {
         if (lines[i][0] == '#') {
-            for (y = 7; y <= 12; y++) {
+            for (y = 7; y <= 18; y++) {
                 files[x][y-7] = lines[i][y];
             }
             x++;
@@ -401,49 +565,61 @@ unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsi
         else if (x != 0) break;
     }
 
-    return x+1;
+    return x;
 }
 
 unsigned int get_files_and_dirs (Dossier * dirs_b, char ** lines, unsigned int nb, unsigned int * sizes_list) {
     // Executer read_dir_list, read_file_list puis blockerize ...
     unsigned int ref_line;
-    char ** files = calloc(10000, sizeof(char*));
+    char ** files = calloc(1000, sizeof(char*));
     unsigned int x, y, z;
 
     printf ("Parsing ...\n");
 
-    for (int i = 0; i < 10000; i++) {
-        files[i] = malloc(100*sizeof(char));
+    for (int i = 0; i < 1000; i++) {
+        files[i] = calloc(100, sizeof(char));
     }
 
-    unsigned int lines_nb = read_dir_list(lines, nb, dirs_b), tmp_size, tmp_y = 0;
+    unsigned int lines_nb = read_dir_list(dirs_b);
+    unsigned int tmp_size, tmp_y = 0;
+
+    printf("%d", lines_nb);
 
     for (x = 0; x < lines_nb; x++) {
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 1000; i++) {
             for (int j = 0; j < 100; j++) {
                 files[i][j] = 0;
             }
         }
 
-        tmp_size = read_file_list(files, lines, nb, dirs_b[x].ref_line); // ref_line est la lignes où commencer
-        add_dossier(dirs_b, files, x++);
+
+        dirs_b[x].nb_images = read_file_list(files, lines, nb, dirs_b[x].ref_line); // ref_line est la lignes où commencer
+
+        add_dossier(dirs_b, files, x);
+
+        for (int z = 0; z < dirs_b[x].nb_images; z++) {
+            printf ("%s\n", dirs_b[x].images[z]);
+        }
         // tmp_y += tmp_size;
         // z += tmp_size-1;
+
+        x++;
     }
 
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 1000; i++) {
         free(files[i]);
     }
 
     free(files);
-    return lines_nb+1;
+
+    return lines_nb;
 }
 
 int eachFileRating (Dossier * dossiers, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs) {
     printf("For each rating\n");
     int y = 0;
 
-    char * commande = calloc(10000, sizeof(char));
+    char * commande = calloc(300, sizeof(char));
     char * nom = calloc(15, sizeof(char));
     char * files = calloc(10000, sizeof(char));
 
@@ -452,12 +628,15 @@ int eachFileRating (Dossier * dossiers, char ** transferts, unsigned int * dir_s
     int * ratings = calloc(nb_dirs, sizeof(int));
 
     // Vider le fichier
-    system("rm -f ../tmp/exif.txt;touch ../tmp/exif.txt");
+    system("echo "" > ./data/tmp/exif.txt");
+
+    unsigned int i = 0;
 
     for (int y = 0; y < nb_dirs; y++) {
-        for (int i = 0; i < dir_sizes[y]; i++) {
+        for (int i = 0; i < dossiers[y].nb_images; i++) {
             // Commande
-            sprintf(commande, "./exiv_xmp %s >> ../tmp/exif.txt", dossiers[y].images[i]);
+            printf("%s %s\n", dossiers[y].title, dossiers[y].images[i]);
+            sprintf(commande, "./exiv_xmp %s %s >> ./data/tmp/exif.txt", dossiers[y].title, dossiers[y].images[i]);
             printf ("%s\n", commande);
             system(commande);
         }
@@ -468,7 +647,8 @@ int eachFileRating (Dossier * dossiers, char ** transferts, unsigned int * dir_s
     printf ("Commande lancée.\n");
 
     // Traiter chaque image
-    int i = 0, rating = -1, x = 0;
+    i = 0;
+    unsigned int rating = -1, x = 0;
 
     FILE * RATING = fopen("data/images/rating.txt", "w");
     FILE * RATINGS = fopen("data/images/tmp/exif.txt", "r");
@@ -511,9 +691,21 @@ int eachFileRating (Dossier * dossiers, char ** transferts, unsigned int * dir_s
     return x;
 }
 
+void init_dossiers (Dossier * dirs) {
+    dirs = calloc(MIN_DIRS, sizeof(Dossier));
+
+    dirs->title = calloc(100, sizeof(char));
+    dirs->images = calloc(1000, sizeof(char*));
+    for (int i = 0; i < 1000; i++) {
+        dirs->images[i] = calloc(100, sizeof(char));
+    }
+}
+
 int main (void) {
     getFiles();
-    FILE * GETS = fopen("./data/images/gets.txt", "r");
+    FILE * GETS = fopen("data/images/gets.txt", "r");
+    Dossier * dossiers;
+    init_dossiers(dossiers);
 
     char ** liste_captures = calloc(MAX_CAPTURES, sizeof(char*));
     char ** transferts = calloc(MAX_CAPTURES, sizeof(char*));
@@ -535,8 +727,6 @@ int main (void) {
     }
 
     i = 0;
-
-    Dossier * dossiers = calloc(MIN_DIRS, sizeof(Dossier));
 
     unsigned int files_nb = get_files_and_dirs(dossiers, liste_captures, number, dir_sizes);
     int transferts_nb = eachFileRating(dossiers, transferts, dir_sizes, files_nb);
