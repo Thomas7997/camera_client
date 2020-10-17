@@ -1,5 +1,4 @@
 #include <exiv2/exiv2.hpp>
-
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -9,6 +8,7 @@
 #include <gphoto2/gphoto2-setting.h>
 #include <gphoto2/gphoto2-filesys.h>
 #include <cstdlib>
+#include <fstream>
 
 void handleError(int status) {
     printf ("%d\n", status);
@@ -52,33 +52,33 @@ GPContext* sample_create_context() {
 int main(int argc, char** argv)
 {
     int status = 0;
+    
     CameraFile * file;
-    const char * data = (const char*) malloc(1500000 * sizeof(char));
-    unsigned long size;
+    char * data = (char*) malloc(150000 * sizeof(char));
+    unsigned long size = 32000;
     Camera * camera;
     GPContext *context = sample_create_context();
 
     gp_camera_new (&camera);
     status = gp_camera_init(camera, context);
-    status = gp_file_new(&file);
-    status = gp_camera_file_get(camera, argv[1], argv[2], GP_FILE_TYPE_NORMAL, file, context);
-    status = gp_file_get_data_and_size (file, (const char**) &data, &size);
+    // status = gp_file_new(&file);
+    // status = gp_camera_file_get(camera, argv[1], argv[2], GP_FILE_TYPE_PREVIEW, file, context);
+    // status = gp_file_get_data_and_size (file, (const char**) &data, &size);
 
-    // const std::vector<uint8_t> bytes = std::vector<uint8_t> vec(str.begin(), str.end());
+    uint64_t size_l = 64000;
+      status = gp_camera_file_read(camera,
+        argv[1],
+        argv[2],
+        GP_FILE_TYPE_NORMAL,
+        0,
+        data,
+        &size_l,
+        context 
+      );
+      std::cout << status;
 
-    // std::vector<uint8_t> bytes = static_assert(std::is_same<uint8_t, char>::value, "uint8_t is not unsigned char");
-    
-
-  Exiv2::XmpParser::initialize();
-  ::atexit(Exiv2::XmpParser::terminate);
- 
-  try
+      try
   {
-    if (argc != 3) 
-      {
-        std::cout << "Usage: " << argv[0] << " file\n";
-        return 1;
-      }
 
     Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open((const Exiv2::byte*) data, size);
     // std::cout << image;
@@ -113,15 +113,29 @@ int main(int argc, char** argv)
                   << std::endl;
       }
  
-    Exiv2::XmpParser::terminate();
+    // Exiv2::XmpParser::terminate();
  
-    return 0;
   }
 catch (Exiv2::AnyError& e) 
   {
     std::cout << "Caught Exiv2 exception '" << e << "'\n";
     return -1;
   }
+
+    return 0;
+
+    gp_camera_free(camera);
+
+    // std::cout << data;
+
+    // const std::vector<uint8_t> bytes = std::vector<uint8_t> vec(str.begin(), str.end());
+
+    // std::vector<uint8_t> bytes = static_assert(std::is_same<uint8_t, char>::value, "uint8_t is not unsigned char");
+    
+
+  // Exiv2::XmpParser::initialize();
+  // ::atexit(Exiv2::XmpParser::terminate);
+
 }
 
 // Compilation : g++ -o exiv_xmp exiv_xmp.cpp -lexiv2 -lgphoto2 -lgphoto2_port

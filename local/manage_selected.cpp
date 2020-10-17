@@ -1,25 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <curl/curl.h>
-#include <time.h>
-#define MAX 80
-
-#define MAX_CAPTURES 100000
-#define TAILLE_NOM 100
-#define TMaxL 1500000
-#define TMax 100
-#define MIN_DIRS 10
-
-struct _Dossier {
-    char * title;
-    char ** images;
-    unsigned int nb_images;
-    unsigned int ref_line;
-};
-
-typedef struct _Dossier Dossier;
+#include "manage_selected2.h"
 
 void clearBufLast (char * buf, unsigned int len, unsigned int nb) {
     int i;
@@ -29,12 +8,6 @@ void clearBufLast (char * buf, unsigned int len, unsigned int nb) {
     return;
 }
 
-void add_dossier (Dossier * dossiers, char ** images, unsigned int index) {
-    unsigned int x = 0;
-
-    dossiers[index].images = images;
-}
-
 // Envoi de la photo
 void send_request (char *name) {
     printf("Requêtes\n");
@@ -42,7 +15,7 @@ void send_request (char *name) {
     CURL *curl;
     CURLcode res;
 
-    char * request_string = calloc(1000, sizeof(char));
+    char * request_string = (char *) calloc(1000, sizeof(char));
     sprintf(request_string, "name=%s", name);
 
     
@@ -79,7 +52,6 @@ void afficher_tab2 (char ** tab) {
     }
 }
 
-
 unsigned int load_dossiers (char ** dossiers, const char * path, unsigned int * refs) {
     int k=0; //nb de fois ou on detecte les mots "le dossier"
     int l=0;
@@ -89,9 +61,9 @@ unsigned int load_dossiers (char ** dossiers, const char * path, unsigned int * 
     int tab[TMax]={0}; //liée  a k contient les indice de ou les mots "le dossier" sont dans le TAB1
     char code[TMax]=""; //contient les noms des dossiers separés par "+%+"
     char code1[500]="";                    
-    char TAB2[10]= "Le dossier";
-    char TAB3[5]="aucun";
-    unsigned int * ks = calloc(10, sizeof(unsigned int));
+    char TAB2[]= "Le dossier";
+    char TAB3[]="aucun";
+    unsigned int * ks = (unsigned int*) calloc(10, sizeof(unsigned int));
 
     FILE * File;
     File = fopen(path, "r");
@@ -214,11 +186,9 @@ unsigned int load_dossiers (char ** dossiers, const char * path, unsigned int * 
 
 
     unsigned int u = 0;
-    char * number = calloc(5, sizeof(char));
+    char * number = (char*) calloc(5, sizeof(char));
 
     x = 0;
-
-    printf ("1\n");
 
     while (code1[u] != 0) {
         // printf ("%c", code1[u]);
@@ -241,13 +211,9 @@ unsigned int load_dossiers (char ** dossiers, const char * path, unsigned int * 
         u++;
     }
 
-    printf("1\n");
-
     free(number);
     free(ks);
     fclose(File);
-
-    printf("%d\n", x);
 
     return x;
 }
@@ -291,8 +257,34 @@ int compare_file_historique (char * file, char ** historique, int lines) {
     return 0;
 }
 
+void mirroir (char * buf, unsigned int n) {
+    int i = 0;
+    char car;
+
+    for (i = 0; i < (n+1)/2; i++) {
+        car = buf[n-i-1];
+        buf[n-i-1] = buf[i];
+        buf[i] = car;
+    }
+}
+
+char * getName (char * buf) {
+    unsigned int n = strlen(buf), x = 0;
+    char * buffer = (char*) calloc(100, sizeof(char));
+
+    for (int i = n-1; buf[i] != '/'; i--) {
+        buffer[x++] = buf[i];
+    }
+
+    printf ("%s %d\n", buffer, x);
+
+    mirroir(buffer, x);
+
+    return buffer;
+}
+
 // Pour l'envoi
-void transferer_noms (char ** liste) {
+void transferer_noms (char ** liste, unsigned int n_transferts) {
     printf ("Transferts\n\n\n");
 
     int i = 0;
@@ -302,29 +294,32 @@ void transferer_noms (char ** liste) {
 
     FILE * HISTORIQUE = fopen("data/images/historique.txt", "a+");
 
-    char ** hist_lines = calloc(MAX_CAPTURES, sizeof(char*));
+    system("cd data/images/gets");
+
+    char ** hist_lines = (char **) calloc(MAX_CAPTURES, sizeof(char*));
 
     int x;
 
     for (x = 0; x < MAX_CAPTURES; x++) {
-        hist_lines[x] = calloc(TAILLE_NOM, sizeof(char));
+        hist_lines[x] = (char *) calloc(TAILLE_NOM, sizeof(char));
     }
 
     x = 0;
 
     while (fgets(hist_lines[x++], TAILLE_NOM, HISTORIQUE));
 
-    char * current_file = calloc(TAILLE_NOM, sizeof(char));
+    char * current_file = (char *) calloc(TAILLE_NOM, sizeof(char));
 
-    while (liste[i][0] != 0) {
+    for (i = 0; i < n_transferts; i++) {
         // Il y aura peut être besoin d'insérer les lignes précédentes dans cette boucle
 
-        sprintf(current_file, "%s", liste[i]);
+        char * filename = getName(liste[i]);
 
-        file_transfered = compare_file_historique(current_file, hist_lines, x);
+        // A corriger
+        file_transfered = compare_file_historique(liste[i], hist_lines, x);
 
         if (file_transfered == 0) {
-            sprintf(commande, "gphoto2 --get-file=\"%s\";mv ./data/images/gets/%s /home/thomas/camera_server/public", liste[i], liste[i]);
+            sprintf(commande, "./get.sh %s %s\n", liste[i], filename);
 
             printf ("%s\n", commande);
 
@@ -332,12 +327,12 @@ void transferer_noms (char ** liste) {
             system(commande);
 
             // ÉCIRE DANS L'HISTORIQUE DES TRANSFERTS
-            fprintf(HISTORIQUE, "%s\n", liste[i]);
+            fprintf(HISTORIQUE, "%s\n", filename);
 
-            send_request(liste[i]);
-            
-            i++;
+            send_request(filename);
         }
+
+        free(filename);
     }
 
     for (x = 0; x < MAX_CAPTURES; x++) {
@@ -408,7 +403,7 @@ unsigned int getRating (char * file) {
 }
 */
 
-void parseRatings (unsigned int * ratings, char ** lines, unsigned int size) {
+void parseRatings (int * ratings, char ** lines, unsigned int size) {
     // A coder
     // Lecture en imparité d'indexs
 
@@ -420,112 +415,8 @@ void parseRatings (unsigned int * ratings, char ** lines, unsigned int size) {
     }
 }
 
-
-// A finir car ca ne fonctionne que sur le premier élément (dossier)
-
-int select_dir (unsigned char * dossiers, FILE * File) {
-    int k=0;
-    int l=0;
-    int r=0;
-    char TAB1[TMaxL] = "";
-    char tmp[100]={0};
-    int tab[TMax]={0};
-    char code[TMax]="";
-    char TAB2[10]="Le dossier";
-    char TAB3[5]="aucun";
-    File = fopen("files.txt", "r");
-    if (File == NULL) {
-        exit(0);
-    }
-   
-    int rado=0;
-    int longueur=0;
-    for(int aze=0; aze<50000; aze++) {
-        fgets(tmp,2000,File);
-        while(tmp[rado]!=0) { 
-            TAB1[longueur]=tmp[rado];
-            longueur=longueur+1;
-            rado=rado+1;
-        }
-
-        for(int zer=0; zer < 100; zer++) {
-            tmp[zer]=0;
-        }
-        
-        rado=0;
-    }
-
-    int x, c, same = 1;
-
-    for (c = 0; c < longueur; c++) {
-        same = 1;
-        for (x = 0; x < 10; x++) {
-            if (TAB1[c+x] != TAB2[x]) {
-                same = 0;
-                break;
-            }
-        }
-
-        if (same == 1) {
-            tab[k]=c+5;
-            k=k+1;
-        }
-    }
-
-    int g=0;
-    for(int rty=0;rty<k;rty++) {
-        g=tab[rty];
-        for (int h=0; h<60; h++) {
-            same = 1;
-            for (int y = 0; y < 4; y++) {
-                if(TAB1[g+h+y]!=TAB3[y]) {
-                    same = 0;
-                    break;
-                }
-            }
-
-            if (same == 1) {
-                tab[rty]=0;
-            }
-        }
-    }
-    int q=0;
-    int t=0;
-
-    char * result = calloc(100, sizeof(char));
-
-    for(int s=0; s < k; s++) {
-        if(tab[s]!=0) {
-            // printf("%c",tab[s]);
-            t=tab[s];
-            for (int a=0; a<100; a++) {
-                if (TAB1[t+a]=='/') {
-                    while (TAB1[t+a+q]!='c') {
-                        code[q]=TAB1[t+a+q];
-                        q++;
-                    }
-                    goto label;
-                }
-            }
-        }
-    }
-
-    label: {
-        for (int i = 0; i < strlen(code)-3; i++) {
-            result[i] = code[i];
-        }
-        
-        printf("%s", result);
-        printf("\n");
-    }
-
-    free(result);
-        
-    return 0;
-}
-
 unsigned int read_dir_list (char ** dossiers, unsigned int * refs) {
-    unsigned int dirs_nb = load_dossiers(dossiers, "files.txt", refs);
+    unsigned int dirs_nb = load_dossiers(dossiers, "data/images/gets.txt", refs);
 
     for (unsigned int i = 0; i < dirs_nb; i++) {
         clearBufLast(dossiers[i], strlen(dossiers[i])-1, 1);
@@ -552,16 +443,139 @@ unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsi
     return x;
 }
 
+void handleError(int status) {
+    printf ("%d\n", status);
+}
+
+static void
+ctx_error_func (GPContext *context, const char *str, void *data)
+{
+        fprintf  (stderr, "\n*** Contexterror ***              \n%s\n",str);
+        fflush   (stderr);
+}
+
+static void
+ctx_status_func (GPContext *context, const char *str, void *data)
+{
+        fprintf  (stderr, "%s\n", str);
+        fflush   (stderr);
+}
+
+GPContext* sample_create_context() {
+	GPContext *context;
+
+	/* This is the mandatory part */
+	context = gp_context_new();
+
+	/* All the parts below are optional! */
+        gp_context_set_error_func (context, ctx_error_func, NULL);
+        gp_context_set_status_func (context, ctx_status_func, NULL);
+
+	/* also:
+	gp_context_set_cancel_func    (p->context, ctx_cancel_func,  p);
+        gp_context_set_message_func   (p->context, ctx_message_func, p);
+        if (isatty (STDOUT_FILENO))
+                gp_context_set_progress_funcs (p->context,
+                        ctx_progress_start_func, ctx_progress_update_func,
+                        ctx_progress_stop_func, p);
+	 */
+	return context;
+}
+
+// Retourne le status, le reste, dans les pointeurs
+int getPlacements(int * rating, char * dir, char * file, GPContext * context, Camera * camera)
+{
+    int status = 0;
+    
+    char * data = (char*) malloc(150000 * sizeof(char));
+    
+    uint64_t size_l = 64000;
+      status = gp_camera_file_read(camera,
+        dir,
+        file,
+        GP_FILE_TYPE_NORMAL,
+        0,
+        data,
+        &size_l,
+        context 
+      );
+      std::cout << status;
+
+      try
+  {
+
+    Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open((const Exiv2::byte*) data, size_l);
+    // std::cout << image;
+    // assert (image.get() != 0);
+    image->readMetadata();
+ 
+    Exiv2::XmpData &xmpData = image->xmpData();
+    if (xmpData.empty()) {
+        std::string error(dir);
+        error += ": No XMP data found in the file";
+        throw Exiv2::Error(Exiv2::kerErrorMessage, error);
+    }
+    if (xmpData.empty()) 
+      {
+        return -1;
+        // std::string error(argv[1]);
+        // error += ": No XMP properties found in the XMP packet";
+        // throw Exiv2::Error(Exiv2::kerErrorMessage, error);
+      }
+ 
+    std::string stars = "";
+
+    for (Exiv2::XmpData::const_iterator md = xmpData.begin();
+         md != xmpData.end(); ++md) 
+      {
+          stars = md->toString();
+        std::cout //<< std::setfill(' ') << std::left
+        //           << std::setw(44)
+        //           << md->key() << " "
+        //           << std::setw(9) << std::setfill(' ') << std::left
+        //           << md->typeName() << " "
+        //           << std::dec << std::setw(3)
+        //           << std::setfill(' ') << std::right
+        //           << md->count() << "\n"
+                  << std::dec << stars
+                  << std::endl;
+      }
+
+      *rating = std::stoi(stars);
+ 
+    // Exiv2::XmpParser::terminate();
+ 
+  }
+catch (Exiv2::AnyError& e) 
+  {
+    std::cout << "Caught Exiv2 exception '" << e << "'\n";
+    return -1;
+  }
+
+    return 0;
+
+    // std::cout << data;
+
+    // const std::vector<uint8_t> bytes = std::vector<uint8_t> vec(str.begin(), str.end());
+
+    // std::vector<uint8_t> bytes = static_assert(std::is_same<uint8_t, char>::value, "uint8_t is not unsigned char");
+    
+
+  // Exiv2::XmpParser::initialize();
+  // ::atexit(Exiv2::XmpParser::terminate);
+
+}
+
 unsigned int get_files_and_dirs (char *** dirs_b, char ** dirs_n, char ** lines, unsigned int nb, unsigned int * sizes_list) {
     // Executer read_dir_list, read_file_list puis blockerize ...
-    unsigned int * ref_lines = calloc(MIN_DIRS, sizeof(unsigned int));
-    char ** files = calloc(1000, sizeof(char*));
+    unsigned int * ref_lines = (unsigned int*) calloc(MIN_DIRS, sizeof(unsigned int));
+    char ** files = (char**) calloc(1000, sizeof(char*));
     unsigned int x, y, z;
 
     printf ("Parsing ...\n");
 
     for (int i = 0; i < 1000; i++) {
-        files[i] = calloc(100, sizeof(char));
+        files[i] = (char*) calloc(100, sizeof(char));
     }
 
     unsigned int lines_nb = read_dir_list(dirs_n, ref_lines);
@@ -594,34 +608,41 @@ unsigned int get_files_and_dirs (char *** dirs_b, char ** dirs_n, char ** lines,
 
     free(files);
 
-    return lines_nb;
+    printf ("1");
+
+    return 1;
 }
 
-int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs) {
+int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, Camera * camera, GPContext * context) {
     printf("For each rating\n");
     int y = 0;
 
-    char * commande = calloc(300, sizeof(char));
-    char * nom = calloc(15, sizeof(char));
-    char * files = calloc(10000, sizeof(char));
+    char * commande = (char*) calloc(300, sizeof(char));
+    char * nom = (char*) calloc(15, sizeof(char));
+    char * files = (char*) calloc(10000, sizeof(char));
 
     printf ("Allocating size : %d\n", nb_dirs);
 
-    int * ratings = calloc(nb_dirs, sizeof(int));
+    int * ratings = (int*) calloc(nb_dirs, sizeof(int));
+
+    FILE * RATING = fopen("data/images/rating.txt", "w");
+    FILE * RATINGS = fopen("data/images/tmp/exif.txt", "r");
 
     // Vider le fichier
     system("echo "" > ./data/tmp/exif.txt");
     system(commande);
 
-    unsigned int i = 0;
+    unsigned int i = 0, x = 0;
 
     for (int y = 0; y < nb_dirs; y++) {
         while (dossiers[y][i][0] != 0) {
             // Commande
-            printf("%s %s\n", dirs[y], dossiers[y][i]);
-            sprintf(commande, "./exiv_xmp %s %s", (char *) dirs[y], (char *) dossiers[y][i]);
-            printf ("%s\n", commande);
-            system(commande); // Ou appeler la fonction
+            getPlacements(&ratings[y], dirs[y], dossiers[y][i], context, camera);
+            if (ratings[y] == 5) {
+                sprintf(transferts[x++], "%s/%s", dirs[y], dossiers[y][i]);
+            }
+
+            fprintf(RATING, "%s : %d\n", dirs[y], ratings[y]);
             i++;
         }
     }
@@ -631,32 +652,29 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
 
     // Traiter chaque image
     i = 0;
-    unsigned int rating = 0, x = 0;
+    unsigned int rating = 0;
 
-    FILE * RATING = fopen("data/images/rating.txt", "w");
-    FILE * RATINGS = fopen("data/images/tmp/exif.txt", "r");
-
-    char ** lignes = calloc(10000, sizeof(char*));
+    char ** lignes = (char**) calloc(10000, sizeof(char*));
 
     for (int i = 0; i < 10000; i++) {
-        lignes[i] = calloc(100, sizeof(char));
+        lignes[i] = (char*) calloc(100, sizeof(char));
     }
 
-    while (fgets(lignes[i++], 99, RATINGS));
+    // while (fgets(lignes[i++], 99, RATINGS));
 
-    parseRatings(ratings, lignes, nb_dirs);
+    // parseRatings(ratings, lignes, nb_dirs);
 
-    for (y = 0; y < nb_dirs; y++) {
-        for (i = 0; i < dir_sizes[y]; i++) {
-            // Pour chaque rating recus
+    // for (y = 0; y < nb_dirs; y++) {
+    //     for (i = 0; i < dir_sizes[y]; i++) {
+    //         // Pour chaque rating recus
 
-            if (ratings[i+y] == 5) {
-                strcpy(transferts[x++], dossiers[y][i]);
-            }
+    //         if (ratings[i+y] == 5) {
+    //             strcpy(transferts[x++], dossiers[y][i]);
+    //         }
 
-            fprintf(RATING, "%s : %s\n", dirs[i], dossiers[y][i]);
-        }
-    }
+    //         fprintf(RATING, "%s : %s\n", dirs[i], dossiers[y][i]);
+    //     }
+    // }
 
     fclose(RATING);
     fclose(RATINGS);
@@ -672,82 +690,4 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
     free(files);
 
     return x;
-}
-
-void init_dossiers (Dossier * dirs) {
-    dirs = calloc(MIN_DIRS, sizeof(Dossier));
-
-    for (int y = 0; y < MIN_DIRS; y++) {
-        dirs[y].title = calloc(100, sizeof(char));
-        dirs[y].images = calloc(1000, sizeof(char*));
-        for (int i = 0; i < 1000; i++) {
-            dirs[y].images[i] = calloc(100, sizeof(char));
-        }
-    }
-
-    return;
-}
-
-int main (void) {
-    getFiles();
-    FILE * GETS = fopen("data/images/gets.txt", "r");
-    char *** dossiers = calloc(MIN_DIRS, sizeof(char**));
-
-    char ** liste_captures = calloc(MAX_CAPTURES, sizeof(char*));
-    char ** transferts = calloc(MAX_CAPTURES, sizeof(char*));
-    char ** dirs_n = calloc(MIN_DIRS, sizeof(char*));
-    unsigned int * dir_sizes = calloc(1000, sizeof(unsigned int));
-
-    int i, j, number = 0;
-
-    for (int d = 0; d < MIN_DIRS; d++) {
-        dossiers[d] = calloc(MAX_CAPTURES, sizeof(char*));
-        for (int dy = 0; dy < MAX_CAPTURES; dy++) {
-            dossiers[d][dy] = calloc(TAILLE_NOM, sizeof(char));
-        }
-        dirs_n[d] = calloc(TAILLE_NOM, sizeof(char));
-    }
-
-    for (i = 0; i < MAX_CAPTURES; i++) {
-        liste_captures[i] = calloc(TAILLE_NOM, sizeof(char));
-        transferts[i] = calloc(TAILLE_NOM, sizeof(char));
-    }
-
-    i = 0;
-
-    while (fgets(liste_captures[i], TAILLE_NOM, GETS) != NULL) {
-        // Remplissage
-        enlever_last_car(liste_captures[i++]);
-        number++;
-    }
-
-    i = 0;
-
-    unsigned int files_nb = get_files_and_dirs(dossiers, dirs_n, liste_captures, number, dir_sizes);
-    int transferts_nb = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb);
-
-    transferer_noms(transferts);
-
-    fclose(GETS);
-
-    for (i = 0; i < MAX_CAPTURES; i++) {
-        free(liste_captures[i]);
-        free(transferts[i]);
-    }
-
-    for (int d = 0; d < MIN_DIRS; d++) {
-        for (int dy = 0; dy < MAX_CAPTURES; dy++) {
-            free(dossiers[d][dy]);
-        }
-        free(dossiers[d]);
-        free(dirs_n[d]);
-    }
-
-    free(dirs_n);
-    free(liste_captures);
-    free(transferts);
-    free(dir_sizes);
-    free(dossiers);
-
-    return 0;
 }

@@ -4,33 +4,7 @@
 #define TMaxL 150000
 #define TMax 1000
 
-unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsigned int start) {
-    unsigned int line_size, x = 0, i, y;
-
-    // Parser la liste de fichiers
-    for (i = start; i < nb; i++) {
-        if (lines[i][0] == '#') {
-            for (y = 7; y <= 18; y++) {
-                files[x][y-7] = lines[i][y];
-            }
-            x++;
-        }
-
-        else if (x != 0) break;
-    }
-
-    return x+1;
-}
-
-void clearBufLast (char * buf, unsigned int len, unsigned int nb) {
-    int i;
-
-    for (i = len; i >= len - nb; i--)
-        buf[i] = 0;
-    return;
-}
-
-void load_dossiers (char ** dossiers, const char * path, unsigned int * refs) {
+unsigned int load_dossiers (char ** dossiers, const char * path, unsigned int * refs) {
     int k=0; //nb de fois ou on detecte les mots "le dossier"
     int l=0;
     int r=0;
@@ -39,9 +13,9 @@ void load_dossiers (char ** dossiers, const char * path, unsigned int * refs) {
     int tab[TMax]={0}; //liée  a k contient les indice de ou les mots "le dossier" sont dans le TAB1
     char code[TMax]=""; //contient les noms des dossiers separés par "+%+"
     char code1[500]="";                    
-    char TAB2[10]= "Le dossier";
-    char TAB3[5]="aucun";
-    unsigned int * ks = calloc(10, sizeof(unsigned int));
+    char TAB2[]= "Le dossier";
+    char TAB3[]="aucun";
+    unsigned int * ks = (unsigned int*) calloc(10, sizeof(unsigned int));
 
     FILE * File;
     File = fopen(path, "r");
@@ -164,7 +138,7 @@ void load_dossiers (char ** dossiers, const char * path, unsigned int * refs) {
 
 
     unsigned int u = 0;
-    char * number = calloc(5, sizeof(char));
+    char * number = (char*) calloc(5, sizeof(char));
 
     x = 0;
 
@@ -192,6 +166,8 @@ void load_dossiers (char ** dossiers, const char * path, unsigned int * refs) {
     free(number);
     free(ks);
     fclose(File);
+
+    return x;
 }
 
 int select_dirs (char ** dirs, FILE * FIC, unsigned int * lines) {
@@ -202,25 +178,26 @@ int main (void) {
     FILE * FIC = fopen("files.txt", "r");
 
     unsigned int x = 0;
-    char ** lines = calloc(1000, sizeof(char*));
-    char ** files = calloc(1000, sizeof(char*));
-    char ** dirs = calloc(10, sizeof(char*));
-    unsigned int * l = calloc(10, sizeof(int));
+    char ** lines = (char**) calloc(1000, sizeof(char*));
+    char ** files = (char**) calloc(1000, sizeof(char*));
+    char ** dirs = (char**) calloc(10, sizeof(char*));
+    unsigned int * l = (unsigned int*) calloc(10, sizeof(int));
 
     for (x = 0; x < 1000; x++) {
-        lines[x] = calloc(100, sizeof(char));
-        files[x] = calloc(100, sizeof(char));
+        lines[x] = (char*) calloc(100, sizeof(char));
+        files[x] = (char*) calloc(100, sizeof(char));
     }
 
     for (x = 0; x < 10; x++) {
-        dirs[x] = calloc(100, sizeof(char));
+        dirs[x] = (char*) calloc(100, sizeof(char));
     }
 
     x = 0;
 
     while (fgets(lines[x++], 100, FIC));
 
-    load_dossiers(dirs, "files.txt", l);
+    unsigned int result = load_dossiers(dirs, "files.txt", l);
+    printf ("result : %d\n", result);
 
     x = 0;
 
