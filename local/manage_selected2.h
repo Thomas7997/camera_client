@@ -41,7 +41,7 @@ unsigned int load_dossiers (char ** dossiers, const char * path, unsigned int * 
 void transform_noms (char ** liste, char ** nouvelleListe, int size);
 void linearize (char *base, char **lines);
 int compare_file_historique (char * file, char ** historique, int lines);
-void transferer_noms (char ** liste, unsigned int n_transferts);
+void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera);
 int getPlacements(int * rating, char * dir, char * file, GPContext * context, Camera * camera);
 void enlever_last_car(char *chaine);
 void select_medias ();

@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     // status = gp_camera_file_get(camera, argv[1], argv[2], GP_FILE_TYPE_PREVIEW, file, context);
     // status = gp_file_get_data_and_size (file, (const char**) &data, &size);
 
-    uint64_t size_l = 64000;
+    uint64_t size_l = 20000;
       status = gp_camera_file_read(camera,
         argv[1],
         argv[2],

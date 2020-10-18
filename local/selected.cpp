@@ -10,9 +10,11 @@ int main (void) {
     Camera * camera;
     GPContext *context = sample_create_context();
 
-    gp_camera_new (&camera);
-    status = gp_camera_init(camera, context);
-    handleError(status);
+    do {
+        gp_camera_new (&camera);
+        status = gp_camera_init(camera, context);
+        handleError(status);
+    } while (status != 0);
 
     char ** liste_captures = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     char ** transferts = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -47,7 +49,7 @@ int main (void) {
     unsigned int files_nb = get_files_and_dirs(dossiers, dirs_n, liste_captures, number, dir_sizes);
     int transferts_nb = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, camera, context);
 
-    transferer_noms(transferts, transferts_nb);
+    transferer_noms(transferts, transferts_nb, context, camera);
 
     fclose(GETS);
 
