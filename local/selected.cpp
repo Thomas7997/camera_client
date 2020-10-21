@@ -67,7 +67,7 @@ int main (void) {
     }
 
     gp_camera_exit(camera, context);
-    gp_camera_free(camera);
+    // gp_camera_free(camera);
     free(dirs_n);
     free(liste_captures);
     free(transferts);

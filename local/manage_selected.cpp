@@ -698,8 +698,8 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPCont
     free(tmp_dir);
     free(folder);
     free(tmp);
-    free(dir);
-    free(file);
+    // free(dir);
+    // free(file);
     gp_list_free(fileList);
     gp_list_free(folderList);
 
