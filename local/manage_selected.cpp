@@ -320,12 +320,12 @@ void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * cont
     int status = 0;
     CameraFile * file;
     gp_file_new(&file);
+    char * filename = getName(liste[i], dossier);
 
     for (i = 0; i < n_transferts; i++) {
         // Il y aura peut être besoin d'insérer les lignes précédentes dans cette boucle
         strcpy(dossier, "");
-
-        char * filename = getName(liste[i], dossier);
+        strcpy(filename, "");
 
         // A corriger
         file_transfered = compare_file_historique(filename, hist_lines, x);
@@ -347,14 +347,13 @@ void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * cont
 
             send_request(filename);
         }
-
-        free(filename);
     }
 
     for (x = 0; x < MAX_CAPTURES; x++) {
         free(hist_lines[x]);
     }
 
+    free(filename);
     free(current_file);
     fclose(HISTORIQUE);
     free(hist_lines);
@@ -505,7 +504,7 @@ int getPlacements(int * rating, char * dir, char * file, char * data, GPContext 
 {
     int status = 0;
     
-    uint64_t size_l = 20;
+    uint64_t size_l = 32000;
       status = gp_camera_file_read(camera,
         dir,
         file,
@@ -517,53 +516,35 @@ int getPlacements(int * rating, char * dir, char * file, char * data, GPContext 
       );
       std::cout << status << "\n";
 
-      try
-  {
+      try {
 
-    // Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open((const Exiv2::byte*) data, size_l);
-    // // std::cout << image;
-    // // assert (image.get() != 0);
-    // image->readMetadata();
+    Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open((const Exiv2::byte*) data, size_l);
+    // std::cout << image;
+    // assert (image.get() != 0);
+    image->readMetadata();
  
-    // Exiv2::XmpData &xmpData = image->xmpData();
-    // if (xmpData.empty()) {
-    //     std::string error(dir);
-    //     error += ": No XMP data found in the file";
-    //     throw Exiv2::Error(Exiv2::kerErrorMessage, error);
-    // }
-    // if (xmpData.empty()) 
-    //   {
-    //     return -1;
-    //     // std::string error(argv[1]);
-    //     // error += ": No XMP properties found in the XMP packet";
-    //     // throw Exiv2::Error(Exiv2::kerErrorMessage, error);
-    //   }
+    Exiv2::XmpData &xmpData = image->xmpData();
+    if (xmpData.empty()) {
+        std::string error(dir);
+        error += ": No XMP data found in the file";
+        throw Exiv2::Error(Exiv2::kerErrorMessage, error);
+    }
+    if (xmpData.empty()) 
+      {
+        return -1;
+        // std::string error(argv[1]);
+        // error += ": No XMP properties found in the XMP packet";
+        // throw Exiv2::Error(Exiv2::kerErrorMessage, error);
+      }
  
-    // std::string stars = "";
-    // Exiv2::XmpData::const_iterator md = xmpData.begin();
-    // std::cout << md->toString() << "\n";
-
-//     for (Exiv2::XmpData::const_iterator md = xmpData.begin();
-//          md != xmpData.end(); ++md) 
-//       {
-//           stars = md->toString();
-//         std::cout //<< std::setfill(' ') << std::left
-//         //           << std::setw(44)
-//         //           << md->key() << " "
-//         //           << std::setw(9) << std::setfill(' ') << std::left
-//         //           << md->typeName() << " "
-//         //           << std::dec << std::setw(3)
-//         //           << std::setfill(' ') << std::right
-//         //           << md->count() << "\n"
-//                   << std::dec << stars
-//                   << std::endl;
-//       }
-
-//       *rating = std::stoi(stars);
+        std::string stars = "";
+        Exiv2::XmpData::const_iterator md = xmpData.begin();
+        stars = md->toString();
+        std::cout << stars << "\n";
+        *rating = std::stoi(stars);
+    }
  
-//     // Exiv2::XmpParser::terminate();
- 
-  }
+    
 catch (Exiv2::AnyError& e) 
   {
     std::cout << "Caught Exiv2 exception '" << e << "'\n";
@@ -583,7 +564,7 @@ catch (Exiv2::AnyError& e)
   // ::atexit(Exiv2::XmpParser::terminate);
 
 }
-
+ /*
 unsigned int get_files_and_dirs (char *** dirs_b, char ** dirs_n, char ** lines, unsigned int nb, unsigned int * sizes_list) {
     // Executer read_dir_list, read_file_list puis blockerize ...
     unsigned int * ref_lines = (unsigned int*) calloc(MIN_DIRS, sizeof(unsigned int));
@@ -629,6 +610,100 @@ unsigned int get_files_and_dirs (char *** dirs_b, char ** dirs_n, char ** lines,
     printf ("1");
 
     return 1;
+}*/
+
+int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPContext * context) {
+    CameraList * folderList;
+    char * dir = (char*) calloc(100, sizeof(char));
+    char * file = (char*) calloc(100, sizeof(char));
+    char * folder = (char*) calloc(100, sizeof(char));
+    int status = gp_list_new(&folderList);
+    handleError(status);
+    status = gp_camera_folder_list_folders(camera,
+		"/",
+		folderList,
+		context 
+	);
+    handleError(status);
+
+    status = gp_list_get_name(folderList, 0, (const char**) &dir);
+    handleError(status);
+
+    status = gp_list_reset(folderList);
+    handleError(status);
+
+    char * tmp = (char*) calloc(100, sizeof(char));
+    char * tmp_dir = (char*) calloc(100, sizeof(char));
+
+    CameraList * fileList;
+    gp_list_new(&fileList);
+
+    unsigned int n = strlen(dir)-1;
+    strcpy(tmp_dir, "/store_");
+
+    unsigned int x = 0, z = 0;
+
+    while (dir[z++] != '_');
+    while (dir[z] != 0) {
+        tmp_dir[7+x++] = dir[z++];
+    }
+
+    sprintf(folder, "%s/DCIM", tmp_dir);
+    printf ("%s\n", folder);
+
+    status = gp_camera_folder_list_folders(camera,
+		folder,
+		folderList,
+		context 
+	);
+    handleError(status);
+
+    int nb = gp_list_count(folderList);
+    int nb_files = 0;
+    handleError(nb);
+
+    for (unsigned int i = 0; i < nb; i++) {
+        // status = gp_list_reset(fileList);
+        // handleError(status);
+        strcpy(dir, "");
+        status = gp_list_get_name(folderList, i, (const char**) &dir);
+        handleError(status);
+
+        sprintf (tmp_dir, "%s/%s", folder, dir);
+        printf ("%s\n", tmp_dir);
+
+        strcpy(dirs_n[i], tmp_dir);
+
+        status = gp_camera_folder_list_files(camera,
+		    tmp_dir,
+		    fileList,
+		    context 
+	    );
+        handleError(status);
+
+        nb_files = gp_list_count(fileList);
+        handleError(nb_files);
+
+        // sprintf(dirs_n[i], "/%s", dir);
+
+        for (unsigned int j = 0; j < nb_files; j++) {
+            strcpy(file, "");
+            status = gp_list_get_name(fileList, j, (const char**) &file);
+            handleError(status);
+            strcpy(dirs_b[i][j], file);
+            printf ("%s\n", dirs_b[i][j]);
+        }
+    }
+
+    free(tmp_dir);
+    free(folder);
+    free(tmp);
+    free(dir);
+    free(file);
+    gp_list_free(fileList);
+    gp_list_free(folderList);
+
+    return nb; // Nombre de dossiers
 }
 
 int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, Camera * camera, GPContext * context) {
@@ -653,16 +728,11 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
         i = 0;
         while (dossiers[y][i][0] != 0) {
             // Commande
-            for (int z = 0; z < 5; z++) {
-                printf("%s\n", dossiers[y][i]);
-                // gp_port_set_timeout(camera->port, 15);
-                int timeout = 0;
-                gp_port_get_timeout(camera->port, &timeout);
-                printf ("timeout : %d\n", timeout);
-                getPlacements(&rates, dirs[y], dossiers[y][i], data, context, camera);
-                if (rates == 5) {
-                    sprintf(transferts[x++], "%s/%s", dirs[y], dossiers[y][i]);
-                }
+            printf("%s\n", dossiers[y][i]);
+            int timeout = 0;
+            getPlacements(&rates, dirs[y], dossiers[y][i], data, context, camera);
+            if (rates == 5) {
+                sprintf(transferts[x++], "%s/%s", dirs[y], dossiers[y][i]);
             }
 
             // fprintf(RATING, "%s : %d\n", dossiers[y][i], rates);

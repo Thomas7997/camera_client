@@ -3,9 +3,9 @@
 #include "manage_selected2.h"
 
 int main (void) {
-    getFiles();
+    // getFiles();
     int status = 0;
-    FILE * GETS = fopen("data/images/gets.txt", "r");
+    // FILE * GETS = fopen("data/images/gets.txt", "r");
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
     Camera * camera;
     GPContext *context = sample_create_context();
@@ -38,20 +38,20 @@ int main (void) {
 
     i = 0;
 
-    while (fgets(liste_captures[i], TAILLE_NOM, GETS) != NULL) {
-        // Remplissage
-        enlever_last_car(liste_captures[i++]);
-        number++;
-    }
+    // while (fgets(liste_captures[i], TAILLE_NOM, GETS) != NULL) {
+    //     // Remplissage
+    //     enlever_last_car(liste_captures[i++]);
+    //     number++;
+    // }
 
     i = 0;
 
-    unsigned int files_nb = get_files_and_dirs(dossiers, dirs_n, liste_captures, number, dir_sizes);
+    unsigned int files_nb = get_files_and_dirs(dossiers, dirs_n, camera, context);
     int transferts_nb = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, camera, context);
 
     transferer_noms(transferts, transferts_nb, context, camera);
 
-    fclose(GETS);
+    // fclose(GETS);
 
     for (i = 0; i < MAX_CAPTURES; i++) {
         free(liste_captures[i]);
@@ -66,7 +66,7 @@ int main (void) {
         free(dirs_n[d]);
     }
 
-    gp_camera_exit(camera,context);
+    gp_camera_exit(camera, context);
     gp_camera_free(camera);
     free(dirs_n);
     free(liste_captures);

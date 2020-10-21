@@ -16,6 +16,7 @@
 #include <gphoto2/gphoto2-port-log.h>
 #include <gphoto2/gphoto2-setting.h>
 #include <gphoto2/gphoto2-filesys.h>
+#include <gphoto2/gphoto2-list.h>
 
 #define MAX 80
 #define MAX_CAPTURES 10000
@@ -50,7 +51,7 @@ unsigned int parseRating (char * line);
 void parseRatings (int * ratings, char ** lines, unsigned int size);
 unsigned int read_dir_list (char ** dossiers, unsigned int * refs);
 unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsigned int starts);
-unsigned int get_files_and_dirs (char *** dirs_b, char ** dirs_n, char ** lines, unsigned int nb, unsigned int * sizes_list);
+int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPContext * context);
 int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, Camera * camera, GPContext * context);
 void handleError(int status);
 static void

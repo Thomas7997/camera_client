@@ -52,7 +52,7 @@ CAPTURE_ERRORS : capture_errors.o
 	gcc -o capture_errors capture_errors.o -lcurl
 
 MANAGE_SELECTEDS : manage_selected.cpp
-	g++ -o selected selected.cpp manage_selected.cpp -lcurl -lexiv2 -lgphoto2 -lgphoto2_port
+	g++ -O3 -o selected selected.cpp manage_selected.cpp -lcurl -lexiv2 -lgphoto2 -lgphoto2_port
 
 ARCHITECTURE : architecture.o 
 	gcc -o architecture architecture.o
