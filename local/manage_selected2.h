@@ -34,6 +34,8 @@ struct _Dossier {
 
 typedef struct _Dossier Dossier;
 
+void mirroir (char * buf, unsigned int n);
+char * getName (char * buf, char * dossier);
 void clearBufLast (char * buf, unsigned int len, unsigned int nb);
 void send_request (char *name);
 void vider_buffer (char *buffer);

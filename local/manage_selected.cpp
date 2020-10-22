@@ -247,10 +247,11 @@ void linearize (char *base, char **lines) {
 
 int compare_file_historique (char * file, char ** historique, int lines) {
     int i;
-    unsigned int size_f = strlen(file);
+    unsigned int file_s = strlen(file)-1;
 
     for (i = 0; i < lines; i++) {
-        if (strncmp(historique[i], file, size_f) == 0) {
+        printf("%s | %s\n", historique[i], file);
+        if (strncmp(historique[i], file, file_s) == 0) {
            return 1;
         }
     }
@@ -292,14 +293,13 @@ char * getName (char * buf, char * dossier) {
 
 // Pour l'envoi
 void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
-    printf ("Transferts\n\n\n");
-
     int i = 0;
 
     char commande[250] = "";
     int file_transfered = 0;
 
-    FILE * HISTORIQUE = fopen("data/images/historique.txt", "a+");
+    FILE * HISTORIQUE = fopen("data/images/historique.txt", "a");
+    FILE * HISTORIQUER = fopen("data/images/historique.txt", "r");
 
     system("cd data/images/gets");
 
@@ -308,44 +308,45 @@ void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * cont
     int x;
 
     for (x = 0; x < MAX_CAPTURES; x++) {
-        hist_lines[x] = (char *) calloc(TAILLE_NOM, sizeof(char));
+        hist_lines[x] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
     x = 0;
 
-    while (fgets(hist_lines[x++], TAILLE_NOM, HISTORIQUE));
+    while (fgets(hist_lines[x++], TAILLE_NOM, HISTORIQUER));
 
     char * current_file = (char*) calloc(TAILLE_NOM, sizeof(char));
     char * dossier = (char*) calloc(TAILLE_NOM, sizeof(char));
     int status = 0;
     CameraFile * file;
     gp_file_new(&file);
-    char * filename = getName(liste[i], dossier);
+
+    char * filename = (char*) calloc(100, sizeof(char));
 
     for (i = 0; i < n_transferts; i++) {
-        // Il y aura peut être besoin d'insérer les lignes précédentes dans cette boucle
         strcpy(dossier, "");
-        strcpy(filename, "");
+        filename = getName(liste[i], dossier);
+        // Il y aura peut être besoin d'insérer les lignes précédentes dans cette boucle
 
         // A corriger
         file_transfered = compare_file_historique(filename, hist_lines, x);
-
         if (file_transfered == 0) {
             sprintf(commande, "data/images/gets/%s", filename);
 
             printf ("%s\n", commande);
             status = gp_camera_file_get(camera, dossier, filename, GP_FILE_TYPE_NORMAL, file, context);
             handleError(status);
+            printf("%s\n", dossier);
             status = gp_file_save(file, (const char*) commande);
             sprintf(commande, "mv data/images/gets/%s /home/thomas/camera_server/public", filename);
             // Envoyer le nom du nouveau fichier transféré au socket
 
             // ÉCIRE DANS L'HISTORIQUE DES TRANSFERTS
             printf("%s\n", commande);
-            system(commande);
+            printf ("Transfert !\n");
+            // system(commande);
             fprintf(HISTORIQUE, "%s\n", filename);
-
-            send_request(filename);
+            // send_request(filename);
         }
     }
 
@@ -353,10 +354,11 @@ void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * cont
         free(hist_lines[x]);
     }
 
-    free(filename);
     free(current_file);
     fclose(HISTORIQUE);
+    fclose(HISTORIQUER);
     free(hist_lines);
+    free(filename);
     free(dossier);
     gp_file_free(file);
 }
@@ -461,7 +463,7 @@ unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsi
 }
 
 void handleError(int status) {
-    printf ("%d\n", status);
+    printf ("%s\n", gp_result_as_string(status));
 }
 
 static void
@@ -514,7 +516,6 @@ int getPlacements(int * rating, char * dir, char * file, char * data, GPContext 
         &size_l,
         context
       );
-      std::cout << status << "\n";
 
       try {
 
@@ -540,7 +541,6 @@ int getPlacements(int * rating, char * dir, char * file, char * data, GPContext 
         std::string stars = "";
         Exiv2::XmpData::const_iterator md = xmpData.begin();
         stars = md->toString();
-        std::cout << stars << "\n";
         *rating = std::stoi(stars);
     }
  
@@ -618,19 +618,15 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPCont
     char * file = (char*) calloc(100, sizeof(char));
     char * folder = (char*) calloc(100, sizeof(char));
     int status = gp_list_new(&folderList);
-    handleError(status);
     status = gp_camera_folder_list_folders(camera,
 		"/",
 		folderList,
 		context 
 	);
-    handleError(status);
 
     status = gp_list_get_name(folderList, 0, (const char**) &dir);
-    handleError(status);
 
     status = gp_list_reset(folderList);
-    handleError(status);
 
     char * tmp = (char*) calloc(100, sizeof(char));
     char * tmp_dir = (char*) calloc(100, sizeof(char));
@@ -656,18 +652,14 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPCont
 		folderList,
 		context 
 	);
-    handleError(status);
 
     int nb = gp_list_count(folderList);
     int nb_files = 0;
-    handleError(nb);
 
     for (unsigned int i = 0; i < nb; i++) {
-        // status = gp_list_reset(fileList);
-        // handleError(status);
+        status = gp_list_reset(fileList);
         strcpy(dir, "");
         status = gp_list_get_name(folderList, i, (const char**) &dir);
-        handleError(status);
 
         sprintf (tmp_dir, "%s/%s", folder, dir);
         printf ("%s\n", tmp_dir);
@@ -679,27 +671,25 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPCont
 		    fileList,
 		    context 
 	    );
-        handleError(status);
 
         nb_files = gp_list_count(fileList);
-        handleError(nb_files);
+
+        if (nb_files != 0) {
+            for (unsigned int j = 0; j < nb_files; j++) {
+                strcpy(file, "");
+                status = gp_list_get_name(fileList, j, (const char**) &file);
+                handleError(status);
+                strcpy(dirs_b[i][j], file);
+                printf ("%s\n", dirs_b[i][j]);
+            }
+        }
 
         // sprintf(dirs_n[i], "/%s", dir);
-
-        for (unsigned int j = 0; j < nb_files; j++) {
-            strcpy(file, "");
-            status = gp_list_get_name(fileList, j, (const char**) &file);
-            handleError(status);
-            strcpy(dirs_b[i][j], file);
-            printf ("%s\n", dirs_b[i][j]);
-        }
     }
 
     free(tmp_dir);
     free(folder);
     free(tmp);
-    // free(dir);
-    // free(file);
     gp_list_free(fileList);
     gp_list_free(folderList);
 
@@ -744,22 +734,12 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
     printf ("Commande lancée.\n");
 
     // Traiter chaque image
-    i = 0;
-    unsigned int rating = 0;
-
-    char ** lignes = (char**) calloc(10000, sizeof(char*));
-
-    for (int i = 0; i < 10000; i++) {
-        lignes[i] = (char*) calloc(100, sizeof(char));
-    }
-
-    // while (fgets(lignes[i++], 99, RATINGS));
-
-    // parseRatings(ratings, lignes, nb_dirs);
+    // i = 0;
+    // unsigned int rating = 0;
 
     // for (y = 0; y < nb_dirs; y++) {
     //     for (i = 0; i < dir_sizes[y]; i++) {
-    //         // Pour chaque rating recus
+    //         // Pour chaque rating reçu
 
     //         if (ratings[i+y] == 5) {
     //             strcpy(transferts[x++], dossiers[y][i]);
@@ -770,12 +750,6 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
     // }
 
     fclose(RATING);
-
-    for (int i = 0; i < 10000; i++) {
-        free(lignes[i]);
-    }
-
-    free(lignes);
     free(commande);
     free(nom);
     free(ratings);
