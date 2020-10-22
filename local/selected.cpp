@@ -36,6 +36,9 @@ int main (void) {
 
     i = 0;
     FILE * STOP = fopen("data/stop/selection.txt", "r");
+
+    if (STOP == NULL) return 1;
+
     int stop = -1;
     fscanf(STOP, "%d", &stop);
 

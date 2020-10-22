@@ -295,7 +295,7 @@ char * getName (char * buf, char * dossier) {
 void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
     int i = 0;
 
-    char commande[250] = "";
+    char * commande = (char*) calloc(250, sizeof(char));
     int file_transfered = 0;
 
     FILE * HISTORIQUE = fopen("data/images/historique.txt", "a");
@@ -359,6 +359,7 @@ void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * cont
     fclose(HISTORIQUER);
     free(hist_lines);
     free(filename);
+    free(commande);
     free(dossier);
     gp_file_free(file);
 }
@@ -563,8 +564,11 @@ catch (Exiv2::AnyError& e)
   // Exiv2::XmpParser::initialize();
   // ::atexit(Exiv2::XmpParser::terminate);
 
+   *rating = 0;
+
+
 }
- /*
+
 unsigned int get_files_and_dirs (char *** dirs_b, char ** dirs_n, char ** lines, unsigned int nb, unsigned int * sizes_list) {
     // Executer read_dir_list, read_file_list puis blockerize ...
     unsigned int * ref_lines = (unsigned int*) calloc(MIN_DIRS, sizeof(unsigned int));
@@ -610,12 +614,12 @@ unsigned int get_files_and_dirs (char *** dirs_b, char ** dirs_n, char ** lines,
     printf ("1");
 
     return 1;
-}*/
+}
 
 int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPContext * context) {
     CameraList * folderList;
-    char * dir = (char*) calloc(100, sizeof(char));
-    char * file = (char*) calloc(100, sizeof(char));
+    char * dir;
+    char * file;
     char * folder = (char*) calloc(100, sizeof(char));
     int status = gp_list_new(&folderList);
     status = gp_camera_folder_list_folders(camera,
@@ -626,7 +630,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPCont
 
     status = gp_list_get_name(folderList, 0, (const char**) &dir);
 
-    status = gp_list_reset(folderList);
+    // status = gp_list_reset(folderList);
 
     char * tmp = (char*) calloc(100, sizeof(char));
     char * tmp_dir = (char*) calloc(100, sizeof(char));
@@ -657,7 +661,8 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPCont
     int nb_files = 0;
 
     for (unsigned int i = 0; i < nb; i++) {
-        status = gp_list_reset(fileList);
+        // status = gp_list_reset(fileList);
+
         strcpy(dir, "");
         status = gp_list_get_name(folderList, i, (const char**) &dir);
 
@@ -707,9 +712,6 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
     char * data = (char*) calloc(150000, sizeof(char));
 
     printf ("Allocating size : %d\n", nb_dirs);
-
-    int * ratings = (int*) calloc(nb_dirs, sizeof(int));
-
     FILE * RATING = fopen("data/images/rating.txt", "w");
 
     unsigned int i, x = 0;
@@ -752,7 +754,6 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
     fclose(RATING);
     free(commande);
     free(nom);
-    free(ratings);
     free(files);
     free(data);
 
