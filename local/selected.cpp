@@ -48,6 +48,7 @@ int main (void) {
         unsigned int files_nb = get_files_and_dirs(dossiers, dirs_n, camera, context);
         int transferts_nb = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, camera, context);
         transferer_noms(transferts, transferts_nb, context, camera);
+        fscanf(STOP, "%d", &stop);
     } while (stop == 0);
 
     for (i = 0; i < MAX_CAPTURES; i++) {
