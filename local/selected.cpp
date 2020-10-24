@@ -35,21 +35,34 @@ int main (void) {
     }
 
     i = 0;
-    FILE * STOP = fopen("data/stop/selection.txt", "r");
-
-    if (STOP == NULL) return 1;
-
     int stop = -1;
-    fscanf(STOP, "%d", &stop);
 
+    int files_nb = 0, transferts_nb = 0;
+
+    FILE * STOP = fopen("data/stop/selection.txt", "r");
+    
+    if (STOP == NULL) return 1;
+    fscanf(STOP, "%d", &stop);
     if (stop == -1) return 1;
 
-    do {
-        unsigned int files_nb = get_files_and_dirs(dossiers, dirs_n, camera, context);
-        int transferts_nb = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, camera, context);
-        transferer_noms(transferts, transferts_nb, context, camera);
-        fscanf(STOP, "%d", &stop);
-    } while (stop == 0);
+    for (unsigned int e = 0; e < MIN_DIRS; e++) {
+        for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
+            strcpy(dossiers[e][j], "");
+        }            
+    }
+
+    for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
+        strcpy(transferts[e], "");
+    }
+
+    status = gp_camera_ref(camera);
+    handleError(status);
+    
+    files_nb = get_files_and_dirs(dossiers, dirs_n, camera, context);
+    transferts_nb = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, camera, context);
+    transferer_noms(transferts, transferts_nb, context, camera);
+    fscanf(STOP, "%d", &stop);
+    fclose(STOP);
 
     for (i = 0; i < MAX_CAPTURES; i++) {
         free(liste_captures[i]);
@@ -71,7 +84,6 @@ int main (void) {
     free(transferts);
     free(dir_sizes);
     free(dossiers);
-    fclose(STOP);
 
     return 0;
 }

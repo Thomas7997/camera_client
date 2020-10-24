@@ -345,9 +345,9 @@ void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * cont
             // ÉCIRE DANS L'HISTORIQUE DES TRANSFERTS
             printf("%s\n", commande);
             printf ("Transfert !\n");
-            // system(commande);
+            system(commande);
             fprintf(HISTORIQUE, "%s\n", filename);
-            // send_request(filename);
+            send_request(filename);
         }
     }
 
@@ -386,43 +386,6 @@ unsigned int parseRating (char * line) {
 
     return line[0] - '0';
 }
-
-/*
-unsigned int getRating (char * file) {
-    char * commande = calloc(300, sizeof(char));
-    printf ("Rating\n%s\nsize : %d\n", file, strlen(file));
-
-    sprintf(commande, "cd data/images/gets;exiv2 %s -g Rating > ../tmp/exif.txt;cd ../../..", file);
-    // sprintf(commande, "cd data/images/gets;echo $(exiftool -filename -imagesize -exif:fnumber -xmp:all %s) > ../tmp/exif.txt;cd ../../..", file);
-    system(commande);
-    // execl("/bin/bash", "bash", "-c", commande, (char *) NULL);
-    printf ("%s\n", commande);
-
-    // Lecture
-    int x = 0;
-
-    printf ("Getting lines\n");
-
-    // Remplissage
-    while (fgets(lignes[x], 999, RATING)) {
-        printf ("%s\n", lignes[x++]);
-    }
-
-    unsigned int rating = parseRating(lignes);
-
-    printf ("Finished\n");
-
-    for (int i = 0; i < 10; i++) {
-        free(lignes[i]);
-    }
-
-    fclose(RATING);
-    free(lignes);
-    free(commande);
-
-    return rating;
-}
-*/
 
 void parseRatings (int * ratings, char ** lines, unsigned int size) {
     // A coder
@@ -721,35 +684,18 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
         while (dossiers[y][i][0] != 0) {
             // Commande
             printf("%s\n", dossiers[y][i]);
-            int timeout = 0;
             getPlacements(&rates, dirs[y], dossiers[y][i], data, context, camera);
             if (rates == 5) {
                 sprintf(transferts[x++], "%s/%s", dirs[y], dossiers[y][i]);
             }
 
-            // fprintf(RATING, "%s : %d\n", dossiers[y][i], rates);
+            fprintf(RATING, "%s : %d\n", dossiers[y][i], rates);
             i++;
         }
     }
 
     printf ("Lancement de la commande.\n");
     printf ("Commande lancée.\n");
-
-    // Traiter chaque image
-    // i = 0;
-    // unsigned int rating = 0;
-
-    // for (y = 0; y < nb_dirs; y++) {
-    //     for (i = 0; i < dir_sizes[y]; i++) {
-    //         // Pour chaque rating reçu
-
-    //         if (ratings[i+y] == 5) {
-    //             strcpy(transferts[x++], dossiers[y][i]);
-    //         }
-
-    //         fprintf(RATING, "%s : %s\n", dirs[i], dossiers[y][i]);
-    //     }
-    // }
 
     fclose(RATING);
     free(commande);
