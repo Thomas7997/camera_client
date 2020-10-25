@@ -69,13 +69,6 @@ int main (void) {
 
     // FIN RÉPÉTITIONS
 
-    gp_camera_free(camera);
-    free(dirs_n);
-    free(liste_captures);
-    free(transferts);
-    free(dir_sizes);
-    free(dossiers);
-
     for (int i = 0; i < MAX_CAPTURES; i++) {
         free(liste_captures[i]);
         free(transferts[i]);
@@ -88,6 +81,13 @@ int main (void) {
         free(dossiers[d]);
         free(dirs_n[d]);
     }
+
+    gp_camera_free(camera);
+    free(dirs_n);
+    free(liste_captures);
+    free(transferts);
+    free(dir_sizes);
+    free(dossiers);
 
     return 0;
 }

@@ -345,9 +345,9 @@ void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * cont
             // ÉCIRE DANS L'HISTORIQUE DES TRANSFERTS
             printf("%s\n", commande);
             printf ("Transfert !\n");
-            // system(commande);
+            system(commande);
             fprintf(HISTORIQUE, "%s\n", filename);
-            // send_request(filename);
+            send_request(filename);
         }
     }
 
