@@ -7,19 +7,12 @@ int main (void) {
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
     Camera * camera;
     GPContext *context = sample_create_context();
-
-    do {
-        gp_camera_new (&camera);
-        status = gp_camera_init(camera, context);
-        handleError(status);
-    } while (status != 0);
+    gp_camera_new (&camera);
 
     char ** liste_captures = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     char ** transferts = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     char ** dirs_n = (char**) calloc(MIN_DIRS, sizeof(char*));
     unsigned int * dir_sizes = (unsigned int *) calloc(1000, sizeof(unsigned int));
-
-    int i, j, number = 0;
 
     for (int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -29,42 +22,61 @@ int main (void) {
         dirs_n[d] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
-    for (i = 0; i < MAX_CAPTURES; i++) {
+    for (int i = 0; i < MAX_CAPTURES; i++) {
         liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
         transferts[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
-    i = 0;
+    // DÉBUT RÉPÉTITIONS
+
     int stop = -1;
+    do {
+        do {
+            status = gp_camera_init(camera, context);
+            handleError(status);
+        } while (status != 0);
 
-    int files_nb = 0, transferts_nb = 0;
+        int i, j, number = 0;
 
-    FILE * STOP = fopen("data/stop/selection.txt", "r");
-    
-    if (STOP == NULL) return 1;
-    fscanf(STOP, "%d", &stop);
-    if (stop == -1) return 1;
+        i = 0;
 
-    for (unsigned int e = 0; e < MIN_DIRS; e++) {
-        for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
-            strcpy(dossiers[e][j], "");
-        }            
-    }
+        FILE * STOP = fopen("data/stop/selection.txt", "r");
+        
+        if (STOP == NULL) return 1;
+        fscanf(STOP, "%d", &stop);
+        if (stop == -1) return 1;
 
-    for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
-        strcpy(transferts[e], "");
-    }
+        int files_nb = 0, transferts_nb = 0;
 
-    status = gp_camera_ref(camera);
-    handleError(status);
-    
-    files_nb = get_files_and_dirs(dossiers, dirs_n, camera, context);
-    transferts_nb = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, camera, context);
-    transferer_noms(transferts, transferts_nb, context, camera);
-    fscanf(STOP, "%d", &stop);
-    fclose(STOP);
+        for (unsigned int e = 0; e < MIN_DIRS; e++) {
+            for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
+                strcpy(dossiers[e][j], "");
+            }            
+        }
 
-    for (i = 0; i < MAX_CAPTURES; i++) {
+        for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
+            strcpy(transferts[e], "");
+        }
+        
+        files_nb = get_files_and_dirs(dossiers, dirs_n, camera, context);
+        transferts_nb = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, camera, context);
+        transferer_noms(transferts, transferts_nb, context, camera);
+        fscanf(STOP, "%d", &stop);
+        fclose(STOP);
+
+        gp_camera_exit(camera, context);
+    } while (stop != 1);
+
+    // FIN RÉPÉTITIONS
+
+    gp_camera_free(camera);
+    free(dirs_n);
+    free(liste_captures);
+    free(transferts);
+    free(dir_sizes);
+    free(dossiers);
+
+    for (int i = 0; i < MAX_CAPTURES; i++) {
         free(liste_captures[i]);
         free(transferts[i]);
     }
@@ -76,14 +88,6 @@ int main (void) {
         free(dossiers[d]);
         free(dirs_n[d]);
     }
-
-    gp_camera_exit(camera, context);
-    gp_camera_free(camera);
-    free(dirs_n);
-    free(liste_captures);
-    free(transferts);
-    free(dir_sizes);
-    free(dossiers);
 
     return 0;
 }
