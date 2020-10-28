@@ -5,9 +5,9 @@
 int main (void) {
     int status = 0;
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
+
     Camera * camera;
     GPContext *context = sample_create_context();
-    gp_camera_new (&camera);
 
     char ** liste_captures = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     char ** transferts = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -32,12 +32,17 @@ int main (void) {
     int stop = -1;
     do {
         do {
+            gp_camera_new (&camera);
             status = gp_camera_init(camera, context);
             handleError(status);
-            generateError(status);
-            usleep(500000);
 
-            if (status < 0) gp_camera_exit(camera, context);
+            if (status < 0) {
+                generateError(status);
+                gp_camera_exit(camera, context);
+                gp_camera_free(camera);
+            }
+
+            usleep(5000);
         } while (status != 0);
 
         int i, j, number = 0;
@@ -78,6 +83,7 @@ int main (void) {
         fclose(STOP);
 
         gp_camera_exit(camera, context);
+        gp_camera_free(camera);
     } while (stop != 1);
 
     // FIN RÉPÉTITIONS
@@ -95,7 +101,6 @@ int main (void) {
         free(dirs_n[d]);
     }
 
-    gp_camera_free(camera);
     free(dirs_n);
     free(liste_captures);
     free(transferts);
