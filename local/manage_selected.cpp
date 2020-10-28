@@ -8,6 +8,25 @@ void clearBufLast (char * buf, unsigned int len, unsigned int nb) {
     return;
 }
 
+int generateError (int status) {
+    // Notifier une erreur en fonction de ce qu'il s'agit.
+
+    switch (status)
+    {
+    case -53:
+        // Rebrancher la télécommande
+        printf ("Il faut rebrancher la télécommande.\n");
+        break;
+    
+    default:
+        break;
+    }
+
+    printf("GENERATE ERROR.\n");
+
+    return status;
+}
+
 // Envoi de la photo
 void send_request (char *name) {
     printf("Requêtes\n");
@@ -293,7 +312,7 @@ char * getName (char * buf, char * dossier) {
 }
 
 // Pour l'envoi
-void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
+int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
     int i = 0;
 
     char * commande = (char*) calloc(250, sizeof(char));
@@ -304,7 +323,7 @@ void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * cont
 
     system("cd data/images/gets");
 
-    char ** hist_lines = (char **) calloc(MAX_CAPTURES, sizeof(char*));
+    char ** hist_lines = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
     int x;
 
@@ -338,16 +357,22 @@ void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * cont
             status = gp_camera_file_get(camera, dossier, filename, GP_FILE_TYPE_NORMAL, file, context);
             handleError(status);
             printf("%s\n", dossier);
+
+            if (status < 0) return generateError(status);
+
             status = gp_file_save(file, (const char*) commande);
+
+            if (status < 0) return generateError(status);
+
             sprintf(commande, "mv data/images/gets/%s /home/thomas/camera_server/public", filename);
             // Envoyer le nom du nouveau fichier transféré au socket
 
             // ÉCIRE DANS L'HISTORIQUE DES TRANSFERTS
             printf("%s\n", commande);
             printf ("Transfert !\n");
-            system(commande);
+            // system(commande);
             fprintf(HISTORIQUE, "%s\n", filename);
-            send_request(filename);
+            // send_request(filename);
         }
     }
 
@@ -363,6 +388,8 @@ void transferer_noms (char ** liste, unsigned int n_transferts, GPContext * cont
     free(commande);
     free(dossier);
     gp_file_free(file);
+
+    return 0;
 }
 
 void enlever_last_car(char *chaine) {
@@ -482,6 +509,8 @@ int getPlacements(int * rating, char * dir, char * file, char * data, GPContext 
         context
       );
 
+      if (status < 0) return status;
+
       try {
 
     Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open((const Exiv2::byte*) data, size_l);
@@ -497,7 +526,7 @@ int getPlacements(int * rating, char * dir, char * file, char * data, GPContext 
     }
     if (xmpData.empty()) 
       {
-        return -1;
+        return -1; // Il faudrait trouver un code d'état spécial
         // std::string error(argv[1]);
         // error += ": No XMP properties found in the XMP packet";
         // throw Exiv2::Error(Exiv2::kerErrorMessage, error);
@@ -516,7 +545,6 @@ catch (Exiv2::AnyError& e)
     return -1;
   }
 
-    return 0;
 
     // std::cout << data;
 
@@ -528,7 +556,7 @@ catch (Exiv2::AnyError& e)
   // Exiv2::XmpParser::initialize();
   // ::atexit(Exiv2::XmpParser::terminate);
 
-   *rating = 0;
+   return 0;
 
 
 }
@@ -580,18 +608,16 @@ catch (Exiv2::AnyError& e)
 //     return 1;
 // }
 
-int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPContext * context) {
+int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, Camera * camera, GPContext * context) {
     CameraList * folderList;
     char * folder = (char*) calloc(100, sizeof(char));
-    int status = gp_list_new(&folderList);
+    gp_list_new(&folderList);
     const char * dir;
-    status = gp_camera_folder_list_folders(camera,
-		"/",
-		folderList,
-		context 
-	);
+    int status = gp_camera_folder_list_folders(camera, "/", folderList, context);
+    if (status < 0) return generateError(status);
 
     status = gp_list_get_name(folderList, 0, (const char**) &dir);
+    if (status < 0) return generateError(status);
 
     // status = gp_list_reset(folderList);
 
@@ -619,11 +645,15 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPCont
 		folderList,
 		context 
 	);
+    if (status < 0) return generateError(status);
 
-    int nb = gp_list_count(folderList);
+    int local_nb = gp_list_count(folderList);
     int nb_files = 0;
 
-    for (unsigned int i = 0; i < nb; i++) {
+    if (local_nb < 0) return generateError(local_nb);
+    *nb = local_nb;
+
+    for (unsigned int i = 0; i < *nb; i++) {
         // status = gp_list_reset(fileList);
 
         const char * subdir;
@@ -634,20 +664,20 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPCont
 
         strcpy(dirs_n[i], tmp_dir);
 
-        gp_list_reset(fileList);
+        status = gp_list_reset(fileList);
+        if (status < 0) return generateError(status);
 
-        status = gp_camera_folder_list_files(camera,
-		    tmp_dir,
-		    fileList,
-		    context 
-	    );
+        status = gp_camera_folder_list_files(camera, tmp_dir, fileList, context);
+        if (status < 0) return generateError(status);
 
         nb_files = gp_list_count(fileList);
+        if (nb_files < 0) return generateError(nb_files);
 
         for (unsigned int j = 0; j < nb_files; j++) {
             const char * file;
             status = gp_list_get_name(fileList, j, (const char**) &file);
             handleError(status);
+            if (status < 0) return generateError(status);
             strcpy(dirs_b[i][j], file);
             printf ("%s\n", dirs_b[i][j]);
         }
@@ -660,11 +690,10 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, Camera * camera, GPCont
     free(tmp);
     gp_list_free(folderList);
     gp_list_free(fileList);
-
-    return nb; // Nombre de dossiers
+    return 0; // Pas d'erreur
 }
 
-int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, Camera * camera, GPContext * context) {
+int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, unsigned int * transferts_nb, Camera * camera, GPContext * context) {
     printf("For each rating\n");
     int y = 0;
     int rates = 0;
@@ -684,7 +713,10 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
         while (dossiers[y][i][0] != 0) {
             // Commande
             printf("%s\n", dossiers[y][i]);
-            getPlacements(&rates, dirs[y], dossiers[y][i], data, context, camera);
+            int status = getPlacements(&rates, dirs[y], dossiers[y][i], data, context, camera);
+
+            if (status < 0) return generateError(status);
+
             if (rates == 5) {
                 sprintf(transferts[x++], "%s/%s", dirs[y], dossiers[y][i]);
             }
@@ -703,5 +735,7 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
     free(files);
     free(data);
 
-    return x;
+    *transferts_nb = x;
+
+    return 0;
 }

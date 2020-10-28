@@ -34,6 +34,10 @@ int main (void) {
         do {
             status = gp_camera_init(camera, context);
             handleError(status);
+            generateError(status);
+            usleep(500000);
+
+            if (status < 0) gp_camera_exit(camera, context);
         } while (status != 0);
 
         int i, j, number = 0;
@@ -46,7 +50,7 @@ int main (void) {
         fscanf(STOP, "%d", &stop);
         if (stop == -1) return 1;
 
-        int files_nb = 0, transferts_nb = 0;
+        unsigned int files_nb = 0, transferts_nb = 0;
 
         for (unsigned int e = 0; e < MIN_DIRS; e++) {
             for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
@@ -58,9 +62,18 @@ int main (void) {
             strcpy(transferts[e], "");
         }
         
-        files_nb = get_files_and_dirs(dossiers, dirs_n, camera, context);
-        transferts_nb = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, camera, context);
-        transferer_noms(transferts, transferts_nb, context, camera);
+        status = get_files_and_dirs(dossiers, dirs_n, &files_nb, camera, context);
+
+        if (status < 0) continue;
+
+        status = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, &transferts_nb, camera, context);
+
+        if (status < 0) continue;
+
+        status = transferer_noms(transferts, transferts_nb, context, camera);
+
+        if (status < 0) continue;
+
         fscanf(STOP, "%d", &stop);
         fclose(STOP);
 
