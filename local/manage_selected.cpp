@@ -11,6 +11,11 @@ void clearBufLast (char * buf, unsigned int len, unsigned int nb) {
 int generateError (int status) {
     // Notifier une erreur en fonction de ce qu'il s'agit.
 
+    // Pour une optimisation de vitesse, il serait préférable d'utiliser un système de fichiers et un second script de lecture de fichiers et de lancement de requêtes CURL
+    // Écire le status dans un fichier
+    FILE * ERR = fopen("data/tmp/errors.txt", "w");
+    fprintf(ERR, "%d", status);
+
     switch (status)
     {
     case -53:
@@ -23,6 +28,7 @@ int generateError (int status) {
     }
 
     printf("GENERATE ERROR.\n");
+    fclose(ERR);
 
     return status;
 }

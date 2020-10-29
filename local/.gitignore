@@ -2,5 +2,15 @@ architecture
 sync
 transfert
 transfert2
+selected
+task
+sync
+usb
+manage_task
+manage_selected
+manage
+log
+capture
+capture_errors
 
 *.o
