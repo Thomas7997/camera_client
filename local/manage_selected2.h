@@ -54,7 +54,7 @@ unsigned int parseRating (char * line);
 void parseRatings (int * ratings, char ** lines, unsigned int size);
 //unsigned int read_dir_list (char ** dossiers, unsigned int * refs);
 //unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsigned int starts);
-int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, Camera * camera, GPContext * context);
+int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context);
 int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, unsigned int * transferts_nb, Camera * camera, GPContext * context);
 void handleError(int status);
 static void

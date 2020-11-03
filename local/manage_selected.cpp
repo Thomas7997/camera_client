@@ -614,7 +614,7 @@ catch (Exiv2::AnyError& e)
 //     return 1;
 // }
 
-int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, Camera * camera, GPContext * context) {
+int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context) {
     CameraList * folderList;
     char * folder = (char*) calloc(100, sizeof(char));
     gp_list_new(&folderList);
@@ -679,6 +679,8 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, Came
         nb_files = gp_list_count(fileList);
         if (nb_files < 0) return generateError(nb_files);
 
+        dir_sizes[i] = nb_files;
+
         for (unsigned int j = 0; j < nb_files; j++) {
             const char * file;
             status = gp_list_get_name(fileList, j, (const char**) &file);
@@ -699,6 +701,14 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, Came
     return 0; // Pas d'erreur
 }
 
+void afficher_i (unsigned int * buffer, unsigned int n) {
+    unsigned int i = 0;
+
+    for (i = 0; i < n; i++) {
+        printf ("%u\n", buffer[i]);
+    }
+}
+
 int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, unsigned int * transferts_nb, Camera * camera, GPContext * context) {
     printf("For each rating\n");
     int y = 0;
@@ -712,11 +722,22 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
     printf ("Allocating size : %d\n", nb_dirs);
     FILE * RATING = fopen("data/images/rating.txt", "w");
 
-    unsigned int i, x = 0;
+    afficher_i(dir_sizes, nb_dirs);
 
-    for (int y = 0; y < nb_dirs; y++) {
-        i = 0;
-        while (dossiers[y][i][0] != 0) {
+    int i, x = 0;
+
+    for (int y = nb_dirs-1; y >= 0; y--) {
+        printf("dir_size : %u\n", dir_sizes[y]);
+        // indice du dernier fichier de dossier
+        if (dir_sizes[y] > 0) {
+            i = dir_sizes[y] - 1;
+        }
+
+        else {
+            i = -1;
+        }
+
+        while (i >= 0) {
             // Commande
             printf("%s\n", dossiers[y][i]);
             int status = getPlacements(&rates, dirs[y], dossiers[y][i], data, context, camera);
@@ -728,7 +749,8 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
             }
 
             fprintf(RATING, "%s : %d\n", dossiers[y][i], rates);
-            i++;
+
+            i--;
         }
     }
 
