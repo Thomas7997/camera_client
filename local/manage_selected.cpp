@@ -271,6 +271,20 @@ void linearize (char *base, char **lines) {
     }
 }
 
+unsigned int dossiers_to_list (char *** dossiers, char ** list, char ** dirs, unsigned int nb_dossiers, unsigned int * nb_files) {
+    unsigned int x = 0, item = 0;
+
+    while (x < nb_dossiers) {
+        for (unsigned int y = 0; y < nb_files[x]; y++) {
+            sprintf(list[item++], "%s/%s", dirs[x], dossiers[x][y]);
+        }
+        
+        x++;
+    }
+
+    return item;
+}
+
 int compare_file_historique (char * file, char ** historique, int lines) {
     int i;
     unsigned int file_s = strlen(file)-1;
@@ -762,6 +776,47 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
     free(nom);
     free(files);
     free(data);
+
+    *transferts_nb = x;
+
+    return 0;
+}
+
+int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context) {
+    printf("For each rating\n");
+    int y = 0;
+    int rates = 0;
+
+    char * nom = (char*) calloc(100, sizeof(char));
+    char * data = (char*) calloc(150000, sizeof(char));
+    char * dirname = (char*) calloc(100, sizeof(char));
+
+    printf ("Allocating size : %d\n", files_nb);
+    FILE * RATING = fopen("data/images/rating.txt", "w");
+
+    int i, x = 0;
+
+    for (int y = files_nb-1; y >= 0; y--) {
+        printf("files : %d\n", files_nb);
+
+        // Commande
+        printf("%s\n", files[y]);
+        nom = getName(files[y], dirname);
+        int status = getPlacements(&rates, dirname, nom, data, context, camera);
+
+        if (status < 0) return generateError(status);
+
+        if (rates == 5) {
+            sprintf(transferts[x++], "%s/%s", dirname, nom);
+        }
+
+        fprintf(RATING, "%s : %d\n", files[y], rates);
+    }
+
+    fclose(RATING);
+    free(nom);
+    free(data);
+    free(dirname);
 
     *transferts_nb = x;
 
