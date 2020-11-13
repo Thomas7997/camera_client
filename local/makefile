@@ -39,6 +39,9 @@ CAPTURE : capture.o
 TRANSFERT2 : transfert2.o
 	gcc -o transfert2 transfert2.o
 
+MODEL : model.c
+	gcc -o models model.c -lcurl
+
 SYNC : sync.o
 	gcc -o sync sync.o
 

@@ -17,6 +17,7 @@
 #include <gphoto2/gphoto2-setting.h>
 #include <gphoto2/gphoto2-filesys.h>
 #include <gphoto2/gphoto2-list.h>
+#include <gphoto2/gphoto2-abilities-list.h>
 
 #define MAX 80
 #define MAX_CAPTURES 10000
@@ -36,6 +37,7 @@ typedef struct _Dossier Dossier;
 
 void mirroir (char * buf, unsigned int n);
 int generateError (int status);
+int getCameraModel (Camera * cam);
 char * getName (char * buf, char * dossier);
 void clearBufLast (char * buf, unsigned int len, unsigned int nb);
 void send_request (char *name);
@@ -57,6 +59,7 @@ void parseRatings (int * ratings, char ** lines, unsigned int size);
 int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, Camera * camera, GPContext * context);
 int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, unsigned int * transferts_nb, Camera * camera, GPContext * context);
 void handleError(int status);
+void send_status_request (int status);
 static void
 ctx_error_func (GPContext *context, const char *str, void *data);
 static void

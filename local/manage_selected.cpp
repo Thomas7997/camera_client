@@ -8,13 +8,60 @@ void clearBufLast (char * buf, unsigned int len, unsigned int nb) {
     return;
 }
 
+int getCameraModel (Camera * cam) {
+    CameraAbilities cam_abilities;
+    FILE * MODEL = fopen("data/tmp/model.txt", "w");
+    char * camera_model = (char*) calloc(50, sizeof(char));
+    int status = gp_camera_get_abilities(cam, &cam_abilities);
+
+    if (status < 0) {
+        free(camera_model);
+        fclose(MODEL);
+        return generateError(status);
+    }
+
+    strcpy(camera_model, cam_abilities.model);
+
+    fprintf (MODEL, "%s", camera_model);
+    printf ("modèle : %s\n", camera_model);
+
+    free(camera_model);
+    fclose(MODEL);
+    return 0;
+}
+
+void send_status_request (int status) {
+    CURL *curl;
+    CURLcode res;
+
+    char * request_string = (char*) calloc(1000, sizeof(char));
+    sprintf(request_string, "status=%d", status);
+    
+    curl_global_init(CURL_GLOBAL_ALL);
+    
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/transfert/status");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_string);
+    
+        res = curl_easy_perform(curl); 
+        if(res != CURLE_OK)
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+        curl_easy_strerror(res));
+    
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
+    printf ("\n");
+}
+
 int generateError (int status) {
     // Notifier une erreur en fonction de ce qu'il s'agit.
 
     // Pour une optimisation de vitesse, il serait préférable d'utiliser un système de fichiers et un second script de lecture de fichiers et de lancement de requêtes CURL
     // Écire le status dans un fichier
-    FILE * ERR = fopen("data/tmp/errors.txt", "w");
-    fprintf(ERR, "%d", status);
+    FILE * ERR = fopen("data/tmp/errors.txt", "r+");
+    int previousStatus = 0;
 
     switch (status)
     {
@@ -27,7 +74,12 @@ int generateError (int status) {
         break;
     }
 
-    printf("GENERATE ERROR.\n");
+    if (fscanf(ERR, "%d", &previousStatus) == 1 && previousStatus != status) {
+        send_status_request(status);
+        fprintf(ERR, "%d\n", status);
+    }
+
+    printf("GENERATE ERROR %d\n", status);
     fclose(ERR);
 
     return status;
@@ -376,9 +428,9 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
             // ÉCIRE DANS L'HISTORIQUE DES TRANSFERTS
             printf("%s\n", commande);
             printf ("Transfert !\n");
-            // system(commande);
+            system(commande);
             fprintf(HISTORIQUE, "%s\n", filename);
-            // send_request(filename);
+            send_request(filename);
         }
     }
 

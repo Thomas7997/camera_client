@@ -27,6 +27,8 @@ int main (void) {
         transferts[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
+    int successBoot = 0;
+
     // DÉBUT RÉPÉTITIONS
 
     int stop = -1;
@@ -40,10 +42,20 @@ int main (void) {
                 generateError(status);
                 gp_camera_exit(camera, context);
                 gp_camera_free(camera);
+                successBoot = 0;
             }
 
             usleep(5000);
         } while (status != 0);
+
+        if (successBoot == 0) {
+            status = getCameraModel(camera);
+
+            if (status < 0) continue;
+
+            send_status_request(0);
+            successBoot = 1;
+        }
 
         int i, j, number = 0;
 
@@ -85,6 +97,10 @@ int main (void) {
         gp_camera_exit(camera, context);
         gp_camera_free(camera);
     } while (stop != 1);
+
+    // Vider le fichier car il n'y a aucun modèle
+    FILE * CAM_MODEL = fopen("data/tmp/camera.txt", "w");
+    fclose(CAM_MODEL);
 
     // FIN RÉPÉTITIONS
 
