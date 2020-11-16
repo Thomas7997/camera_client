@@ -79,7 +79,7 @@ int main (void) {
             strcpy(transferts[e], "");
         }
         
-        status = get_files_and_dirs(dossiers, dirs_n, &files_nb, camera, context);
+        status = get_files_and_dirs(dossiers, dirs_n, &files_nb, dir_sizes, camera, context);
 
         if (status < 0) continue;
 

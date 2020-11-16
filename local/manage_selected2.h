@@ -12,6 +12,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+#include <time.h>
 #include <gphoto2/gphoto2.h>
 #include <gphoto2/gphoto2-port-log.h>
 #include <gphoto2/gphoto2-setting.h>
@@ -25,6 +26,7 @@
 #define TMaxL 150000
 #define TMax 100
 #define MIN_DIRS 10
+#define NB_PARTS 2
 
 struct _Dossier {
     char * title;
@@ -56,10 +58,15 @@ unsigned int parseRating (char * line);
 void parseRatings (int * ratings, char ** lines, unsigned int size);
 //unsigned int read_dir_list (char ** dossiers, unsigned int * refs);
 //unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsigned int starts);
-int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, Camera * camera, GPContext * context);
+int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context);
 int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, unsigned int * transferts_nb, Camera * camera, GPContext * context);
+int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context);
 void handleError(int status);
+<<<<<<< HEAD
 void send_status_request (int status);
+=======
+unsigned int dossiers_to_list (char *** dossiers, char ** list, char ** dirs, unsigned int nb_dossiers, unsigned int * nb_files);
+>>>>>>> e292c0cc082e9ccc02da018f84d1a647a3a60b0d
 static void
 ctx_error_func (GPContext *context, const char *str, void *data);
 static void
