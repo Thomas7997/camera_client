@@ -29,6 +29,10 @@ int main (void) {
 
     int successBoot = 0;
 
+    FILE * CONNECTED;
+    FILE * WIFI;
+    int wifiStatus = 0;
+
     // DÉBUT RÉPÉTITIONS
 
     int stop = -1;
@@ -43,12 +47,23 @@ int main (void) {
                 gp_camera_exit(camera, context);
                 gp_camera_free(camera);
                 successBoot = 0;
+                CONNECTED = fopen("data/tmp/camera_connected.txt", "w");
+                fprintf(CONNECTED, "0");
+                fclose(CONNECTED);
             }
 
             usleep(5000);
         } while (status != 0);
 
         if (successBoot == 0) {
+            // Indiquer que la connexion est établie correctement
+            CONNECTED = fopen("data/tmp/camera_connected.txt", "w");
+            fprintf(CONNECTED, "1");
+            fclose(CONNECTED);
+
+            WIFI = fopen("data/tmp/wifi_status.txt", "r");
+            fscanf(WIFI, "%d", &wifiStatus);
+
             status = getCameraModel(camera);
 
             if (status < 0) continue;
@@ -58,16 +73,13 @@ int main (void) {
         }
 
         int i, j, number = 0;
-
-        i = 0;
-
+        unsigned int files_nb = 0, transferts_nb = 0;
         FILE * STOP = fopen("data/stop/selection.txt", "r");
-        
         if (STOP == NULL) return 1;
         fscanf(STOP, "%d", &stop);
         if (stop == -1) return 1;
 
-        unsigned int files_nb = 0, transferts_nb = 0;
+        i = 0;
 
         for (unsigned int e = 0; e < MIN_DIRS; e++) {
             for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
@@ -87,9 +99,16 @@ int main (void) {
 
         if (status < 0) continue;
 
-        status = transferer_noms(transferts, transferts_nb, context, camera);
+        if (wifiStatus == 0) {
+            printf ("Mode hors ligne.\n");
+            // Sauvegarder noms
+        }
 
-        if (status < 0) continue;
+        else {
+            printf ("Mode en ligne.\n");
+            status = transferer_noms(transferts, transferts_nb, context, camera);
+            if (status < 0) continue;
+        }
 
         fscanf(STOP, "%d", &stop);
         fclose(STOP);

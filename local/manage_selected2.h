@@ -51,6 +51,7 @@ void linearize (char *base, char **lines);
 int compare_file_historique (char * file, char ** historique, int lines);
 int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera);
 int getPlacements(int * rating, char * dir, char * file, GPContext * context, Camera * camera);
+int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera);
 void enlever_last_car(char *chaine);
 void select_medias ();
 void getFiles (void);
@@ -62,11 +63,8 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
 int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, unsigned int * transferts_nb, Camera * camera, GPContext * context);
 int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context);
 void handleError(int status);
-<<<<<<< HEAD
 void send_status_request (int status);
-=======
 unsigned int dossiers_to_list (char *** dossiers, char ** list, char ** dirs, unsigned int nb_dossiers, unsigned int * nb_files);
->>>>>>> e292c0cc082e9ccc02da018f84d1a647a3a60b0d
 static void
 ctx_error_func (GPContext *context, const char *str, void *data);
 static void

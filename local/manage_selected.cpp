@@ -383,6 +383,43 @@ char * getName (char * buf, char * dossier) {
     return buffer;
 }
 
+int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
+    int i = 0, file_transfered = 0, x = 0, nb_historique;
+    char * commande = (char*) calloc(300, sizeof(char));
+    char ** hist_lines = (char**) calloc(MAX_CAPTURES, sizeof(char*));
+    char * current_file = (char*) calloc(TAILLE_NOM, sizeof(char));
+    char * dossier = (char*) calloc(TAILLE_NOM, sizeof(char));
+    char * filename = (char*) calloc(100, sizeof(char));
+
+    for (int u = 0; u < MAX_CAPTURES; u++) {
+        hist_lines[u] = (char*) calloc(TAILLE_NOM, sizeof(char));
+    }
+
+    FILE * HISTORIQUE = fopen("data/images/historique.txt", "a");
+    FILE * HISTORIQUER = fopen("data/images/historique.txt", "r");
+
+    while (fgets(hist_lines[x++], TAILLE_NOM, HISTORIQUER));
+
+    nb_historique = x;
+    x = 0;
+
+    for (i = 0; i < nb_historique; i++) {
+        strcpy(dossier, "");
+        filename = getName(liste[i], dossier);
+
+        // Suite ici
+    }
+
+    for (int u = 0; u < MAX_CAPTURES; u++) {
+        free(hist_lines[u]);
+    }
+
+    fclose(HISTORIQUE);
+    fclose(HISTORIQUER);
+    free(hist_lines);
+    free(commande);
+}
+
 // Pour l'envoi
 int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
     int i = 0;
@@ -412,7 +449,6 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
     int status = 0;
     CameraFile * file;
     gp_file_new(&file);
-
     char * filename = (char*) calloc(100, sizeof(char));
 
     for (i = 0; i < n_transferts; i++) {
