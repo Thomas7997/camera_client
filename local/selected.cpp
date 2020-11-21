@@ -99,16 +99,9 @@ int main (void) {
 
         if (status < 0) continue;
 
-        if (wifiStatus == 0) {
-            printf ("Mode hors ligne.\n");
-            // Sauvegarder noms
-        }
-
-        else {
-            printf ("Mode en ligne.\n");
-            status = transferer_noms(transferts, transferts_nb, context, camera);
-            if (status < 0) continue;
-        }
+        printf ("Mode en ligne.\n");
+        status = transferer_noms(transferts, transferts_nb, context, camera, wifiStatus);
+        if (status < 0) continue;
 
         fscanf(STOP, "%d", &stop);
         fclose(STOP);

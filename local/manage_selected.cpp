@@ -421,7 +421,7 @@ int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * cont
 }
 
 // Pour l'envoi
-int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
+int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera, int online) {
     int i = 0;
 
     char * commande = (char*) calloc(250, sizeof(char));
@@ -472,15 +472,27 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
 
             if (status < 0) return generateError(status);
 
-            sprintf(commande, "mv data/images/gets/%s /home/thomas/camera_server/public", filename);
+            if (!online) {
+                sprintf(commande, "mv data/images/gets/%s /home/thomas/camera_server/public", filename);
+                system(commande);
+                send_request(filename);
+            }
+
+            else {
+                sprintf(commande, "mv data/images/gets/%s data/images/cloud", filename);
+                system(commande);
+
+                // Indiquer que des fichiers ont été transférés hors ligne.
+
+                // Ou détecter dans un autre script que des fichiers existent dans le mode hors ligne.
+            }
+
             // Envoyer le nom du nouveau fichier transféré au socket
 
             // ÉCIRE DANS L'HISTORIQUE DES TRANSFERTS
             printf("%s\n", commande);
             printf ("Transfert !\n");
-            system(commande);
             fprintf(HISTORIQUE, "%s\n", filename);
-            send_request(filename);
         }
     }
 

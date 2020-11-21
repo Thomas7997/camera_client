@@ -49,7 +49,7 @@ void afficher_tab2 (char ** tab);
 void transform_noms (char ** liste, char ** nouvelleListe, int size);
 void linearize (char *base, char **lines);
 int compare_file_historique (char * file, char ** historique, int lines);
-int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera);
+int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera, int wifiStatus);
 int getPlacements(int * rating, char * dir, char * file, GPContext * context, Camera * camera);
 int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera);
 void enlever_last_car(char *chaine);
@@ -70,5 +70,6 @@ ctx_error_func (GPContext *context, const char *str, void *data);
 static void
 ctx_status_func (GPContext *context, const char *str, void *data);
 GPContext* sample_create_context();
+void declancher_transferer_hors_ligne(char ** transferts, unsigned int transferts_nb, GPContext * context, Camera * camera);
 
 #endif
