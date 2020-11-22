@@ -130,172 +130,6 @@ void afficher_tab2 (char ** tab) {
     }
 }
 
-// unsigned int load_dossiers (char ** dossiers, const char * path, unsigned int * refs) {
-//     int k=0; //nb de fois ou on detecte les mots "le dossier"
-//     int l=0;
-//     int r=0;
-//     char TAB1[TMaxL] = ""; // va contenir tt le file.txt
-//     char tmp[100]={0};
-//     int tab[TMax]={0}; //liée  a k contient les indice de ou les mots "le dossier" sont dans le TAB1
-//     char code[TMax]=""; //contient les noms des dossiers separés par "+%+"
-//     char code1[500]="";                    
-//     char TAB2[]= "Le dossier";
-//     char TAB3[]="aucun";
-//     unsigned int * ks = (unsigned int*) calloc(10, sizeof(unsigned int));
-
-//     FILE * File;
-//     File = fopen(path, "r");
-//     if (File == NULL) {
-//         exit(0);
-//     }
-  
-//     int rado = 0;
-//     int longeur = 0;
-//     // boucle for pour mettre dans TAB1 
-//     for(int aze=0; aze<50000; aze++) {
-//         fgets(tmp,2000,File);
-//         while(tmp[rado] != 0) { 
-//             TAB1[longeur] = tmp[rado];
-//             longeur = longeur+1;
-//             rado = rado + 1;
-//         }
-
-//         for(int zer=0; zer<100; zer++) {
-//             tmp[zer] = 0;
-//         }
-
-//         rado=0;
-//     }
-
-//     // compare "le dossier" et TAB1[X] parcour tout TAB1
-
-//     for(int c = 0;c < longeur; c++) {
-//         if(TAB1[c]==TAB2[0]) {
-//         if(TAB1[c+1]==TAB2[1]) {
-//         if(TAB1[c+2]==TAB2[2]) {
-//             if(TAB1[c+3]==TAB2[3])
-//             {
-//                 if(TAB1[c+4]==TAB2[4])
-//                 {if(TAB1[c+5]==TAB2[5])
-//                 {if(TAB1[c+6]==TAB2[6])
-//                    {if(TAB1[c+7]==TAB2[7])
-
-//                    {
-//                     if(TAB1[c+8]==TAB2[8])
-//                      {
-//                         if(TAB1[c+9]==TAB2[9])    {  
-                           
-//                             tab[k]=c+3;                   
-//                              k=k+1;
-//     }}} }}}}}}}}
-
-//     int g=0;
-//     for(int rty=0;rty<k;rty++) {
-//         g=tab[rty];
-//         for (int h=0;h<60;h++) {
-//             if(TAB1[g+h]==TAB3[0]) {
-//                 if(TAB1[g+1+h]==TAB3[1]) {
-//                     if(TAB1[g+h+2]==TAB3[2]) {
-//                             if(TAB1[g+h+3]==TAB3[3]) {
-//                                 tab[rty]=0; 
-//                             }
-//                         }
-//                     }
-//                 }
-
-//             }
-//         }
-//     int q=0;
-//     int t=0;
-//     int qsd=0;
-//     unsigned int x = 0;
-//     unsigned int y = 0;
-//     unsigned int xk = 0;
-
-//     for(int s=0;s<k;s++) {
-//         if(tab[s] != 0) {
-//             ks[xk++] = s;
-//             strcpy(code, "");
-//             // printf("%d  ,,",tab[s]);
-//             t = tab[s];
-//             qsd=0;
-//             for (int a=0;a<15;a++) {
-//                 if(TAB1[t+a]=='/') {
-//                     y = 0;
-//                     while(TAB1[t+a+qsd+2]!=' ') { 
-//                         code[q]=TAB1[t+a+qsd];
-//                         printf ("%c", code[q]);
-//                         dossiers[x][y++] = code[q];
-//                         qsd++;  
-//                         q=q+1;
-//                     }
-//                     printf ("1\n");
-//                     x++;
-//                 }
-//             }
-
-//             // code[q]='+';code[q+1]='%';code[q+2]='+';q=q+3;
-//         }
-//     }
-
-//     t=0;
-//     int klm=0;
-//     int fdj=0;
-//     for(int jkl=0;jkl<k;jkl++) {
-//         if(tab[jkl]!=0) {
-//             printf("%d\n",tab[jkl]);
-//             klm=tab[jkl];
-//             for (int hjk=0;hjk<100;hjk++) {	
-//                 if(TAB1[klm+hjk]=='#') {
-//                     while (TAB1[klm+hjk+fdj]!='I') {   
-//                         code1[t]=TAB1[klm+hjk+fdj];
-//                         fdj++;
-//                         t++;
-//                     }
-//                 }
-//                 fdj=0;
-//             }
-//         }
-//     }
-
-//     // for(int u=0;u<10000;u++) {
-//     //     printf("%c",code1[u]);
-//     // }
-
-
-//     unsigned int u = 0;
-//     char * number = (char*) calloc(5, sizeof(char));
-
-//     x = 0;
-
-//     while (code1[u] != 0) {
-//         // printf ("%c", code1[u]);
-//         strcpy(number, "");
-//         if (code1[u-1] == '#') {
-//             y = 0;
-//             while (code1[u] != ' ') {
-//                 number[y++] = code1[u];
-//                 // printf ("%c", code1[u]);
-//                 u++;
-//             }
-
-//             sscanf(number, "%d", &refs[x]);
-
-//             // Calcul
-//             refs[x] = refs[x] + ks[x];
-//             x++;
-//         }
-        
-//         u++;
-//     }
-
-//     free(number);
-//     free(ks);
-//     fclose(File);
-
-//     return x;
-// }
-
 // Il faut enlever l'extension
 void transform_noms (char ** liste, char ** nouvelleListe, int size) {
     int i = 0, j;
@@ -459,7 +293,13 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
         // A corriger
         file_transfered = compare_file_historique(filename, hist_lines, x);
         if (file_transfered == 0) {
-            sprintf(commande, "data/images/gets/%s", filename);
+            if (online) {
+                sprintf(commande, "data/images/gets/%s", filename);
+            }
+
+            else {
+                sprintf(commande, "data/images/cloud/%s", filename);
+            }
 
             printf ("%s\n", commande);
             status = gp_camera_file_get(camera, dossier, filename, GP_FILE_TYPE_NORMAL, file, context);
@@ -472,15 +312,15 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
 
             if (status < 0) return generateError(status);
 
-            if (!online) {
-                sprintf(commande, "mv data/images/gets/%s /home/thomas/camera_server/public", filename);
-                system(commande);
-                send_request(filename);
+            if (online) {
+                // sprintf(commande, "mv data/images/gets/%s /home/thomas/camera_server/public", filename);
+                // system(commande);
+                // send_request(filename);
             }
 
             else {
-                sprintf(commande, "mv data/images/gets/%s data/images/cloud", filename);
-                system(commande);
+                // sprintf(commande, "mv data/images/gets/%s data/images/cloud", filename);
+                // system(commande);
 
                 // Indiquer que des fichiers ont été transférés hors ligne.
 
@@ -545,34 +385,6 @@ void parseRatings (int * ratings, char ** lines, unsigned int size) {
         i++;
     }
 }
-
-// unsigned int read_dir_list (char ** dossiers, unsigned int * refs) {
-//     unsigned int dirs_nb = load_dossiers(dossiers, "data/images/gets.txt", refs);
-
-//     for (unsigned int i = 0; i < dirs_nb; i++) {
-//         clearBufLast(dossiers[i], strlen(dossiers[i])-1, 1);
-//     }
-
-//     return dirs_nb; // Nombre de dossiers contenant des fichiers
-// }
-
-// unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsigned int starts) {
-//     unsigned int line_size, x = 0, i, y;
-
-//     // Parser la liste de fichiers
-//     for (i = starts; i < nb; i++) {
-//         if (lines[i][0] == '#') {
-//             for (y = 7; y <= 18; y++) {
-//                 files[x][y-7] = lines[i][y];
-//             }
-//             x++;
-//         }
-
-//         else if (x != 0) break;
-//     }
-
-//     return x;
-// }
 
 void handleError(int status) {
     printf ("%s\n", gp_result_as_string(status));

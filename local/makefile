@@ -1,4 +1,4 @@
-all : MANAGE TRANSFERT2 SYNC USER ARCHITECTURE CONSTRUCTION CAPTURE_EXEC CAPTURE_ERRORS MANAGE_SELECTED
+all : MANAGE TRANSFERT2 SYNC USER ARCHITECTURE CONSTRUCTION CAPTURE_EXEC CAPTURE_ERRORS MANAGE_SELECTED TRANSFERTS
 
 manage_selected.o : manage_selected.c
 	gcc -c -Wall manage_selected.c
@@ -57,11 +57,20 @@ CAPTURE_ERRORS : capture_errors.o
 MANAGE_SELECTEDS : manage_selected.cpp
 	g++ -o selected selected.cpp manage_selected.cpp -lcurl -lexiv2 -lgphoto2 -lgphoto2_port
 
+TRANSFERTS : transferts.cpp
+	g++ -Wall -o transferts transferts.cpp manage_selected.cpp -lcurl -lexiv2 -lgphoto2 -lgphoto2_port
+
 MANAGE_OPTIMALE : selection_optimale.cpp
 	g++ -o selection_optimale selection_optimale.cpp manage_selected.cpp -lcurl -lexiv2 -lgphoto2 -lgphoto2_port
 
 ARCHITECTURE : architecture.o 
 	gcc -o architecture architecture.o
+
+AUTO : auto.c
+	gcc -o auto auto.c manage_auto.c -lgphoto2
+
+WIFI : wifi_status.c
+	gcc -o wifi_status wifi_status.c
 
 CONSTRUCTION : architecture
 	./architecture

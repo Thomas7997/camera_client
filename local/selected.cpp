@@ -44,7 +44,7 @@ int main (void) {
 
             if (status < 0) {
                 generateError(status);
-                gp_camera_exit(camera, context);
+                // gp_camera_exit(camera, context);
                 gp_camera_free(camera);
                 successBoot = 0;
                 CONNECTED = fopen("data/tmp/camera_connected.txt", "w");
