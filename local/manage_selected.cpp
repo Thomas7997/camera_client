@@ -58,32 +58,18 @@ void send_status_request (int status) {
 int generateError (int status) {
     // Notifier une erreur en fonction de ce qu'il s'agit.
 
-    // Pour une optimisation de vitesse, il serait préférable d'utiliser un système de fichiers et un second script de lecture de fichiers et de lancement de requêtes CURL
+    // J'utilise un système de fichiers et un second script de lecture de fichiers et de lancement de requêtes CURL
     // Écire le status dans un fichier
     FILE * ERR = fopen("data/tmp/errors.txt", "r");
     FILE * NOTIFICATION;
     int previousStatus = 0;
 
-    switch (status)
-    {
-    case -53:
-        // Rebrancher la télécommande
-        printf ("Il faut rebrancher la télécommande.\n");
-        break;
+    NOTIFICATION = fopen("data/tmp/errors.txt", "w");
     
-    default:
-        break;
-    }
-
-    if (fscanf(ERR, "%d", &previousStatus) == 1 && previousStatus != status) {
-        // send_status_request(status);
-        NOTIFICATION = fopen("data/tmp/errors.txt", "w");
-        
-        // Envoyer l'ordre de notifier vers un autre script qui détecte le changement de status
-        
-        fprintf(NOTIFICATION, "%d\n", status);
-        fclose(NOTIFICATION);
-    }
+    // Envoyer l'ordre de notifier vers un autre script qui détecte le changement de status
+    
+    fprintf(NOTIFICATION, "%d\n", status);
+    fclose(NOTIFICATION);
 
     printf("GENERATE ERROR %d\n", status);
     fclose(ERR);
@@ -98,7 +84,7 @@ void send_request (char *name) {
     CURL *curl;
     CURLcode res;
 
-    char * request_string = (char *) calloc(1000, sizeof(char));
+    char * request_string = (char*) calloc(1000, sizeof(char));
     sprintf(request_string, "name=%s", name);
 
     
@@ -436,7 +422,7 @@ int getPlacements(int * rating, char * dir, char * file, char * data, GPContext 
 {
     int status = 0;
     
-    uint64_t size_l = 32000;
+    uint64_t size_l = 64000;
       status = gp_camera_file_read(camera,
         dir,
         file,
@@ -498,53 +484,6 @@ catch (Exiv2::AnyError& e)
 
 
 }
-
-// unsigned int get_files_and_dirs (char *** dirs_b, char ** dirs_n, char ** lines, unsigned int nb, unsigned int * sizes_list) {
-//     // Executer read_dir_list, read_file_list puis blockerize ...
-//     unsigned int * ref_lines = (unsigned int*) calloc(MIN_DIRS, sizeof(unsigned int));
-//     char ** files = (char**) calloc(1000, sizeof(char*));
-//     unsigned int x, y, z;
-
-//     printf ("Parsing ...\n");
-
-//     for (int i = 0; i < 1000; i++) {
-//         files[i] = (char*) calloc(100, sizeof(char));
-//     }
-
-//     unsigned int lines_nb = read_dir_list(dirs_n, ref_lines);
-//     unsigned int tmp_size, tmp_y = 0;
-
-//     printf("%d", lines_nb);
-
-//     for (x = 0; x < lines_nb; x++) {
-//         for (int i = 0; i < 1000; i++) {
-//             for (int j = 0; j < 100; j++) {
-//                 files[i][j] = 0;
-//             }
-//         }
-
-//         tmp_size = read_file_list(files, lines, nb, ref_lines[x]); // ref_line est la lignes où commencer
-
-//         for (y = 0; y < tmp_size; y++) {
-//             strcpy(dirs_b[x][y], files[y]);
-//         }
-
-//         // tmp_y += tmp_size;
-//         // z += tmp_size-1;
-
-//         x++;
-//     }
-
-//     for (int i = 0; i < 1000; i++) {
-//         free(files[i]);
-//     }
-
-//     free(files);
-
-//     printf ("1");
-
-//     return 1;
-// }
 
 int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context) {
     CameraList * folderList;

@@ -67,7 +67,7 @@ ARCHITECTURE : architecture.o
 	gcc -o architecture architecture.o
 
 GENERATE_ERRORS : generate_errors.c
-	gcc -o generate_errors generate_errors.c
+	gcc -o generate_errors generate_errors.c -lcurl
 
 AUTO : auto.c
 	gcc -o auto auto.c manage_auto.c -lgphoto2

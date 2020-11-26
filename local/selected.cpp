@@ -66,10 +66,10 @@ int main (void) {
 
             status = getCameraModel(camera);
 
-            if (status < 0) continue;
-
-            send_status_request(0);
+            generateError(0);
             successBoot = 1;
+
+            if (status < 0) continue;
         }
 
         int i, j, number = 0;

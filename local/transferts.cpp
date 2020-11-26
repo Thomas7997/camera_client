@@ -2,6 +2,9 @@
 
 #include "manage_selected2.h"
 
+// Bosser plus en détail car il y a des problèmes
+// Un problème a déjà été réglé
+
 void supp_last_char (char * buffer) {
     unsigned int len =  strlen(buffer);
     buffer[len-1] = 0;
@@ -31,6 +34,11 @@ int main (void) {
         CLOUD = fopen("data/images/cloud.txt", "r");
 
         fscanf(STOP, "%d", &stop);
+
+        for (unsigned int t = 0; t < MAX_CAPTURES; t++) {
+            strcpy(transferts[t], "");
+            strcpy(cloud[t], "");
+        }
 
         x = 0;
         
