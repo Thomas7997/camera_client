@@ -23,8 +23,6 @@
 #define MAX 80
 #define MAX_CAPTURES 10000
 #define TAILLE_NOM 100
-#define TMaxL 150000
-#define TMax 100
 #define MIN_DIRS 10
 #define NB_PARTS 2
 

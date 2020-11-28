@@ -1,9 +1,8 @@
 // Transfert en ligne uniquement pour l'envoi des requêtes CURL à partir des fichiers contenus dans le dossier gets/
 
-#include "manage_selected2.h"
+#include "net.h"
 
-// Bosser plus en détail car il y a des problèmes
-// Un problème a déjà été réglé
+// Faire attention à la gestion des erreurs
 
 void supp_last_char (char * buffer) {
     unsigned int len =  strlen(buffer);
@@ -17,7 +16,9 @@ int main (void) {
     FILE * TRANSFERTS;
     FILE * STOP;
     FILE * CLOUD;
+    FILE * HISTORIQUE = fopen("data/images/historique.txt", "a");
     int stop = -1;
+    int reqStatus, prevReqStatus; // A utiliser
 
     for (unsigned int i = 0; i < MAX_CAPTURES; i++) {
         transferts[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
@@ -57,19 +58,31 @@ int main (void) {
         for (x = 0; x < nb_lines_tr_cld-1; x++) {
             strcpy(commande, "");
             supp_last_char(cloud[x]);
-            sprintf(commande, "mv data/images/cloud/%s /home/thomas/camera_server/public", cloud[x]);
-            // system(commande);
+            sprintf(commande, "cp -f data/images/cloud/%s /home/thomas/camera_server/public;rm -f data/images/cloud/%s", cloud[x], cloud[x]);
+            system(commande);
             printf ("%s\n", commande);
-            // send_request(cloud[x]);
+
+            do {
+                reqStatus = send_request(cloud[x]);
+                handle_error_net_status(reqStatus);
+            } while (reqStatus < 0);
+
+            fprintf(HISTORIQUE, "%s\n", cloud[x]);
         }
 
         for (x = 0; x < nb_lines_tr-1; x++) {
             strcpy(commande, "");
             supp_last_char(transferts[x]);
-            sprintf(commande, "mv data/images/gets/%s /home/thomas/camera_server/public", transferts[x]);
-            // system(commande);
+            sprintf(commande, "cp -f data/images/gets/%s /home/thomas/camera_server/public;rm -f data/images/gets/%s", transferts[x], transferts[x]);
+            system(commande);
             printf ("%s\n", commande);
-            // send_request(transferts[x]);
+
+            do {
+                reqStatus = send_request(transferts[x]);
+                handle_error_net_status(reqStatus);
+            } while (reqStatus != 0);
+
+            fprintf(HISTORIQUE, "%s\n", transferts[x]);
         }
 
         fclose(STOP);
@@ -85,6 +98,7 @@ int main (void) {
     free(transferts);
     free(commande);
     free(cloud);
+    fclose(HISTORIQUE);
     
     return 0;
 }
