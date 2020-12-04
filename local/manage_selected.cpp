@@ -679,3 +679,16 @@ int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, 
 
     return 0;
 }
+
+void save_list(char ** files, unsigned int size) {
+    // Appliquer cut_list une seule fois quand check_event est VRAI 
+}
+
+void cut_list(char ** files, unsigned int size) {
+    // Sauvegarder le dernier fichier de la caméra
+}
+
+int check_event(void) {
+    // Lecture de fichier
+    // Chaque reconnexion à l'ordinateur doit proposer un nouvel évènement (y/n)
+}

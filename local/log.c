@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-int main () {
+int main (void) {
     while (1) {
         FILE * LOG = fopen("data/tmp/capture.txt", "r");
         

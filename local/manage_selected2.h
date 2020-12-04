@@ -35,6 +35,15 @@ struct _Dossier {
 
 typedef struct _Dossier Dossier;
 
+// Création d'une fonction permettant de découper une liste en deux (old/new)
+int check_event(void);
+
+// Création d'une fonction pour détecter l'apparition d'un nouvel évènement
+void cut_list(char ** files, unsigned int size);
+
+// Création d'une fonction pour appliquer le découpage old/new quand un nouvel évènement a lieu
+void save_list(char ** files, unsigned int size);
+
 void mirroir (char * buf, unsigned int n);
 int generateError (int status);
 int getCameraModel (Camera * cam);
@@ -43,7 +52,6 @@ void clearBufLast (char * buf, unsigned int len, unsigned int nb);
 void send_request (char *name);
 void vider_buffer (char *buffer);
 void afficher_tab2 (char ** tab);
-// unsigned int load_dossiers (char ** dossiers, const char * path, unsigned int * refs);
 void transform_noms (char ** liste, char ** nouvelleListe, int size);
 void linearize (char *base, char **lines);
 int compare_file_historique (char * file, char ** historique, int lines);
@@ -55,8 +63,6 @@ void select_medias ();
 void getFiles (void);
 unsigned int parseRating (char * line);
 void parseRatings (int * ratings, char ** lines, unsigned int size);
-//unsigned int read_dir_list (char ** dossiers, unsigned int * refs);
-//unsigned int read_file_list (char ** files, char ** lines, unsigned int nb, unsigned int starts);
 int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context);
 int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, unsigned int * transferts_nb, Camera * camera, GPContext * context);
 int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context);
