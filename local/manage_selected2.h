@@ -25,6 +25,7 @@
 #define TAILLE_NOM 100
 #define MIN_DIRS 10
 #define NB_PARTS 2
+#define PART_NB 50
 
 struct _Dossier {
     char * title;
@@ -35,14 +36,8 @@ struct _Dossier {
 
 typedef struct _Dossier Dossier;
 
-// Création d'une fonction permettant de découper une liste en deux (old/new)
-int check_event(void);
-
-// Création d'une fonction pour détecter l'apparition d'un nouvel évènement
-void cut_list(char ** files, unsigned int size);
-
-// Création d'une fonction pour appliquer le découpage old/new quand un nouvel évènement a lieu
-void save_list(char ** files, unsigned int size);
+// Création d'une fonction pour ne sélectionner que les X derniers éléments de la liste de photos
+void cut_list(char ** files, unsigned int size, char ** newList);
 
 void mirroir (char * buf, unsigned int n);
 int generateError (int status);

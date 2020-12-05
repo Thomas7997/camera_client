@@ -653,9 +653,8 @@ int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, 
 
     int i, x = 0;
 
-    for (int y = files_nb-1; y >= 0; y--) {
-        printf("files : %d\n", files_nb);
-
+    for (int y = 0; y < PART_NB; y++) {
+        printf("%d\n", y);
         // Commande
         printf("%s\n", files[y]);
         nom = getName(files[y], dirname);
@@ -680,15 +679,18 @@ int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, 
     return 0;
 }
 
-void save_list(char ** files, unsigned int size) {
-    // Appliquer cut_list une seule fois quand check_event est VRAI 
-}
+void cut_list(char ** files, unsigned int size, char ** newList) {
+    unsigned int x = 0, y;
+    
+    if (size <= 50 && size > 0) {
+        for (y = size-1; y >= 0; y--) {
+            strcpy(newList[x++], files[y]);
+        }
+    }
 
-void cut_list(char ** files, unsigned int size) {
-    // Sauvegarder le dernier fichier de la caméra
-}
-
-int check_event(void) {
-    // Lecture de fichier
-    // Chaque reconnexion à l'ordinateur doit proposer un nouvel évènement (y/n)
+    else {
+        for (y = size-1; y >= size-PART_NB; y--) {
+            strcpy(newList[x++], files[y]);
+        }
+    }
 }

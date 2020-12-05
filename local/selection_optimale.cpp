@@ -17,7 +17,7 @@ int getDay (void) {
 void RemplirLignes (char ** lns1, char ** lns2) {
     unsigned int i = 0;
 
-    while (ln2[i][0] != 0) lns1[i] = lns2[i];
+    while (lns2[i][0] != 0) lns1[i] = lns2[i];
     return;
 }
 
@@ -96,17 +96,10 @@ int main (void) {
     char ** transferts = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     char ** dirs_n = (char**) calloc(MIN_DIRS, sizeof(char*));
     char ** files = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
-    char *** files_list = (char***) calloc(NB_PARTS, sizeof(char**));
     unsigned int * dir_sizes = (unsigned int*) calloc(1000, sizeof(unsigned int));
+    char ** images_list = (char**) calloc(PART_NB, sizeof(char*));
 
-    for (int d = 0; d < NB_PARTS; d++) {
-        files_list[d] = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
-        for (int dx = 0; dx < MIN_DIRS*MAX_CAPTURES; dx++) {
-            files_list[d][dx] = (char*) calloc(TAILLE_NOM, sizeof(char));
-        }
-    }
-
-    for (int d = 0; d < MIN_DIRS; d++) {
+    for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
         for (int dy = 0; dy < MAX_CAPTURES; dy++) {
             dossiers[d][dy] = (char*) calloc(TAILLE_NOM, sizeof(char));
@@ -114,12 +107,16 @@ int main (void) {
         dirs_n[d] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
-    for (int i = 0; i < MAX_CAPTURES; i++) {
+    for (unsigned int i = 0; i < PART_NB; i++) {
+        images_list[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+    }
+
+    for (unsigned int i = 0; i < MAX_CAPTURES; i++) {
         liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
         transferts[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
-    for (int i = 0; i < MIN_DIRS*MAX_CAPTURES; i++) {
+    for (unsigned int i = 0; i < MIN_DIRS*MAX_CAPTURES; i++) {
         files[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
@@ -166,6 +163,10 @@ int main (void) {
         for (unsigned int e = 0; e < MAX_CAPTURES*MIN_DIRS; e++) {
             strcpy(files[e], "");
         }
+
+        for (unsigned int e = 0; e < PART_NB; e++) {
+            strcpy(images_list[e], "");
+        }
         
         status = get_files_and_dirs(dossiers, dirs_n, &files_nb, dir_sizes, camera, context);
 
@@ -173,23 +174,14 @@ int main (void) {
 
         unsigned int nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
 
-        // ON COMMENCE AVEC LA DIVISION EN DEUX PARTIES
-        // Effectuer la division de tableaux ici
+        // if (nb_files > 50) {
+        //     nb_files = 50;
+        // }
 
-        divisionListes(files_list, files, nb_files); // Découpage
+        cut_list(files, nb_files, images_list);
 
-        unsigned int reps[2] = { 1, 3 };
-        unsigned int count;
-
-        for (unsigned int u = 0; u < 2; u++) {
-            count = 0;
-            while (reps[u] >= count) {
-                status = eachFileRating_1(files_list[u], transferts, nb_files, &transferts_nb, camera, context);
-                if (status < 0) break;
-            }
-        }
-
-        if (status < 0) continue;
+        status = eachFileRating_1(images_list, transferts, nb_files, &transferts_nb, camera, context);
+        if (status < 0) break;
 
         // status = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, &transferts_nb, camera, context);
 
@@ -225,20 +217,17 @@ int main (void) {
         free(files[i]);
     }
 
-    for (int d = 0; d < NB_PARTS; d++) {
-        free(files_list[d]);
-        for (int dx = 0; dx < MIN_DIRS*MAX_CAPTURES; dx++) {
-            free(files_list[d][dx]);
-        }
+    for (unsigned int i = 0; i < PART_NB; i++) {
+        free(images_list[i]);
     }
 
-    free(files_list);
     free(dirs_n);
     free(liste_captures);
     free(transferts);
     free(dir_sizes);
     free(dossiers);
     free(files);
+    free(images_list);
 
     return 0;
 }
