@@ -694,3 +694,48 @@ void cut_list(char ** files, unsigned int size, char ** newList) {
         }
     }
 }
+
+void findPathIndex(char ** files, char * name, char * path) {
+    unsigned int x = 0;
+    char * dir = (char*) calloc(200, sizeof(char));
+    char * cur_name = (char*) calloc(100, sizeof(char));
+
+    cur_name = getName(files[0], dir);
+
+    while (strcmp(cur_name, name) != 0) {
+        strcpy(dir, "");
+        cur_name = getName(files[x++], dir);
+        printf("%s\n", cur_name);
+    }
+
+    strcpy(path, dir);
+    strcat(path, "/");
+    strcat(path, name);
+
+    free(dir);
+    free(cur_name);
+}
+
+int eachFileRating_2 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context) {
+    int status = 0;
+    CameraEventType e_type;
+    char * filePath = (char*) calloc(100, sizeof(char));
+    
+    while (1) {
+        char * e_data;
+        strcpy(filePath, "");
+        status = gp_camera_wait_for_event(camera, 10, &e_type, (void**) &e_data, context);
+
+        // Capturer l'évènement de prise de photos
+        
+        if (e_type == GP_EVENT_FILE_CHANGED) {
+            printf ("%s changed !\n", e_data);
+
+            // Fonction pour retrouver le chemin complet du fichier
+            findPathIndex(files, e_data, filePath);
+            printf("%s\n", filePath);
+        }
+    }
+
+    return 0;
+}

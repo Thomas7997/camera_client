@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/stat.h>
 
 // GPHOTO
 #include <gphoto2/gphoto2.h>
@@ -26,5 +29,6 @@ ctx_error_func (GPContext *context, const char *str, void *data);
 static void
 ctx_status_func (GPContext *context, const char *str, void *data);
 GPContext* sample_create_context();
+void getCaptureEvent(Camera * camera, GPContext * context);
 
 #endif

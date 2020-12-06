@@ -56,11 +56,13 @@ int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * cont
 void enlever_last_car(char *chaine);
 void select_medias ();
 void getFiles (void);
+void findPathIndex(char ** files, char * name, char * path);
 unsigned int parseRating (char * line);
 void parseRatings (int * ratings, char ** lines, unsigned int size);
 int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context);
 int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, unsigned int * transferts_nb, Camera * camera, GPContext * context);
 int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context);
+int eachFileRating_2 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context);
 void handleError(int status);
 void send_status_request (int status);
 unsigned int dossiers_to_list (char *** dossiers, char ** list, char ** dirs, unsigned int nb_dossiers, unsigned int * nb_files);

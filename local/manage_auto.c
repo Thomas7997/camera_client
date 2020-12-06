@@ -1,34 +1,34 @@
 #include "manage_auto.h"
 
-int generateError (int status) {
-    // Notifier une erreur en fonction de ce qu'il s'agit.
+// int generateError (int status) {
+//     // Notifier une erreur en fonction de ce qu'il s'agit.
 
-    // Pour une optimisation de vitesse, il serait préférable d'utiliser un système de fichiers et un second script de lecture de fichiers et de lancement de requêtes CURL
-    // Écire le status dans un fichier
-    FILE * ERR = fopen("data/tmp/errors.txt", "r+");
-    int previousStatus = 0;
+//     // Pour une optimisation de vitesse, il serait préférable d'utiliser un système de fichiers et un second script de lecture de fichiers et de lancement de requêtes CURL
+//     // Écire le status dans un fichier
+//     FILE * ERR = fopen("data/tmp/errors.txt", "r+");
+//     int previousStatus = 0;
 
-    switch (status)
-    {
-    case -53:
-        // Rebrancher la télécommande
-        printf ("Il faut rebrancher la télécommande.\n");
-        break;
+//     switch (status)
+//     {
+//     case -53:
+//         // Rebrancher la télécommande
+//         printf ("Il faut rebrancher la télécommande.\n");
+//         break;
     
-    default:
-        break;
-    }
+//     default:
+//         break;
+//     }
 
-    if (fscanf(ERR, "%d", &previousStatus) == 1 && previousStatus != status) {
-        send_status_request(status);
-        fprintf(ERR, "%d\n", status);
-    }
+//     if (fscanf(ERR, "%d", &previousStatus) == 1 && previousStatus != status) {
+//         send_status_request(status);
+//         fprintf(ERR, "%d\n", status);
+//     }
 
-    printf("GENERATE ERROR %d\n", status);
-    fclose(ERR);
+//     printf("GENERATE ERROR %d\n", status);
+//     fclose(ERR);
 
-    return status;
-}
+//     return status;
+// }
 
 int getCameraModel (Camera * cam) {
     CameraAbilities cam_abilities;
@@ -39,7 +39,8 @@ int getCameraModel (Camera * cam) {
     if (status < 0) {
         free(camera_model);
         fclose(MODEL);
-        return generateError(status);
+        // return generateError(status);
+        handleError(status);
     }
 
     strcpy(camera_model, cam_abilities.model);
@@ -90,4 +91,28 @@ GPContext* sample_create_context() {
                         ctx_progress_stop_func, p);
 	 */
 	return context;
+}
+
+void getCaptureEvent(Camera * camera, GPContext * context) {
+    int status = 0;
+    CameraEventType e_type;
+    char * data;
+    struct timeval	start, curtime;
+    gettimeofday (&start, NULL);
+
+    printf ("WAITING ...\n");
+
+    while (1) {
+        printf ("ANALYSE...\n");
+        int timediff;
+        gettimeofday (&curtime, NULL);
+        timediff = ((curtime.tv_sec - start.tv_sec)*1000)+((curtime.tv_usec - start.tv_usec)/1000);
+
+        status = gp_camera_wait_for_event(camera, 1000, &e_type, (void**) &data, context);
+        if (e_type == GP_EVENT_FILE_CHANGED) {
+            printf ("%s\n", data);
+        }        
+    }
+
+    printf("FINISHED\n");
 }

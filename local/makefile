@@ -69,8 +69,11 @@ ARCHITECTURE : architecture.o
 GENERATE_ERRORS : generate_errors.c
 	gcc -o generate_errors generate_errors.c -lcurl
 
-AUTO : auto.c
-	gcc -o auto auto.c manage_auto.c -lgphoto2
+AUTO : auto.c manage_auto.c
+	gcc -o auto manage_auto.c auto.c -lgphoto2
+
+SELECTION : selection.cpp manage_selected.cpp
+	g++ -o selection selection.cpp manage_selected.cpp -lcurl -lexiv2 -lgphoto2 -lgphoto2_port
 
 WIFI : wifi_status.c
 	gcc -o wifi_status wifi_status.c
