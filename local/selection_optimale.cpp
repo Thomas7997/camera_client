@@ -231,3 +231,5 @@ int main (void) {
 
     return 0;
 }
+
+// CameraFilePermissions GP_FILE_PERM_ALL

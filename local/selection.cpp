@@ -138,6 +138,10 @@ int main (void) {
             usleep(5000);
         } while (status != 0);
 
+        do {
+            gp_filesystem_set_info (CameraFilesystem *fs, const char *folder, const char *filename, info, context);
+        } while (status != 0);
+
         int i, j, number = 0;
 
         i = 0;
