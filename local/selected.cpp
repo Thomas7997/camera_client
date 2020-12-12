@@ -95,7 +95,9 @@ int main (void) {
 
         if (status < 0) continue;
 
-        status = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, &transferts_nb, camera, context);
+        cut_list(files, nb_files, newList)
+
+        status = eachFileRating_1(newList, dirs_n, transferts, dir_sizes, files_nb, &transferts_nb, camera, context);
 
         if (status < 0) continue;
 

@@ -2,12 +2,6 @@
 #include <cstdlib>
 #include <cstdio>
 
-// unsigned int somme (int * buffer) {
-//     unsigned int sommeVal = 0;
-//     while (buffer[i] != 0) sommeVal += buffer[i];
-//     return sommeVal;
-// }
-
 int getDay (void) {
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
@@ -21,69 +15,30 @@ void RemplirLignes (char ** lns1, char ** lns2) {
     return;
 }
 
-void divisionListes (char *** decoupages, char ** liste, unsigned int liste_size) {
-    unsigned int i = 0, size, day, current_day, newDay = 1;
-    char ** lines = (char**) calloc(10000, sizeof(char*));
-    char * commande = (char*) calloc(100, sizeof(char));
-    char * path = (char*) calloc(100, sizeof(char));
+int compareFilesLists(char ** files, char ** liste_captures, int files_nb, int *new_file_index) {
+    unsigned int i = 0;
 
-    for (int d = 0; d < 10000; d++) {
-        lines[d] = (char*) calloc(10, sizeof(char));
-    }
-
-    FILE * DAYS = fopen("./data/tmp/days.txt", "a+");
-
-    while (fgets(lines[i++], 9, DAYS));
-    size = i;
-    i = 0;
-
-    current_day = getDay();
-
-    // Comparer les dates de jour
-
-    for (i = 0; i < size; i++) {
-        sscanf(lines[i], "%d", &day);
-        
-        if (day != current_day) {
-            newDay = 0;
-            break;
+    for (i = 0; i < files_nb; i++) {
+        if (strcmp(files[i], liste_captures[i]) != 0) {
+            *new_file_index = i;
+            return 1;
         }
     }
 
-    //+
-
-    if (newDay && decoupages[0][0][0] == 0) {
-        sprintf(path, "data/tmp/days/%d.txt", current_day);
-        strcat(commande, path);
-        FILE * DAY = fopen(path, "a+");
-        // Première division
-
-        RemplirLignes(decoupages[0], liste); // Anciens fichiers
-
-        // Capturer le maximum
-
-        fclose(DAY);
-    }
-
-    else {
-        FILE * DAILYLIST = fopen(path, "r");
-
-        // Ajouter les nouveaux fichiers de la SD à decoupages[1] car decoupages[0] reste constant
-
-        // Recevoir le maximum
-
-        fclose(DAILYLIST);
-    }
-
-    for (int d = 0; d < 10000; d++) {
-        free(lines[d]);
-    }
-
-    free(commande);
-    free(path);
-    free(lines);
-    fclose(DAYS);
+    return 0;
 }
+
+int save_clist_slist(char ** liste_captures, char ** files, unsigned int files_nb, int nb_list) {
+    unsigned int i = 0;
+    
+    for (i = 0; i < files_nb - nb_list; i++) {
+        strcpy(liste_captures[nb_list+i], files[nb_list+i]);
+    }
+}
+
+// Ce programme s'applique aux photos et aux videos
+
+// Il faudra mettre en place unn filtre dans les deux
 
 int main (void) {
     int status = 0;
@@ -92,12 +47,11 @@ int main (void) {
     Camera * camera;
     GPContext *context = sample_create_context();
 
-    char ** liste_captures = (char**) calloc(MAX_CAPTURES, sizeof(char*));
+    char ** liste_captures = (char**) calloc(MAX_CAPTURES, sizeof(char*)); // Liste mémoire
     char ** transferts = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     char ** dirs_n = (char**) calloc(MIN_DIRS, sizeof(char*));
     char ** files = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
     unsigned int * dir_sizes = (unsigned int*) calloc(1000, sizeof(unsigned int));
-    char ** images_list = (char**) calloc(PART_NB, sizeof(char*));
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -106,11 +60,6 @@ int main (void) {
         }
         dirs_n[d] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
-
-    for (unsigned int i = 0; i < PART_NB; i++) {
-        images_list[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
-    }
-
     for (unsigned int i = 0; i < MAX_CAPTURES; i++) {
         liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
         transferts[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
@@ -123,6 +72,9 @@ int main (void) {
     // DÉBUT RÉPÉTITIONS
 
     int stop = -1;
+
+    unsigned int files_nb = 0, nb_list = 0, new_file_index = 0, nb_files = 0;
+
     do {
         do {
             gp_camera_new (&camera);
@@ -142,13 +94,13 @@ int main (void) {
 
         i = 0;
 
-        FILE * STOP = fopen("data/stop/selection.txt", "r");
+        FILE * STOP = fopen("data/stop/video.txt", "r");
         
         if (STOP == NULL) return 1;
         fscanf(STOP, "%d", &stop);
         if (stop == -1) return 1;
 
-        unsigned int files_nb = 0, transferts_nb = 0;
+        unsigned int transferts_nb = 0;
 
         for (unsigned int e = 0; e < MIN_DIRS; e++) {
             for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
@@ -163,33 +115,20 @@ int main (void) {
         for (unsigned int e = 0; e < MAX_CAPTURES*MIN_DIRS; e++) {
             strcpy(files[e], "");
         }
-
-        for (unsigned int e = 0; e < PART_NB; e++) {
-            strcpy(images_list[e], "");
-        }
         
         status = get_files_and_dirs(dossiers, dirs_n, &files_nb, dir_sizes, camera, context);
 
         if (status < 0) continue;
 
-        unsigned int nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
+        nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
 
-        // if (nb_files > 50) {
-        //     nb_files = 50;
-        // }
-
-        cut_list(files, nb_files, images_list);
-
-        status = eachFileRating_1(images_list, transferts, nb_files, &transferts_nb, camera, context);
-        if (status < 0) break;
-
-        // status = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, &transferts_nb, camera, context);
-
-        // if (status < 0) continue;
-
-        // status = transferer_noms(transferts, transferts_nb, context, camera);
-
-        // if (status < 0) continue;
+        if (compareFilesLists(files, liste_captures, files_nb, &new_file_index) && nb_list != 0) {
+            // Store list
+            nb_list = save_clist_slist(liste_captures, files, files_nb, nb_list); // curent to stored   
+        
+            // Command transfert on new file
+            printf ("Transferer %s\n", files[new_file_index]);
+        }
 
         fscanf(STOP, "%d", &stop);
         fclose(STOP);
@@ -217,17 +156,12 @@ int main (void) {
         free(files[i]);
     }
 
-    for (unsigned int i = 0; i < PART_NB; i++) {
-        free(images_list[i]);
-    }
-
     free(dirs_n);
     free(liste_captures);
     free(transferts);
     free(dir_sizes);
     free(dossiers);
     free(files);
-    free(images_list);
 
     return 0;
 }

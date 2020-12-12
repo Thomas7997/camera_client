@@ -21,70 +21,6 @@ void RemplirLignes (char ** lns1, char ** lns2) {
     return;
 }
 
-void divisionListes (char *** decoupages, char ** liste, unsigned int liste_size) {
-    unsigned int i = 0, size, day, current_day, newDay = 1;
-    char ** lines = (char**) calloc(10000, sizeof(char*));
-    char * commande = (char*) calloc(100, sizeof(char));
-    char * path = (char*) calloc(100, sizeof(char));
-
-    for (int d = 0; d < 10000; d++) {
-        lines[d] = (char*) calloc(10, sizeof(char));
-    }
-
-    FILE * DAYS = fopen("./data/tmp/days.txt", "a+");
-
-    while (fgets(lines[i++], 9, DAYS));
-    size = i;
-    i = 0;
-
-    current_day = getDay();
-
-    // Comparer les dates de jour
-
-    for (i = 0; i < size; i++) {
-        sscanf(lines[i], "%d", &day);
-        
-        if (day != current_day) {
-            newDay = 0;
-            break;
-        }
-    }
-
-    //+
-
-    if (newDay && decoupages[0][0][0] == 0) {
-        sprintf(path, "data/tmp/days/%d.txt", current_day);
-        strcat(commande, path);
-        FILE * DAY = fopen(path, "a+");
-        // Première division
-
-        RemplirLignes(decoupages[0], liste); // Anciens fichiers
-
-        // Capturer le maximum
-
-        fclose(DAY);
-    }
-
-    else {
-        FILE * DAILYLIST = fopen(path, "r");
-
-        // Ajouter les nouveaux fichiers de la SD à decoupages[1] car decoupages[0] reste constant
-
-        // Recevoir le maximum
-
-        fclose(DAILYLIST);
-    }
-
-    for (int d = 0; d < 10000; d++) {
-        free(lines[d]);
-    }
-
-    free(commande);
-    free(path);
-    free(lines);
-    fclose(DAYS);
-}
-
 int main (void) {
     int status = 0;
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
@@ -136,10 +72,6 @@ int main (void) {
             }
 
             usleep(5000);
-        } while (status != 0);
-
-        do {
-            gp_filesystem_set_info (CameraFilesystem *fs, const char *folder, const char *filename, info, context);
         } while (status != 0);
 
         int i, j, number = 0;
