@@ -81,5 +81,8 @@ WIFI : wifi_status.c
 VIDEO : video_auto.cpp manage_selected.cpp
 	g++ -o video_auto video_auto.cpp manage_selected.cpp -lgphoto2 -lgphoto2_port -lcurl -lexiv2
 
+PHOTO_AUTO : photo_auto.cpp manage_selected.cpp
+	g++ -o photo_auto photo_auto.cpp manage_selected.cpp -lgphoto2 -lgphoto2_port -lcurl -lexiv2
+
 CONSTRUCTION : architecture
 	./architecture

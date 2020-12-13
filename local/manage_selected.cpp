@@ -515,7 +515,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
     }
 
     sprintf(folder, "%s/DCIM", tmp_dir);
-    printf ("%s\n", folder);
+    // printf ("%s\n", folder);
 
     status = gp_camera_folder_list_folders(camera,
 		folder,
@@ -537,7 +537,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
         status = gp_list_get_name(folderList, i, (const char**) &subdir);
 
         sprintf (tmp_dir, "%s/%s", folder, subdir);
-        printf ("%s\n", tmp_dir);
+        // printf ("%s\n", tmp_dir);
 
         strcpy(dirs_n[i], tmp_dir);
 
@@ -555,10 +555,10 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
         for (unsigned int j = 0; j < nb_files; j++) {
             const char * file;
             status = gp_list_get_name(fileList, j, (const char**) &file);
-            handleError(status);
+            // handleError(status);
             if (status < 0) return generateError(status);
             strcpy(dirs_b[i][j], file);
-            printf ("%s\n", dirs_b[i][j]);
+            // printf ("%s\n", dirs_b[i][j]);
         }
 
         // sprintf(dirs_n[i], "/%s", dir);
