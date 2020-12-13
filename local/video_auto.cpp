@@ -15,14 +15,33 @@ void RemplirLignes (char ** lns1, char ** lns2) {
     return;
 }
 
-int compareFilesLists(char ** files, char ** liste_captures, int files_nb, int *new_file_index) {
-    unsigned int i = 0;
+unsigned int getImageNumber (char * buffer) {
+    unsigned int x = 0, y = strlen(buffer), nb;
+    char * nb_str = (char*) calloc(100, sizeof(char));
+
+    while (buffer[y--] != '.');
+    while (buffer[y] != '_') {
+        nb_str[x++] = buffer[y--];
+    }
+
+    mirroir(nb_str, x);
+    sscanf(nb_str, "%u", &nb);
+    free(nb_str);
+
+    return nb;
+}
+
+int compareFilesLists(char ** files, char ** liste_captures, int files_nb, int nb_list, unsigned int *new_file_index) {
+    unsigned int i = 0, y = 0, newP = 0;
 
     for (i = 0; i < files_nb; i++) {
-        if (strcmp(files[i], liste_captures[i]) != 0) {
-            *new_file_index = i;
-            return 1;
+        for (y = 0; y < nb_list; y++) {
+            if (strcmp(files[i], liste_captures[y]) != 0) {
+                return 1;
+            }
         }
+
+        printf ("%d\n", getImageNumber(files[i]));
     }
 
     return 0;
@@ -43,6 +62,7 @@ int save_clist_slist(char ** liste_captures, char ** files, unsigned int files_n
 int main (void) {
     int status = 0;
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
+    FILE * W = fopen("medias.txt", "a+");
 
     Camera * camera;
     GPContext *context = sample_create_context();
@@ -122,12 +142,12 @@ int main (void) {
 
         nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
 
-        if (compareFilesLists(files, liste_captures, files_nb, &new_file_index) && nb_list != 0) {
+        if (compareFilesLists(files, liste_captures, nb_files, nb_list, &new_file_index) == 1 && nb_list != 0) {
             // Store list
-            nb_list = save_clist_slist(liste_captures, files, files_nb, nb_list); // curent to stored   
+            nb_list = save_clist_slist(liste_captures, files, nb_files, nb_list); // curent to stored   
         
             // Command transfert on new file
-            printf ("Transferer %s\n", files[new_file_index]);
+            fprintf (W, "Transferer %s\n", files[new_file_index]);
         }
 
         fscanf(STOP, "%d", &stop);
@@ -162,6 +182,7 @@ int main (void) {
     free(dir_sizes);
     free(dossiers);
     free(files);
+    fclose(W);
 
     return 0;
 }
