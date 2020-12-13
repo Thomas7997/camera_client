@@ -31,27 +31,63 @@ unsigned int getImageNumber (char * buffer) {
     return nb;
 }
 
-int compareFilesLists(char ** files, char ** liste_captures, int files_nb, int nb_list, unsigned int *new_file_index) {
-    unsigned int i = 0, y = 0, newP = 0;
+int compareFilesLists(char ** transferts, char ** files, char ** liste_captures, int files_nb, int nb_list, unsigned int *new_file_index) {
+    unsigned int i = 0, y = 0, newP, x = 0, a = 0;
 
     for (i = 0; i < files_nb; i++) {
+        newP = 0;
         for (y = 0; y < nb_list; y++) {
-            if (strcmp(files[i], liste_captures[y]) != 0) {
-                return 1;
+            if (strcmp(files[i], liste_captures[y]) == 0) {
+                newP = 1;
+                break;
             }
+        }
+
+        if (newP == 0) {
+            printf("%s\n", files[i]);
+            strcpy(transferts[a++], files[i]); 
         }
 
         printf ("%d\n", getImageNumber(files[i]));
     }
 
-    return 0;
+    return a;
 }
+
+/*
+
+    for (unsigned int tran = 0;tran < size; tran++) {
+        cmp = 0; 
+        for(unsigned int his = 0;his < size1; his++) {
+            if(strncmp(historique1[his], transferts[tran], strlen(historique1[his])) == 0) {
+                cmp = 1;
+                break;
+            }
+        }
+
+        if(cmp == 0) {
+            printf("TRANSFERER : %s\n", transferts[tran]);
+            strcpy(HistoRet[a++], transferts[tran]);
+            break;
+        }
+    }
+
+*/
 
 int save_clist_slist(char ** liste_captures, char ** files, unsigned int files_nb, int nb_list) {
     unsigned int i = 0;
     
     for (i = 0; i < files_nb - nb_list; i++) {
         strcpy(liste_captures[nb_list+i], files[nb_list+i]);
+    }
+}
+
+void afficher_liste(char ** transferts, unsigned int ret_comp) {
+    unsigned int x = 0;
+
+    while (x < ret_comp) {
+        printf ("%s\n", transferts[x]);
+        x++;
     }
 }
 
@@ -142,13 +178,17 @@ int main (void) {
 
         nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
 
-        if (compareFilesLists(files, liste_captures, nb_files, nb_list, &new_file_index) == 1 && nb_list != 0) {
+        unsigned int ret_comp = compareFilesLists(transferts, files, liste_captures, nb_files, nb_list, &new_file_index);
+
+        if (ret_comp != 0 && nb_list != 0) {
             // Store list
             nb_list = save_clist_slist(liste_captures, files, nb_files, nb_list); // curent to stored   
         
             // Command transfert on new file
             fprintf (W, "Transferer %s\n", files[new_file_index]);
         }
+
+        afficher_liste(transferts, ret_comp);
 
         fscanf(STOP, "%d", &stop);
         fclose(STOP);

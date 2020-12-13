@@ -10,7 +10,7 @@
 #include <string.h>
 
 // Fonctions minimales
-char ** commande_transfert(char ** historique1, char ** transferts, unsigned int *size, unsigned int *size1, char ** HistoRet);
+char ** commande_transfert(char ** historique1, char ** transferts, unsigned int size, unsigned int size1, char ** HistoRet);
 char ** getHistorique (unsigned int * size);
 char ** getTransferts (unsigned int * size);
 void afficherList (char ** liste, unsigned int lines);

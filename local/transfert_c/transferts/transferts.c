@@ -1,30 +1,32 @@
 #include "transferts.h"
 
-char ** commande_transfert(char ** historique1, char ** transferts, unsigned int *size, unsigned int *size1, char ** HistoRet) {   
+char ** commande_transfert(char ** historique1, char ** transferts, unsigned int size, unsigned int size1, char ** HistoRet) {   
     int cmp=0;
     unsigned int  a=0;
     unsigned int ligne=0;
     unsigned int Nouveau[MAX_FILES] = {0};
     unsigned int index;
    
-    for (unsigned int tran = 0;tran < *size; tran++) {
-        cmp = 0;
-        for(unsigned int his = 0;his < *size1; his++) {
-            if(strcmp(historique1[his], transferts[trans]) == 0) {
+    for (unsigned int tran = 0;tran < size; tran++) {
+        cmp = 0; 
+        for(unsigned int his = 0;his < size1; his++) {
+            if(strncmp(historique1[his], transferts[tran], strlen(historique1[his])) == 0) {
                 cmp = 1;
                 break;
             }
         }
 
-        if(cmp==0) {
-            Nouveau[a]=tran;
+        if(cmp == 0) {
             printf("TRANSFERER : %s\n", transferts[tran]);
             strcpy(HistoRet[a++], transferts[tran]);
             break;
         }
     }
+}
 
-    unsigned int NvT=(*size1)+1+a;
+void enlever_last_car (char * buffer) {
+    unsigned int n = strlen(buffer)-1;
+    buffer[n] = 0;
 }
 
 char** getHistorique (unsigned int * size) {
@@ -38,9 +40,11 @@ char** getHistorique (unsigned int * size) {
 
     unsigned int x = 0;
 
-    while (fgets(historique[x++], MAX_SIZE, HISTORIQUE));
+    while (fgets(historique[x++], MAX_SIZE, HISTORIQUE)) {
+        //enlever_last_car(historique[x++]);
+    }
 
-    *size = x-1;
+    *size = x;
     
     fclose(HISTORIQUE);
     return historique;
@@ -57,9 +61,11 @@ char** getTransferts (unsigned int * size) {
 
     unsigned int x = 0;
 
-    while (fgets(transferts[x++], MAX_SIZE, TRANSFERTS));
+    while (fgets(transferts[x++], MAX_SIZE, TRANSFERTS)) {
+        //enlever_last_car(transferts[x++]);
+    }
 
-    *size = x-1;
+    *size = x;
     
     fclose(TRANSFERTS);
     return transferts;

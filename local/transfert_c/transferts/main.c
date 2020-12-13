@@ -15,9 +15,7 @@ int main (void) {
     while (1) {
         historique = (char**) getHistorique(&size_historique);
         transferts = (char**) getTransferts(&size_transferts);
-        afficherList(historique, size_historique);
-        afficherList(transferts, size_transferts);
-        commande_transfert(historique, transferts, &size_transferts, &size_historique, c_transferts);
+        commande_transfert(historique, transferts, size_transferts, size_historique, c_transferts);
         usleep(5000);
     }
     
