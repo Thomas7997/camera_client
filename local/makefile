@@ -78,11 +78,11 @@ SELECTION : selection.cpp manage_selected.cpp
 WIFI : wifi_status.c
 	gcc -o wifi_status wifi_status.c
 
-VIDEO : video_auto.cpp manage_selected.cpp
-	g++ -o video_auto video_auto.cpp manage_selected.cpp -lgphoto2 -lgphoto2_port -lcurl -lexiv2
+VIDEO_AUTO : video_auto.c auto.c
+	gcc -o video_auto video_auto.c auto.c -lgphoto2 -lgphoto2_port
 
-PHOTO_AUTO : photo_auto.cpp manage_selected.cpp
-	g++ -o photo_auto photo_auto.cpp manage_selected.cpp -lgphoto2 -lgphoto2_port -lcurl -lexiv2
+PHOTO_AUTO : photo_auto.c auto.c
+	gcc -o photo_auto photo_auto.c auto.c -lgphoto2 -lgphoto2_port
 
 CONSTRUCTION : architecture
 	./architecture

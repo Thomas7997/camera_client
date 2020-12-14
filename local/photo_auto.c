@@ -1,98 +1,7 @@
 // AUTO PHOTO ET VIDEO
+#include "auto.h"
 
-#include "manage_selected2.h"
-#include <cstdlib>
-#include <cstdio>
-
-int getDay (void) {
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
-    return tm.tm_mday;
-}
-
-void RemplirLignes (char ** lns1, char ** lns2) {
-    unsigned int i = 0;
-
-    while (lns2[i][0] != 0) lns1[i] = lns2[i];
-    return;
-}
-
-unsigned int getImageNumber (char * buffer) {
-    unsigned int x = 0, y = strlen(buffer), nb;
-    char * nb_str = (char*) calloc(100, sizeof(char));
-
-    while (buffer[y--] != '.');
-    while (buffer[y] != '_') {
-        nb_str[x++] = buffer[y--];
-    }
-
-    mirroir(nb_str, x);
-    sscanf(nb_str, "%u", &nb);
-    free(nb_str);
-
-    return nb;
-}
-
-int compareFilesLists(char ** transferts, char ** files, char ** liste_captures, int files_nb, int nb_list, unsigned int * indexs) {
-    unsigned int i = 0, y = 0, newP, x = 0, a = 0;
-
-    for (i = 0; i < files_nb; i++) {
-        newP = 0;
-        for (y = 0; y < nb_list; y++) {
-            if (strcmp(files[i], liste_captures[y]) == 0) {
-                newP = 1;
-                break;
-            }
-        }
-
-        if (newP == 0) {
-            printf("\n\n\n\n\n\n\n\n\nT : %s\n%d\n", files[i], i);
-            sprintf(transferts[a], "%s", files[i]);
-            printf("%s\n", transferts[a++]);
-        }
-    }
-
-    return a;
-}
-
-/*
-
-    for (unsigned int tran = 0;tran < size; tran++) {
-        cmp = 0; 
-        for(unsigned int his = 0;his < size1; his++) {
-            if(strncmp(historique1[his], transferts[tran], strlen(historique1[his])) == 0) {
-                cmp = 1;
-                break;
-            }
-        }
-
-        if(cmp == 0) {
-            printf("TRANSFERER : %s\n", transferts[tran]);
-            strcpy(HistoRet[a++], transferts[tran]);
-            break;
-        }
-    }
-
-*/
-
-int save_clist_slist(char ** liste_captures, char ** files, unsigned int files_nb, int nb_list) {
-    unsigned int i = 0;
-    
-    for (i = 0; i < files_nb; i++) {
-        strcpy(liste_captures[i], files[i]);
-    }
-}
-
-void afficher_liste(char ** transferts, unsigned int ret_comp) {
-    unsigned int x = 0;
-
-    while (x < ret_comp) {
-        printf ("%s\n", transferts[x]);
-        x++;
-    }
-}
-
-// Ce programme s'applique aux photos et aux videos
+// Ce programme s'applique aux photos et aux photos
 
 // Il faudra mettre en place un filtre dans les deux
 
@@ -108,8 +17,10 @@ int main (void) {
     char ** transferts = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     char ** dirs_n = (char**) calloc(MIN_DIRS, sizeof(char*));
     char ** files = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
+    char ** photos = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     unsigned int * dir_sizes = (unsigned int*) calloc(1000, sizeof(unsigned int));
     unsigned int * files_index_list = (unsigned int*) calloc(MAX_CAPTURES, sizeof(unsigned int));
+    unsigned int nb_medias;
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -121,6 +32,7 @@ int main (void) {
     for (unsigned int i = 0; i < MAX_CAPTURES; i++) {
         liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
         transferts[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        photos[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
     for (unsigned int i = 0; i < MIN_DIRS*MAX_CAPTURES; i++) {
@@ -133,7 +45,11 @@ int main (void) {
 
     unsigned int files_nb = 0, nb_list = 0, new_file_index = 0, nb_files = 0, x, nb = 0;
 
+    // Phase initiale où le programme démarre et aucune photo n'est transferée
+
     do {
+        int i, j, number = 0;
+
         do {
             gp_camera_new (&camera);
             status = gp_camera_init(camera, context);
@@ -147,8 +63,6 @@ int main (void) {
 
             usleep(5000);
         } while (status != 0);
-
-        int i, j, number = 0;
 
         i = 0;
 
@@ -173,34 +87,32 @@ int main (void) {
         for (unsigned int e = 0; e < MAX_CAPTURES*MIN_DIRS; e++) {
             strcpy(files[e], "");
         }
-        
-        status = get_files_and_dirs(dossiers, dirs_n, &files_nb, dir_sizes, camera, context);
 
-        if (status < 0) continue;
-
-        nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
+        nb_medias = getPhotoDatas(dossiers, dirs_n, photos, files, liste_captures, &files_nb, camera, context, dir_sizes);
 
         if (nb == 0) {
-            save_clist_slist(liste_captures, files, nb_files, nb_list);
+            nb_list = save_clist_slist(liste_captures, photos, nb_medias, nb_list);
+            afficher_liste(liste_captures, nb_list);
+            printf("MEDIAS\n%d\n", nb_list);
+            afficher_liste(photos, nb_medias);
         }
 
-        // afficher_liste(liste_captures, nb_list);
+        // for (x = 0; x < nb_medias; x++) {
+        //     printf ("%s\n", photos[x]);
+        // }
 
-        nb_list = nb_files;
-        nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
-
-        unsigned int ret_comp = compareFilesLists(transferts, files, liste_captures, nb_files, nb_list, files_index_list);
+        unsigned int ret_comp = compareFilesLists(transferts, photos, liste_captures, nb_medias, nb_list, files_index_list);
         x = 0;
 
         printf ("%d\n%d\n", ret_comp, nb_list);
-        if (nb_list != 0) {
+        if (ret_comp != 0) {
             // Store list
-            nb_list = save_clist_slist(liste_captures, files, nb_files, nb_list); // curent to stored   
+            nb_list = save_clist_slist(liste_captures, files, nb_medias, nb_list); // curent to stored   
         
             printf("%d\n", ret_comp);
             while (x < ret_comp) {
                 // Command transfert on new file
-                fprintf (WFILE, "Transferer %s\n", transferts[x]);
+                // fprintf (WFILE, "Transferer %s\n", transferts[x]);
                 printf("%s\n", transferts[x++]);
             }
         }
@@ -220,6 +132,7 @@ int main (void) {
     for (int i = 0; i < MAX_CAPTURES; i++) {
         free(liste_captures[i]);
         free(transferts[i]);
+        free(photos[i]);
     }
 
     for (int d = 0; d < MIN_DIRS; d++) {
@@ -234,6 +147,7 @@ int main (void) {
         free(files[i]);
     }
 
+    free(photos);
     free(dirs_n);
     free(liste_captures);
     free(transferts);
