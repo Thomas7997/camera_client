@@ -14,7 +14,7 @@ void mirroir (char * buf, unsigned int n) {
 }
 
 int main (void) {
-    system("nmcli device wifi > data/tmp/wifi.txt");
+    system("nmcli device wifi > data/tmp/wifi.txt"); // On va migrer vers iwconfig
     FILE * WIFI = fopen("data/tmp/wifi.txt", "r");
     char ** txt = (char**) calloc(100, sizeof(char*));
     char * signal_str = (char*) calloc(4, sizeof(char));

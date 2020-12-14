@@ -168,7 +168,6 @@ int compare_file_historique (char * file, char ** historique, int lines) {
     unsigned int file_s = strlen(file)-1;
 
     for (i = 0; i < lines; i++) {
-        printf("%s | %s\n", historique[i], file);
         if (strncmp(historique[i], file, file_s) == 0) {
            return 1;
         }
@@ -305,18 +304,19 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
             if (status < 0) return generateError(status);
 
             if (online) {
-                // sprintf(commande, "mv data/images/gets/%s /home/thomas/camera_server/public", filename);
+                sprintf(commande, "mv data/images/gets/%s /home/thomas/camera_server/public", filename);
                 // system(commande);
                 // send_request(filename);
             }
 
             else {
-                // sprintf(commande, "mv data/images/gets/%s data/images/cloud", filename);
+                sprintf(commande, "mv data/images/gets/%s data/images/cloud", filename);
                 // system(commande);
 
                 // Indiquer que des fichiers ont été transférés hors ligne.
 
                 // Ou détecter dans un autre script que des fichiers existent dans le mode hors ligne.
+            
             }
 
             // Envoyer le nom du nouveau fichier transféré au socket
@@ -648,15 +648,12 @@ int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, 
     char * data = (char*) calloc(150000, sizeof(char));
     char * dirname = (char*) calloc(100, sizeof(char));
 
-    printf ("Allocating size : %d\n", files_nb);
     FILE * RATING = fopen("data/images/rating.txt", "w");
 
     int i, x = 0;
 
     for (int y = 0; y < PART_NB; y++) {
-        printf("%d\n", y);
         // Commande
-        printf("%s\n", files[y]);
         nom = getName(files[y], dirname);
         int status = getPlacements(&rates, dirname, nom, data, context, camera);
 
