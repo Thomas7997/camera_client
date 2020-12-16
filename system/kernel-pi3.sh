@@ -1,5 +1,7 @@
 #!/bin/bash
+# Ajout des paquets non installés
 
+sudo apt-get install flex bison libssl-dev -y
 mkdir ~/rpi-kernel
 cd ~/rpi-kernel
 mkdir rt-kernel
@@ -20,6 +22,7 @@ make -j4 dtbs_install
 mkdir $INSTALL_MOD_PATH/boot
 ./scripts/mkknlimg ./arch/arm/boot/zImage $INSTALL_MOD_PATH/boot/$KERNEL.img
 cd $INSTALL_MOD_PATH/boot
+cd ..
 mv $KERNEL.img kernel7_rt.img
 tar czf ../rt-kernel.tgz *
 

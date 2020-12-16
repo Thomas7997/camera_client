@@ -1,4 +1,5 @@
 #!/bin/bash
+# Transferer le TGZ par usb et non ssh
 
 cd /tmp
 tar xzf rt-kernel.tgz
