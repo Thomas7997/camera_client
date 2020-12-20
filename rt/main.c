@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define TASK_PRIO  98             /* Highest RT priority */
+#define TASK_PRIO  99             /* Highest RT priority */
 #define TASK_MODE  0  /* Uses FPU, bound to CPU #0 */
 #define TASK_STKSZ 4096            /* Stack size (in bytes) */
 #define TASK_PERM T_JOINABLE
