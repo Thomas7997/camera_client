@@ -25,8 +25,8 @@ RT_TASK task_wifi, task_usb_connection;
 // Procedures
 RT_TASK task_save_files_offline, task_send_files_online, task_enable_transfert_image_auto, task_enable_transfert_image_selection, task_enable_transfert_video_auto;
 
-unsigned int wifi_status, transfert_choice, usb_connected; // 0 : none, 1 : image auto, 2 : image selection, 3 : video auto
-
+unsigned int wifi_status, transfert_choice, usb_connected, nb_transferts; // 0 : none, 1 : image auto, 2 : image selection, 3 : video auto
+static char ** transferts_s;
 static Camera * camera;
 static GPContext* context;
 int status;

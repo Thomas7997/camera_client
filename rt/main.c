@@ -88,8 +88,8 @@ int main (void) {
 	result = rt_task_create (&task_send_files_online, "SEND MEDIAS", 4096, 99, TASK_PERM);
 
 	if (wifi_status == 1) {
-		result = rt_task_suspend(&task_send_files_online);
-		result = rt_task_start(&task_save_files_offline, &send_medias, NULL);
+		result = rt_task_suspend (&task_send_files_online);
+		result = rt_task_start (&task_save_files_offline, &send_medias, NULL);
 	}
 
 	else {
