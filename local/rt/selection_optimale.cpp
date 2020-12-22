@@ -1,6 +1,5 @@
+#include "selection_optimale.h"
 #include "manage_selected.h"
-#include <cstdlib>
-#include <cstdio>
 
 // unsigned int somme (int * buffer) {
 //     unsigned int sommeVal = 0;

@@ -30,36 +30,6 @@ int getCameraModel (Camera * cam) {
     return 0;
 }
 
-// Envoi de la photo
-void send_request (char *name) {
-    printf("Requêtes\n");
-    
-    CURL *curl;
-    CURLcode res;
-
-    char * request_string = (char*) calloc(1000, sizeof(char));
-    sprintf(request_string, "name=%s", name);
-
-    
-    curl_global_init(CURL_GLOBAL_ALL);
-    
-    curl = curl_easy_init();
-    if(curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/transfert/photo");
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_string);
-    
-        res = curl_easy_perform(curl); 
-        if(res != CURLE_OK)
-        fprintf(stderr, "curl_easy_perform() failed: %s\n",
-        curl_easy_strerror(res));
-    
-        curl_easy_cleanup(curl);
-    }
-    curl_global_cleanup();
-    free(request_string);
-    printf ("\n");
-}
-
 void vider_buffer (char *buffer) {
     for (int i = 0; i < strlen(buffer); i++) {
         buffer[i] = 0;
@@ -102,20 +72,6 @@ void linearize (char *base, char **lines) {
     }
 }
 
-unsigned int dossiers_to_list (char *** dossiers, char ** list, char ** dirs, unsigned int nb_dossiers, unsigned int * nb_files) {
-    unsigned int x = 0, item = 0;
-
-    while (x < nb_dossiers) {
-        for (unsigned int y = 0; y < nb_files[x]; y++) {
-            sprintf(list[item++], "%s/%s", dirs[x], dossiers[x][y]);
-        }
-        
-        x++;
-    }
-
-    return item;
-}
-
 int compare_file_historique (char * file, char ** historique, int lines) {
     int i;
     unsigned int file_s = strlen(file)-1;
@@ -127,17 +83,6 @@ int compare_file_historique (char * file, char ** historique, int lines) {
     }
 
     return 0;
-}
-
-void mirroir (char * buf, unsigned int n) {
-    int i = 0;
-    char car;
-
-    for (i = 0; i < (n+1)/2; i++) {
-        car = buf[n-i-1];
-        buf[n-i-1] = buf[i];
-        buf[i] = car;
-    }
 }
 
 char * getName (char * buf, char * dossier) {
@@ -398,93 +343,6 @@ catch (Exiv2::AnyError& e)
    return 0;
 
 
-}
-
-int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context) {
-    CameraList * folderList;
-    char * folder = (char*) calloc(100, sizeof(char));
-    gp_list_new(&folderList);
-    const char * dir;
-    int status = gp_camera_folder_list_folders(camera, "/", folderList, context);
-    if (status < 0) return generateError(status);
-
-    status = gp_list_get_name(folderList, 0, (const char**) &dir);
-    if (status < 0) return generateError(status);
-
-    // status = gp_list_reset(folderList);
-
-    char * tmp = (char*) calloc(100, sizeof(char));
-    char * tmp_dir = (char*) calloc(100, sizeof(char));
-
-    CameraList * fileList;
-    gp_list_new(&fileList);
-
-    unsigned int n = strlen(dir)-1;
-    strcpy(tmp_dir, "/store_");
-
-    unsigned int x = 0, z = 0;
-
-    while (dir[z++] != '_');
-    while (dir[z] != 0) {
-        tmp_dir[7+x++] = dir[z++];
-    }
-
-    sprintf(folder, "%s/DCIM", tmp_dir);
-    // printf ("%s\n", folder);
-
-    status = gp_camera_folder_list_folders(camera,
-		folder,
-		folderList,
-		context 
-	);
-    if (status < 0) return generateError(status);
-
-    int local_nb = gp_list_count(folderList);
-    int nb_files = 0;
-
-    if (local_nb < 0) return generateError(local_nb);
-    *nb = local_nb;
-
-    for (unsigned int i = 0; i < *nb; i++) {
-        // status = gp_list_reset(fileList);
-
-        const char * subdir;
-        status = gp_list_get_name(folderList, i, (const char**) &subdir);
-
-        sprintf (tmp_dir, "%s/%s", folder, subdir);
-        // printf ("%s\n", tmp_dir);
-
-        strcpy(dirs_n[i], tmp_dir);
-
-        status = gp_list_reset(fileList);
-        if (status < 0) return generateError(status);
-
-        status = gp_camera_folder_list_files(camera, tmp_dir, fileList, context);
-        if (status < 0) return generateError(status);
-
-        nb_files = gp_list_count(fileList);
-        if (nb_files < 0) return generateError(nb_files);
-
-        dir_sizes[i] = nb_files;
-
-        for (unsigned int j = 0; j < nb_files; j++) {
-            const char * file;
-            status = gp_list_get_name(fileList, j, (const char**) &file);
-            // handleError(status);
-            if (status < 0) return generateError(status);
-            strcpy(dirs_b[i][j], file);
-            // printf ("%s\n", dirs_b[i][j]);
-        }
-
-        // sprintf(dirs_n[i], "/%s", dir);
-    }
-
-    free(tmp_dir);
-    free(folder);
-    free(tmp);
-    gp_list_free(folderList);
-    gp_list_free(fileList);
-    return 0; // Pas d'erreur
 }
 
 void afficher_i (unsigned int * buffer, unsigned int n) {
