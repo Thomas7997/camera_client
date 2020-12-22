@@ -14,7 +14,7 @@ int main (void) {
 
     usb_freed = 1;
     command_usb_reconnexion = 1;
-    status = 1;
+    status = 0;
     connected_once = -1;
 
 	// Main tasks
@@ -24,8 +24,8 @@ int main (void) {
 	result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
 
     // Reconnexion
-    result = rt_task_spawn (&task_usb_connection, "USB CONNECTION", 4096, 99, TASK_PERM, &camera_usb_connection, NULL);
     result = rt_task_spawn (&task_free_usb, "FREE USB", 4096, 99, TASK_PERM, &free_usb, NULL);
+    result = rt_task_spawn (&task_usb_connection, "USB CONNECTION", 4096, 99, TASK_PERM, &camera_usb_connection, NULL);
 
 	// Scripts d'action
 	result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
@@ -58,7 +58,7 @@ int main (void) {
 
 void check_transfert_choice (void * arg) {
 	while (1) {
-        transfert_choice = 1;
+        transfert_choice = 2;
 		printf ("CHECK TRANSFERT CHOICE\n");
 		sleep(1);
 	}
@@ -90,7 +90,10 @@ void save_medias (void * arg) {
 void enable_transfert_image_selection (void * arg) {
     while (1) {
         printf("TRANSFERT D'IMAGES SÉLECTIONNÉ LANCÉ\n");
-        sleep(1);
+
+        status = selection_optimale (camera, context, &command_usb_reconnexion, &usb_freed);
+
+        usleep(5000);
     }
 }
 
@@ -199,6 +202,7 @@ void script_apply_choice (void * arg) {
                     printf("IMAGE SELECTIONNÉ\n");
                     rt_task_suspend(&task_enable_transfert_image_auto);
                     rt_task_start(&task_enable_transfert_image_selection, &enable_transfert_image_selection, NULL);
+                    rt_task_resume(&task_enable_transfert_image_selection);
                     rt_task_suspend(&task_enable_transfert_video_auto);
                 break;
                 case 3 :

@@ -150,10 +150,9 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
     char * commande = (char*) calloc(250, sizeof(char));
     int file_transfered = 0;
 
-    FILE * HISTORIQUE = fopen("data/images/historique.txt", "a");
-    FILE * HISTORIQUER = fopen("data/images/historique.txt", "r");
-
-    system("cd data/images/gets");
+    printf ("1\n");
+    FILE * HISTORIQUE = fopen("/home/remote/sources/camera_client/local/data/images/historique.txt", "a+");
+    printf("2\n");
 
     char ** hist_lines = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
@@ -165,7 +164,7 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
 
     x = 0;
 
-    while (fgets(hist_lines[x++], TAILLE_NOM, HISTORIQUER));
+    while (fgets(hist_lines[x++], TAILLE_NOM, HISTORIQUE));
 
     char * current_file = (char*) calloc(TAILLE_NOM, sizeof(char));
     char * dossier = (char*) calloc(TAILLE_NOM, sizeof(char));
@@ -232,7 +231,6 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
 
     free(current_file);
     fclose(HISTORIQUE);
-    fclose(HISTORIQUER);
     free(hist_lines);
     free(filename);
     free(commande);
@@ -421,25 +419,28 @@ int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, 
     char * data = (char*) calloc(150000, sizeof(char));
     char * dirname = (char*) calloc(100, sizeof(char));
 
-    FILE * RATING = fopen("data/images/rating.txt", "w");
-
     int i, x = 0;
 
     for (int y = 0; y < PART_NB; y++) {
         // Commande
         nom = getName(files[y], dirname);
+        printf ("%s\n", nom);
         int status = getPlacements(&rates, dirname, nom, data, context, camera);
 
         if (status < 0) return generateError(status);
 
         if (rates == 5) {
-            sprintf(transferts[x++], "%s/%s", dirname, nom);
-        }
+            sprintf(transferts[x], "%s/%s", dirname, nom);
+            printf("%s\n", transferts[x++]);
+        } 
 
-        fprintf(RATING, "%s : %d\n", files[y], rates);
+        // printf ("ÉCRITURE DU PLACEMENT.\n");
+
+        // fprintf(RATING, "%s : %d\n", files[y], rates);
+
+        // printf ("Placement écrit.\n");
     }
 
-    fclose(RATING);
     free(nom);
     free(data);
     free(dirname);

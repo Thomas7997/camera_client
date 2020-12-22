@@ -44,19 +44,11 @@ int generateError (int status) {
 
     // J'utilise un système de fichiers et un second script de lecture de fichiers et de lancement de requêtes CURL
     // Écire le status dans un fichier
-    FILE * ERR = fopen("data/tmp/errors.txt", "r");
-    FILE * NOTIFICATION;
     int previousStatus = 0;
-
-    NOTIFICATION = fopen("data/tmp/errors.txt", "w");
     
     // Envoyer l'ordre de notifier vers un autre script qui détecte le changement de status
     
-    fprintf(NOTIFICATION, "%d\n", status);
-    fclose(NOTIFICATION);
-
-    printf("GENERATE ERROR %d\n", status);
-    fclose(ERR);
+    printf("%d\n", status);
 
     return status;
 }

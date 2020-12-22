@@ -11,6 +11,6 @@
 #include "transactions.h"
 #include "usb_transactions.h"
 
-int selection_optimale (Camera * camera, GPContext * context);
+int selection_optimale (Camera * camera, GPContext * context, unsigned int * command, unsigned int * freed);
 
 #endif

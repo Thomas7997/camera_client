@@ -20,7 +20,7 @@
 //     return;
 // }
 
-int selection_optimale (Camera * camera, GPContext * context) {
+int selection_optimale (Camera * camera, GPContext * context, unsigned int * command, unsigned int * freed) {
     int status = 0;
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
     char ** liste_captures = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -98,6 +98,8 @@ int selection_optimale (Camera * camera, GPContext * context) {
 
     if (status < 0) return status;
 
+    printf("1\n");
+
     // FIN RÉPÉTITIONS
 
     for (int i = 0; i < MAX_CAPTURES; i++) {
@@ -128,6 +130,11 @@ int selection_optimale (Camera * camera, GPContext * context) {
     free(dossiers);
     free(files);
     free(images_list);
+
+    printf("1\n");
+
+    *command = 1;
+    *freed = 0;
 
     return 0;
 }

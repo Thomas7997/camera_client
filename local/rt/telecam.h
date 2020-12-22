@@ -15,6 +15,7 @@
 #include "net.h"
 #include "auto.h"
 #include "errors.h"
+#include "selection_optimale.h"
 
 // CONSTANTS
 #define TASK_PRIO  99             /* Highest RT priority */
