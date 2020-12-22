@@ -20,6 +20,8 @@
 #include <gphoto2/gphoto2-list.h>
 #include <gphoto2/gphoto2-abilities-list.h>
 
+#include "errors.h"
+
 #define MAX 80
 #define MAX_CAPTURES 10000
 #define TAILLE_NOM 100
@@ -40,7 +42,6 @@ typedef struct _Dossier Dossier;
 void cut_list(char ** files, unsigned int size, char ** newList);
 
 void mirroir (char * buf, unsigned int n);
-int generateError (int status);
 int getCameraModel (Camera * cam);
 char * getName (char * buf, char * dossier);
 void clearBufLast (char * buf, unsigned int len, unsigned int nb);
@@ -63,14 +64,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
 int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigned int * dir_sizes, unsigned int nb_dirs, unsigned int * transferts_nb, Camera * camera, GPContext * context);
 int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context);
 int eachFileRating_2 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context);
-void handleError(int status);
-void send_status_request (int status);
 unsigned int dossiers_to_list (char *** dossiers, char ** list, char ** dirs, unsigned int nb_dossiers, unsigned int * nb_files);
-static void
-ctx_error_func (GPContext *context, const char *str, void *data);
-static void
-ctx_status_func (GPContext *context, const char *str, void *data);
-GPContext* sample_create_context();
 void declancher_transferer_hors_ligne(char ** transferts, unsigned int transferts_nb, GPContext * context, Camera * camera);
 
 #endif

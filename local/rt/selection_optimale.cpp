@@ -1,4 +1,4 @@
-#include "manage_selected2.h"
+#include "manage_selected.h"
 #include <cstdlib>
 #include <cstdio>
 
@@ -8,26 +8,22 @@
 //     return sommeVal;
 // }
 
-int getDay (void) {
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
-    return tm.tm_mday;
-}
+// int getDay (void) {
+//     time_t t = time(NULL);
+//     struct tm tm = *localtime(&t);
+//     return tm.tm_mday;
+// }
 
-void RemplirLignes (char ** lns1, char ** lns2) {
-    unsigned int i = 0;
+// void RemplirLignes (char ** lns1, char ** lns2) {
+//     unsigned int i = 0;
 
-    while (lns2[i][0] != 0) lns1[i] = lns2[i];
-    return;
-}
+//     while (lns2[i][0] != 0) lns1[i] = lns2[i];
+//     return;
+// }
 
-int selection_optimale (void) {
+int selection_optimale (Camera * camera, GPContext * context) {
     int status = 0;
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
-
-    Camera * camera;
-    GPContext *context = sample_create_context();
-
     char ** liste_captures = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     char ** transferts = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     char ** dirs_n = (char**) calloc(MIN_DIRS, sizeof(char*));
@@ -58,79 +54,50 @@ int selection_optimale (void) {
 
     // DÉBUT RÉPÉTITIONS
 
-    int stop = -1;
-    do {
-        do {
-            gp_camera_new (&camera);
-            status = gp_camera_init(camera, context);
-            handleError(status);
+    int i, j, number = 0;
 
-            if (status < 0) {
-                generateError(status);
-                gp_camera_exit(camera, context);
-                gp_camera_free(camera);
-            }
+    i = 0;
 
-            usleep(5000);
-        } while (status != 0);
+    unsigned int files_nb = 0, transferts_nb = 0;
 
-        int i, j, number = 0;
+    for (unsigned int e = 0; e < MIN_DIRS; e++) {
+        for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
+            strcpy(dossiers[e][j], "");
+        }            
+    }
 
-        i = 0;
+    for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
+        strcpy(transferts[e], "");
+    }
 
-        FILE * STOP = fopen("data/stop/selection.txt", "r");
-        
-        if (STOP == NULL) return 1;
-        fscanf(STOP, "%d", &stop);
-        if (stop == -1) return 1;
+    for (unsigned int e = 0; e < MAX_CAPTURES*MIN_DIRS; e++) {
+        strcpy(files[e], "");
+    }
 
-        unsigned int files_nb = 0, transferts_nb = 0;
+    for (unsigned int e = 0; e < PART_NB; e++) {
+        strcpy(images_list[e], "");
+    }
+    
+    status = get_files_and_dirs(dossiers, dirs_n, &files_nb, dir_sizes, camera, context);
 
-        for (unsigned int e = 0; e < MIN_DIRS; e++) {
-            for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
-                strcpy(dossiers[e][j], "");
-            }            
-        }
+    if (status < 0) return status;
 
-        for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
-            strcpy(transferts[e], "");
-        }
+    unsigned int nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
 
-        for (unsigned int e = 0; e < MAX_CAPTURES*MIN_DIRS; e++) {
-            strcpy(files[e], "");
-        }
+    cut_list(files, nb_files, images_list);
 
-        for (unsigned int e = 0; e < PART_NB; e++) {
-            strcpy(images_list[e], "");
-        }
-        
-        status = get_files_and_dirs(dossiers, dirs_n, &files_nb, dir_sizes, camera, context);
+    status = eachFileRating_1(images_list, transferts, nb_files, &transferts_nb, camera, context);
+    if (status < 0) return status;
 
-        if (status < 0) continue;
+    // status = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, &transferts_nb, camera, context);
 
-        unsigned int nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
+    // if (status < 0) continue;
 
-        cut_list(files, nb_files, images_list);
+    int online = 0;
 
-        status = eachFileRating_1(images_list, transferts, nb_files, &transferts_nb, camera, context);
-        if (status < 0) continue;
+    status = transferer_noms(transferts, transferts_nb, context, camera, online);
 
-        // status = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, &transferts_nb, camera, context);
-
-        // if (status < 0) continue;
-
-        int online = 0;
-
-        status = transferer_noms(transferts, transferts_nb, context, camera, online);
-
-        if (status < 0) continue;
-
-        fscanf(STOP, "%d", &stop);
-        fclose(STOP);
-
-        gp_camera_exit(camera, context);
-        gp_camera_free(camera);
-    } while (stop != 1);
+    if (status < 0) return status;
 
     // FIN RÉPÉTITIONS
 

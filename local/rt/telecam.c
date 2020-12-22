@@ -1,20 +1,31 @@
 #include "telecam.h"
 
+CameraAbilities abilities;
+
 int main (void) {
 	// Initialisations
     transferts_s = (char**) calloc(MAX_CAPTURES, sizeof(char*));
-	int result = 0;
-    status = 1;
 
     for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
         transferts_s[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
+    context = sample_create_context();
+
+    usb_freed = 1;
+    command_usb_reconnexion = 1;
+    status = 1;
+    connected_once = -1;
+
 	// Main tasks
-	// Scripts de vérification
-	result = rt_task_spawn (&task_transfert_choice, "IMAGE AUTO", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
+
+    // Scripts de vérification
+	result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
 	result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
+
+    // Reconnexion
     result = rt_task_spawn (&task_usb_connection, "USB CONNECTION", 4096, 99, TASK_PERM, &camera_usb_connection, NULL);
+    result = rt_task_spawn (&task_free_usb, "FREE USB", 4096, 99, TASK_PERM, &free_usb, NULL);
 
 	// Scripts d'action
 	result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
@@ -23,47 +34,11 @@ int main (void) {
     result = rt_task_create (&task_enable_transfert_image_selection, "LANCER TRANSFERT IMAGE SELECTION", 4096, 99, TASK_PERM);
     result = rt_task_create (&task_enable_transfert_video_auto, "LANCER TRANSFERT VIDEO AUTO", 4096, 99, TASK_PERM);
 
+    // MAIN SCRIPTS
+    result = rt_task_spawn (&task_apply_choice, "APPLIQUER LE CHOIX DE L'UTILISATEUR", 4096, 99, TASK_PERM, &script_apply_choice, NULL);
+
 	while (1) {
-        printf("USB CONNECTED : %d\n", usb_connected);
-
-		if (usb_connected) {
-            switch (transfert_choice) {
-                case 0 :
-                    rt_task_suspend(&task_enable_transfert_image_auto);
-                    rt_task_suspend(&task_enable_transfert_image_selection);
-                    rt_task_suspend(&task_enable_transfert_video_auto);
-                break;
-                case 1 :
-                    rt_task_start(&task_enable_transfert_image_auto, &enable_transfert_image_auto, NULL);
-                    rt_task_suspend(&task_enable_transfert_image_selection);
-                    rt_task_suspend(&task_enable_transfert_video_auto);
-                break;
-                case 2 :
-                    rt_task_suspend(&task_enable_transfert_image_auto);
-                    rt_task_start(&task_enable_transfert_image_selection, &enable_transfert_image_selection, NULL);
-                    rt_task_suspend(&task_enable_transfert_video_auto);
-                break;
-                case 3 :
-                    rt_task_suspend(&task_enable_transfert_image_auto);
-                    rt_task_suspend(&task_enable_transfert_image_selection);
-                    rt_task_start(&task_enable_transfert_video_auto, &enable_transfert_video_auto, NULL);
-                break;
-                default : printf("Erreur\n");
-                break;
-            }
-
-            if (wifi_status == 1) {
-                result = rt_task_suspend(&task_send_files_online);
-                result = rt_task_start(&task_save_files_offline, &send_medias, NULL);
-            }
-
-            else {
-                result = rt_task_suspend(&task_save_files_offline);
-                result = rt_task_start(&task_send_files_online, &save_medias, NULL);
-            }
-        }
-
-        usleep(500000);
+		pause();
 	}
 
     for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
@@ -71,11 +46,14 @@ int main (void) {
     }
 
     free(transferts_s);
+
+    free_usb(NULL);
     
 	rt_task_delete(&task_transfert_choice);
 	rt_task_delete(&task_wifi);
 	rt_task_delete(&task_save_files_offline);
 	rt_task_delete(&task_send_files_online);
+    rt_task_delete(&task_apply_choice);
 }
 
 void check_transfert_choice (void * arg) {
@@ -116,13 +94,16 @@ void enable_transfert_image_selection (void * arg) {
     }
 }
 
-void enable_transfert_image_auto (void * arg) {
+void enable_transfert_image_auto (void * arg) {   
+    int nb_tours = 0;
+
     while (1) {
         printf("TRANSFERT D'IMAGES AUTO LANCÉ\n");
 
-        photo_auto(camera, context, transferts_s, &nb_transferts);
+        status = photo_auto(camera, context, transferts_s, &nb_transferts, &command_usb_reconnexion, &usb_freed, &nb_tours);
 
-        sleep(1);
+        printf("tours : %d\n", nb_tours++);
+        usleep(5000);
     }
 }
 
@@ -133,31 +114,121 @@ void enable_transfert_video_auto (void * arg) {
     }
 }
 
-void camera_usb_connection (void * arg) {
-    context = sample_create_context();
-    
+void reconnexion_usb (void * arg) {
     while (1) {
-        printf("CHECKING USB\n");
+        // printf("RECONNEXION USB ...\n");
 
+        usleep(500000);
+    }
+}
+
+void free_usb (void * arg) {
+    while (1) {
+        // Problème ici
+        if (usb_freed == 0) {
+            printf("LIBÉRATION USB ...\n");
+            usb_freed = 1;
+            gp_camera_exit(camera, context);
+            gp_camera_free(camera);
+        }
+
+        usleep(100);
+    }
+}
+
+void camera_usb_connection (void * arg) {
+    while (1) {
         if (transfert_choice > 0) {
-            while (status != 0) {
+            while (status != 0 || command_usb_reconnexion == 1) {
                 printf("CONNEXION USB ...\n");
-                gp_camera_new (&camera);
+                status = gp_camera_new (&camera);
+                handleError(status);
                 status = gp_camera_init(camera, context);
                 handleError(status);
 
                 if (status < 0) {
+                    printf("ERREUR DE CONNEXION !\n");
                     generateError(status);
-                    gp_camera_exit(camera, context);
-                    gp_camera_free(camera);
+                    status = gp_camera_exit(camera, context);
+                    handleError(status);
+                    status = gp_camera_free(camera);
+                    handleError(status);
+                    usleep(100000);
+                    usb_connected = 0;
                 }
 
-                usleep(500000);
-            }
+                else {
+                    if (connected_once > 0) {
+                        usb_freed = 0;
+                    }
 
-            usb_connected = 1;
+                    // gp_camera_get_abilities (camera, &abilities);
+
+                    connected_once++;
+                    usb_connected = 1;
+                    command_usb_reconnexion = 0;
+                }
+            }
         }
 
-        sleep(1);
+        usleep(500000);
     }
+}
+
+void script_apply_choice (void * arg) {
+    while (1) {
+        printf("USB CONNECTED : %d\n", usb_connected);
+
+		if (usb_connected == 1) {
+            printf("%d\n", 2);
+            switch (transfert_choice) {
+                case 0 :
+                    printf("NONE\n");
+                    rt_task_suspend(&task_enable_transfert_image_auto);
+                    rt_task_suspend(&task_enable_transfert_image_selection);
+                    rt_task_suspend(&task_enable_transfert_video_auto);
+                break;
+                case 1 :
+                    printf("IMAGE AUTO\n");
+                    rt_task_start(&task_enable_transfert_image_auto, &enable_transfert_image_auto, NULL);
+                    rt_task_resume(&task_enable_transfert_image_auto);
+                    rt_task_suspend(&task_enable_transfert_image_selection);
+                    rt_task_suspend(&task_enable_transfert_video_auto);
+                break;
+                case 2 :
+                    printf("IMAGE SELECTIONNÉ\n");
+                    rt_task_suspend(&task_enable_transfert_image_auto);
+                    rt_task_start(&task_enable_transfert_image_selection, &enable_transfert_image_selection, NULL);
+                    rt_task_suspend(&task_enable_transfert_video_auto);
+                break;
+                case 3 :
+                    printf("VIDEO AUTO\n");
+                    rt_task_suspend(&task_enable_transfert_image_auto);
+                    rt_task_suspend(&task_enable_transfert_image_selection);
+                    rt_task_start(&task_enable_transfert_video_auto, &enable_transfert_video_auto, NULL);
+                break;
+                default : printf("Erreur\n");
+                break;
+            }
+
+            if (wifi_status == 1) {
+                result = rt_task_suspend(&task_send_files_online);
+                result = rt_task_start(&task_save_files_offline, &send_medias, NULL);
+            }
+
+            else {
+                result = rt_task_suspend(&task_save_files_offline);
+                result = rt_task_start(&task_send_files_online, &save_medias, NULL);
+            }
+        }
+
+        else {
+            printf("%d\n", 1);
+            rt_task_suspend(&task_enable_transfert_image_auto);
+            rt_task_suspend(&task_enable_transfert_image_selection);
+            rt_task_suspend(&task_enable_transfert_video_auto);
+        }
+
+        usleep(500000);
+	}
 }

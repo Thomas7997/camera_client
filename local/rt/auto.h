@@ -2,18 +2,8 @@
 #ifndef __AUTO_H__
 #define __AUTO_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <time.h>
-#include <assert.h>
-#include <gphoto2/gphoto2.h>
-#include <gphoto2/gphoto2-port-log.h>
-#include <gphoto2/gphoto2-setting.h>
-#include <gphoto2/gphoto2-filesys.h>
-#include <gphoto2/gphoto2-list.h>
-#include <gphoto2/gphoto2-abilities-list.h>
+#include "mods.h"
+#include "errors.h"
 
 #define MAX 80
 #define MAX_CAPTURES 10000
@@ -30,13 +20,6 @@ unsigned int dossiers_to_list (char *** dossiers, char ** list, char ** dirs, un
 unsigned int save_clist_slist(char ** liste_captures, char ** files, unsigned int files_nb, unsigned int nb_list);
 void afficher_liste(char ** transferts, unsigned int ret_comp);
 int compareFilesLists(char ** transferts, char ** files, char ** liste_captures, int files_nb, int nb_list, unsigned int * indexs);
-static void
-ctx_error_func (GPContext *context, const char *str, void *data);
-static void
-ctx_status_func (GPContext *context, const char *str, void *data);
-GPContext* sample_create_context();
-int generateError (int status);
-void handleError(int status);
 void mirroir (char * buf, unsigned int n);
 unsigned int getVideoDatas (char *** dossiers, char ** dirs_n, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes);
 unsigned int getPhotoDatas (char *** dossiers, char ** dirs_n, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes);

@@ -1,18 +1,5 @@
 #include "auto.h"
 
-int getDay (void) {
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
-    return tm.tm_mday;
-}
-
-void RemplirLignes (char ** lns1, char ** lns2) {
-    unsigned int i = 0;
-
-    while (lns2[i][0] != 0) lns1[i] = lns2[i];
-    return;
-}
-
 unsigned int filterVideos (char ** videos_l, char ** files_l, unsigned int files_n) {
     unsigned int x = 0, i, j, y;
     char ext[5] = "";
@@ -112,58 +99,6 @@ void afficher_liste(char ** transferts, unsigned int ret_comp) {
     }
 }
 
-void handleError(int status) {
-    printf ("%s\n", gp_result_as_string(status));
-}
-
-static void
-ctx_error_func (GPContext *context, const char *str, void *data)
-{
-        fprintf  (stderr, "\n*** Contexterror ***              \n%s\n",str);
-        fflush   (stderr);
-}
-
-static void
-ctx_status_func (GPContext *context, const char *str, void *data)
-{
-        fprintf  (stderr, "%s\n", str);
-        fflush   (stderr);
-}
-
-GPContext* sample_create_context() {
-	GPContext *context;
-
-	/* This is the mandatory part */
-	context = gp_context_new();
-
-	/* All the parts below are optional! */
-        gp_context_set_error_func (context, ctx_error_func, NULL);
-        gp_context_set_status_func (context, ctx_status_func, NULL);
-
-	/* also:
-	gp_context_set_cancel_func    (p->context, ctx_cancel_func,  p);
-        gp_context_set_message_func   (p->context, ctx_message_func, p);
-        if (isatty (STDOUT_FILENO))
-                gp_context_set_progress_funcs (p->context,
-                        ctx_progress_start_func, ctx_progress_update_func,
-                        ctx_progress_stop_func, p);
-	 */
-	return context;
-}
-
-int generateError (int status) {
-    // Notifier une erreur en fonction de ce qu'il s'agit.
-
-    // J'utilise un système de fichiers et un second script de lecture de fichiers et de lancement de requêtes CURL
-    // Écire le status dans un fichier
-    int previousStatus = 0;
-
-    // Envoyer l'ordre de notifier vers un autre script qui détecte le changement de status
-
-    printf("GENERATE ERROR %d\n", status);
-
-    return status;
-}
 
 void mirroir (char * buf, unsigned int n) {
     int i = 0;
