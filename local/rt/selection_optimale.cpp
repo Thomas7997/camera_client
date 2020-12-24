@@ -20,36 +20,11 @@
 //     return;
 // }
 
-int selection_optimale (Camera * camera, GPContext * context, unsigned int * command, unsigned int * freed) {
+int selection_optimale (Camera * camera, GPContext * context, char ** transferts, unsigned int * transferts_nb, unsigned int * command, unsigned int * freed, char *** dossiers, char ** dirs_n, unsigned int * dir_sizes, char ** files, char ** images_list) {
     int status = 0;
-    char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
-    char ** liste_captures = (char**) calloc(MAX_CAPTURES, sizeof(char*));
-    char ** transferts = (char**) calloc(MAX_CAPTURES, sizeof(char*));
-    char ** dirs_n = (char**) calloc(MIN_DIRS, sizeof(char*));
-    char ** files = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
-    unsigned int * dir_sizes = (unsigned int*) calloc(1000, sizeof(unsigned int));
-    char ** images_list = (char**) calloc(PART_NB, sizeof(char*));
+    printf("1\n");
 
-    for (unsigned int d = 0; d < MIN_DIRS; d++) {
-        dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
-        for (int dy = 0; dy < MAX_CAPTURES; dy++) {
-            dossiers[d][dy] = (char*) calloc(TAILLE_NOM, sizeof(char));
-        }
-        dirs_n[d] = (char*) calloc(TAILLE_NOM, sizeof(char));
-    }
-
-    for (unsigned int i = 0; i < PART_NB; i++) {
-        images_list[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
-    }
-
-    for (unsigned int i = 0; i < MAX_CAPTURES; i++) {
-        liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
-        transferts[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
-    }
-
-    for (unsigned int i = 0; i < MIN_DIRS*MAX_CAPTURES; i++) {
-        files[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
-    }
+    printf("1\n");
 
     // DÉBUT RÉPÉTITIONS
 
@@ -57,7 +32,7 @@ int selection_optimale (Camera * camera, GPContext * context, unsigned int * com
 
     i = 0;
 
-    unsigned int files_nb = 0, transferts_nb = 0;
+    unsigned int files_nb = 0;
 
     for (unsigned int e = 0; e < MIN_DIRS; e++) {
         for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
@@ -77,6 +52,8 @@ int selection_optimale (Camera * camera, GPContext * context, unsigned int * com
         strcpy(images_list[e], "");
     }
     
+    printf("1\n");
+
     status = get_files_and_dirs(dossiers, dirs_n, &files_nb, dir_sizes, camera, context);
 
     if (status < 0) return status;
@@ -85,7 +62,7 @@ int selection_optimale (Camera * camera, GPContext * context, unsigned int * com
 
     cut_list(files, nb_files, images_list);
 
-    status = eachFileRating_1(images_list, transferts, nb_files, &transferts_nb, camera, context);
+    status = eachFileRating_1(images_list, transferts, nb_files, transferts_nb, camera, context);
     if (status < 0) return status;
 
     // status = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, &transferts_nb, camera, context);
@@ -94,47 +71,16 @@ int selection_optimale (Camera * camera, GPContext * context, unsigned int * com
 
     int online = 0;
 
-    status = transferer_noms(transferts, transferts_nb, context, camera, online);
-
     if (status < 0) return status;
 
     printf("1\n");
 
     // FIN RÉPÉTITIONS
 
-    for (int i = 0; i < MAX_CAPTURES; i++) {
-        free(liste_captures[i]);
-        free(transferts[i]);
-    }
-
-    for (int d = 0; d < MIN_DIRS; d++) {
-        for (int dy = 0; dy < MAX_CAPTURES; dy++) {
-            free(dossiers[d][dy]);
-        }
-        free(dossiers[d]);
-        free(dirs_n[d]);
-    }
-
-    for (int i = 0; i < MIN_DIRS*MAX_CAPTURES; i++) {
-        free(files[i]);
-    }
-
-    for (unsigned int i = 0; i < PART_NB; i++) {
-        free(images_list[i]);
-    }
-
-    free(dirs_n);
-    free(liste_captures);
-    free(transferts);
-    free(dir_sizes);
-    free(dossiers);
-    free(files);
-    free(images_list);
-
     printf("1\n");
 
-    *command = 1;
-    *freed = 0;
+    // *command = 1;
+    // *freed = 0;
 
-    return 0;
+    return 1;
 }

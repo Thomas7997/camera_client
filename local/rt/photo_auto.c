@@ -6,10 +6,9 @@
 
 // Il faudra mettre en place un filtre dans les deux
 
-int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsigned int * nb_transferts, unsigned int * command, unsigned int * freed, int * nb) {
+int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsigned int * nb_transferts, unsigned int * command, unsigned int * freed, int * nb, char ** liste_captures, unsigned int * nb_list) {
     int status = 0;
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
-    char ** liste_captures = (char**) calloc(MAX_CAPTURES, sizeof(char*)); // Liste mémoire
     char ** dirs_n = (char**) calloc(MIN_DIRS, sizeof(char*));
     char ** files = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
     char ** photos = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -26,7 +25,6 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
     }
 
     for (unsigned int i = 0; i < MAX_CAPTURES; i++) {
-        liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
         photos[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
@@ -36,7 +34,7 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
 
     // DÉBUT RÉPÉTITIONS
 
-    unsigned int files_nb = 0, nb_list = 0, new_file_index = 0, nb_files = 0, x;
+    unsigned int files_nb = 0, new_file_index = 0, nb_files = 0, x;
 
     // Phase initiale où le programme démarre et aucune photo n'est transferée
 
@@ -62,18 +60,18 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
     printf("2\n");
 
     if (*nb == 0) {
-        nb_list = save_clist_slist(liste_captures, photos, nb_medias, nb_list);
+        *nb_list = save_clist_slist(liste_captures, photos, nb_medias, *nb_list);
     }
 
     printf("3\n");
-    unsigned int ret_comp = compareFilesLists(transferts, photos, liste_captures, nb_medias, nb_list, files_index_list);
+    unsigned int ret_comp = compareFilesLists(transferts, photos, liste_captures, nb_medias, *nb_list, files_index_list);
     x = 0;
     printf("4\n");
 
-    printf ("%d\n%d\n", ret_comp, nb_list);
+    printf ("%d\n%d\n", ret_comp, *nb_list);
     if (ret_comp != 0) {
         // Store list
-        nb_list = save_clist_slist(liste_captures, files, nb_medias, nb_list); // curent to stored   
+        *nb_list = save_clist_slist(liste_captures, files, nb_medias, *nb_list); // curent to stored   
     
         printf("%d\n", ret_comp);
         while (x < ret_comp) {
@@ -93,12 +91,11 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
     *freed = 0;
     *command = 1;
 
-    usleep(500000);
+    //usleep(500000);
 
     // FIN RÉPÉTITIONS
 
     for (int i = 0; i < MAX_CAPTURES; i++) {
-        free(liste_captures[i]);
         free(photos[i]);
     }
 
@@ -116,11 +113,10 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
 
     free(photos);
     free(dirs_n);
-    free(liste_captures);
     free(dir_sizes);
     free(dossiers);
     free(files);
     free(files_index_list);
 
-    return 0;
+    return 1;
 }

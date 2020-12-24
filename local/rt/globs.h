@@ -7,6 +7,14 @@ static char ** transferts_s;
 static Camera * camera;
 static GPContext* context;
 int status, connected_once;
-unsigned int result, command_usb_reconnexion, usb_freed;
+unsigned int result, command_usb_reconnexion, usb_freed, liste_captures_size;
+
+// Stockage de fichiers
+static char *** dossiers;
+static char ** dirs_n;
+static char ** files;
+static unsigned int * dir_sizes;
+static char ** images_list;
+static char ** liste_captures;
 
 #endif

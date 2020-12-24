@@ -60,19 +60,19 @@ int generateError (int status) {
 
     // J'utilise un système de fichiers et un second script de lecture de fichiers et de lancement de requêtes CURL
     // Écire le status dans un fichier
-    FILE * ERR = fopen("data/tmp/errors.txt", "r");
+    // FILE * ERR = fopen("data/tmp/errors.txt", "r");
     FILE * NOTIFICATION;
     int previousStatus = 0;
 
-    NOTIFICATION = fopen("data/tmp/errors.txt", "w");
+    // NOTIFICATION = fopen("data/tmp/errors.txt", "w");
     
     // Envoyer l'ordre de notifier vers un autre script qui détecte le changement de status
     
-    fprintf(NOTIFICATION, "%d\n", status);
-    fclose(NOTIFICATION);
+    //fprintf(NOTIFICATION, "%d\n", status);
+    //fclose(NOTIFICATION);
 
     printf("GENERATE ERROR %d\n", status);
-    fclose(ERR);
+    // fclose(ERR);
 
     return status;
 }
@@ -516,6 +516,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
     }
 
     sprintf(folder, "%s/DCIM", tmp_dir);
+
     // printf ("%s\n", folder);
 
     status = gp_camera_folder_list_folders(camera,

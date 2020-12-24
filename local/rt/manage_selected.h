@@ -27,7 +27,7 @@
 #define TAILLE_NOM 100
 #define MIN_DIRS 10
 #define NB_PARTS 2
-#define PART_NB 50
+#define PART_NB 49
 
 struct _Dossier {
     char * title;

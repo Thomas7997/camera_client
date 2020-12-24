@@ -4,6 +4,31 @@ CameraAbilities abilities;
 
 int main (void) {
 	// Initialisations
+    dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
+    dirs_n = (char**) calloc(MIN_DIRS, sizeof(char*));
+    files = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
+    dir_sizes = (unsigned int*) calloc(1000, sizeof(unsigned int));
+    images_list = (char**) calloc(PART_NB, sizeof(char*));
+    dir_sizes = (unsigned int*) calloc(MIN_DIRS, sizeof(unsigned int*));
+    liste_captures = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
+
+    for (unsigned int d = 0; d < MIN_DIRS; d++) {
+        dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
+        for (int dy = 0; dy < MAX_CAPTURES; dy++) {
+            dossiers[d][dy] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        }
+        dirs_n[d] = (char*) calloc(TAILLE_NOM, sizeof(char));
+    }
+
+    for (unsigned int i = 0; i < PART_NB; i++) {
+        images_list[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+    }
+
+    for (unsigned int i = 0; i < MIN_DIRS*MAX_CAPTURES; i++) {
+        files[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+    }
+    
     transferts_s = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
     for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
@@ -14,7 +39,7 @@ int main (void) {
 
     usb_freed = 1;
     command_usb_reconnexion = 1;
-    status = 0;
+    status = 1;
     connected_once = -1;
 
 	// Main tasks
@@ -24,8 +49,8 @@ int main (void) {
 	result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
 
     // Reconnexion
-    result = rt_task_spawn (&task_free_usb, "FREE USB", 4096, 99, TASK_PERM, &free_usb, NULL);
-    result = rt_task_spawn (&task_usb_connection, "USB CONNECTION", 4096, 99, TASK_PERM, &camera_usb_connection, NULL);
+    //result = rt_task_spawn (&task_free_usb, "FREE USB", 4096, 99, TASK_PERM, &free_usb, NULL);
+    //result = rt_task_spawn (&task_usb_connection, "USB CONNECTION", 4096, 99, TASK_PERM, &camera_usb_connection, NULL);
 
 	// Scripts d'action
 	result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
@@ -54,11 +79,35 @@ int main (void) {
 	rt_task_delete(&task_save_files_offline);
 	rt_task_delete(&task_send_files_online);
     rt_task_delete(&task_apply_choice);
+
+    for (int d = 0; d < MIN_DIRS; d++) {
+        for (int dy = 0; dy < MAX_CAPTURES; dy++) {
+            free(dossiers[d][dy]);
+        }
+        free(dossiers[d]);
+        free(dirs_n[d]);
+    }
+
+    for (int i = 0; i < MIN_DIRS*MAX_CAPTURES; i++) {
+        free(files[i]);
+        free(liste_captures[i]);
+    }
+
+    for (unsigned int i = 0; i < PART_NB; i++) {
+        free(images_list[i]);
+    }
+
+    free(dirs_n);
+    free(dir_sizes);
+    free(dossiers);
+    free(files);
+    free(images_list);
+    free(liste_captures);
 }
 
 void check_transfert_choice (void * arg) {
 	while (1) {
-        transfert_choice = 2;
+        transfert_choice = 1;
 		printf ("CHECK TRANSFERT CHOICE\n");
 		sleep(1);
 	}
@@ -90,10 +139,11 @@ void save_medias (void * arg) {
 void enable_transfert_image_selection (void * arg) {
     while (1) {
         printf("TRANSFERT D'IMAGES SÉLECTIONNÉ LANCÉ\n");
+        camera_usb_connection_1 (NULL);
 
-        status = selection_optimale (camera, context, &command_usb_reconnexion, &usb_freed);
+        status = selection_optimale (camera, context, transferts_s, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list);
 
-        usleep(5000);
+        camera_usb_free_1(NULL);
     }
 }
 
@@ -103,7 +153,11 @@ void enable_transfert_image_auto (void * arg) {
     while (1) {
         printf("TRANSFERT D'IMAGES AUTO LANCÉ\n");
 
-        status = photo_auto(camera, context, transferts_s, &nb_transferts, &command_usb_reconnexion, &usb_freed, &nb_tours);
+        camera_usb_connection_1 (NULL);
+
+        status = photo_auto(camera, context, transferts_s, &nb_transferts, &command_usb_reconnexion, &usb_freed, &nb_tours, liste_captures, &liste_captures_size);
+
+        camera_usb_free_1(NULL);
 
         printf("tours : %d\n", nb_tours++);
         usleep(5000);
@@ -134,9 +188,13 @@ void free_usb (void * arg) {
             gp_camera_exit(camera, context);
             gp_camera_free(camera);
         }
-
-        usleep(100);
     }
+}
+
+void camera_usb_free_1(void * arg) {
+    printf("LIBÉRATION USB ...\n");
+    gp_camera_exit(camera, context);
+    gp_camera_free(camera);
 }
 
 void camera_usb_connection (void * arg) {
@@ -174,7 +232,40 @@ void camera_usb_connection (void * arg) {
             }
         }
 
-        usleep(500000);
+        usleep(100);
+    }
+}
+
+void camera_usb_connection_1 (void * arg) {
+    if (transfert_choice > 0) {
+        while (status != 0) {
+            printf("CONNEXION USB ...\n");
+            status = gp_camera_new (&camera);
+            handleError(status);
+            status = gp_camera_init(camera, context);
+            handleError(status);
+
+            if (status < 0) {
+                printf("ERREUR DE CONNEXION !\n");
+                generateError(status);
+                gp_camera_exit(camera, context);
+                gp_camera_free(camera);
+                usleep(100000);
+                usb_connected = 0;
+            }
+
+            else {
+                // if (connected_once > 0) {
+                //     usb_freed = 0;
+                // }
+
+                // gp_camera_get_abilities (camera, &abilities);
+
+                // connected_once++;
+                usb_connected = 1;
+                // command_usb_reconnexion = 0;
+            }
+        }
     }
 }
 
@@ -182,7 +273,7 @@ void script_apply_choice (void * arg) {
     while (1) {
         printf("USB CONNECTED : %d\n", usb_connected);
 
-		if (usb_connected == 1) {
+		if (1) { // USB CONNECTED ?
             printf("%d\n", 2);
             switch (transfert_choice) {
                 case 0 :
