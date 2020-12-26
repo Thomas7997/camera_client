@@ -58,7 +58,7 @@ unsigned int getImageNumber (char * buffer) {
     return nb;
 }
 
-int compareFilesLists(char ** transferts, char ** files, char ** liste_captures, int files_nb, int nb_list, unsigned int * indexs) {
+int compareFilesLists(char ** transferts, char ** files, char ** liste_captures, int files_nb, int nb_list, unsigned int * indexs, Camera * camera, GPContext * context) {
     unsigned int i = 0, y = 0, newP, x = 0, a = 0;
 
     for (i = 0; i < files_nb; i++) {
@@ -73,6 +73,7 @@ int compareFilesLists(char ** transferts, char ** files, char ** liste_captures,
         if (newP == 0) {
             printf("\n\n\n\n\n\n\n\n\nT : %s\n%d\n", files[i], i);
             sprintf(transferts[a], "%s", files[i]);
+            transferer_nom_auto(transferts[a], context, camera);
             printf("%s\n", transferts[a++]);
         }
     }

@@ -40,7 +40,6 @@ int getCameraModel (Camera * cam);
 void clearBufLast (char * buf, unsigned int len, unsigned int nb);
 void vider_buffer (char *buffer);
 void afficher_tab2 (char ** tab);
-void transform_noms (char ** liste, char ** nouvelleListe, int size);
 void linearize (char *base, char **lines);
 int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera, int wifiStatus);
 int getPlacements(int * rating, char * dir, char * file, GPContext * context, Camera * camera);

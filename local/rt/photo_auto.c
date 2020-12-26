@@ -53,26 +53,22 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
         strcpy(files[e], "");
     }
 
-    printf("1\n");
     nb_medias = getPhotoDatas(dossiers, dirs_n, photos, files, liste_captures, &files_nb, camera, context, dir_sizes);
-    printf("2\n");
 
     if (*nb == 0) {
         *nb_list = save_clist_slist(liste_captures, photos, nb_medias, *nb_list);
     }
 
-    printf("3\n");
-    unsigned int ret_comp = compareFilesLists(transferts, photos, liste_captures, nb_medias, *nb_list, files_index_list);
+    unsigned int ret_comp = compareFilesLists(transferts, photos, liste_captures, nb_medias, *nb_list, files_index_list, camera, context);
     x = 0;
-    printf("4\n");
 
     printf ("%d\n%d\n", ret_comp, *nb_list);
 
     if (ret_comp != 0) {
         // Store list
         *nb_list = save_clist_slist(liste_captures, files, nb_medias, *nb_list); // curent to stored   
-        *nb_transferts = x;
-        status = transferer_noms (transferts, *nb_transferts, context, camera);
+        *nb_transferts = ret_comp;
+        // status = transferer_noms_auto (transferts, *nb_transferts, context, camera);
     }
 
     // FIN RÉPÉTITIONS
