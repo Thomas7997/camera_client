@@ -16,6 +16,7 @@
 #include "auto.h"
 #include "errors.h"
 #include "selection_optimale.h"
+#include "usb_transactions.h"
 
 // CONSTANTS
 #define TASK_PRIO  99             /* Highest RT priority */
@@ -36,13 +37,14 @@ RT_TASK task_wifi, task_usb_connection;
 RT_TASK task_save_files_offline, task_send_files_online, task_enable_transfert_image_auto, task_enable_transfert_image_selection, task_enable_transfert_video_auto;
 
 // Général
-RT_TASK task_apply_choice;
+RT_TASK task_apply_choice, task_wifi_transfert;
 
 void enable_transfert_image_selection (void * arg);
 void enable_transfert_image_auto (void * arg);
 void enable_transfert_video_auto (void * arg);
 void check_wifi_status (void * arg);
 void check_transfert_choice (void * arg);
+void send_transferts_online (void * arg);
 void send_medias (void * arg);
 void save_medias (void * arg);
 void camera_usb_connection (void * arg);

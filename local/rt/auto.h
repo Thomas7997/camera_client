@@ -11,13 +11,6 @@
 #include "transactions.h"
 #include "usb_transactions.h"
 
-#define MAX 80
-#define MAX_CAPTURES 10000
-#define TAILLE_NOM 100
-#define MIN_DIRS 10
-#define NB_PARTS 2
-#define PART_NB 50
-
 unsigned int filterPhotos (char ** photos_l, char ** files_l, unsigned int files_n);
 unsigned int filterVideos (char ** videos_l, char ** files_l, unsigned int files_n);
 unsigned int getImageNumber (char * buffer);

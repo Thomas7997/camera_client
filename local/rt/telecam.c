@@ -29,10 +29,10 @@ int main (void) {
         liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
     
-    transferts_s = (char**) calloc(MAX_CAPTURES, sizeof(char*));
+    transferts_send = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
     for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
-        transferts_s[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        transferts_send[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
     context = sample_create_context();
@@ -61,16 +61,17 @@ int main (void) {
 
     // MAIN SCRIPTS
     result = rt_task_spawn (&task_apply_choice, "APPLIQUER LE CHOIX DE L'UTILISATEUR", 4096, 99, TASK_PERM, &script_apply_choice, NULL);
+    result = rt_task_spawn (&task_wifi_transfert, "APPLIQUER LE TRANSFERT WIFI AUTONOME", 4096, 99, TASK_PERM, &send_transferts_online, NULL);
 
 	while (1) {
 		pause();
 	}
 
     for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
-        free(transferts_s[e]);
+        free(transferts_send[e]);
     }
 
-    free(transferts_s);
+    free(transferts_send);
 
     free_usb(NULL);
     
@@ -79,6 +80,7 @@ int main (void) {
 	rt_task_delete(&task_save_files_offline);
 	rt_task_delete(&task_send_files_online);
     rt_task_delete(&task_apply_choice);
+    rt_task_delete(&task_wifi_transfert);
 
     for (int d = 0; d < MIN_DIRS; d++) {
         for (int dy = 0; dy < MAX_CAPTURES; dy++) {
@@ -115,10 +117,10 @@ void check_transfert_choice (void * arg) {
 
 void check_wifi_status (void * arg) {
 	while (1) {
-		wifi_status = 0;
+		wifi_status = 1;
 		// Emettre un message
 
-		sleep(2);
+		usleep(50000);
 	}
 }
 
@@ -136,17 +138,19 @@ void save_medias (void * arg) {
 	}
 }
 
+// Fonctionne
 void enable_transfert_image_selection (void * arg) {
     while (1) {
         printf("TRANSFERT D'IMAGES SÉLECTIONNÉ LANCÉ\n");
         camera_usb_connection_1 (NULL);
 
-        status = selection_optimale (camera, context, transferts_s, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list);
+        status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list);
 
-        camera_usb_free_1(NULL);
+        camera_usb_free_1 (NULL);
     }
 }
 
+// Fonctionne
 void enable_transfert_image_auto (void * arg) {   
     int nb_tours = 0;
 
@@ -155,7 +159,7 @@ void enable_transfert_image_auto (void * arg) {
 
         camera_usb_connection_1 (NULL);
 
-        status = photo_auto(camera, context, transferts_s, &nb_transferts, &command_usb_reconnexion, &usb_freed, &nb_tours, liste_captures, &liste_captures_size);
+        status = photo_auto(camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, &nb_tours, liste_captures, &liste_captures_size);
 
         camera_usb_free_1(NULL);
 
@@ -164,6 +168,7 @@ void enable_transfert_image_auto (void * arg) {
     }
 }
 
+// A travailler
 void enable_transfert_video_auto (void * arg) {
     while (1) {
         printf("TRANSFERT DE VIDEOS AUTO LANCÉ\n");
@@ -326,4 +331,15 @@ void script_apply_choice (void * arg) {
 
         usleep(500000);
 	}
+}
+
+void send_transferts_online (void * arg) {
+    while (1) {
+        if (wifi_status == 1) {
+            send_medias_transfert (transferts_send, nb_transferts);
+            nb_transferts = 0;
+        }
+
+        usleep(50000);
+    }
 }

@@ -121,7 +121,7 @@ unsigned int getPhotoDatas (char *** dossiers, char ** dirs_n, char ** photos, c
     // generateError(status);
     unsigned int nb_files = 0;
 
-    if (status < 0)  generateError(status);
+    if (status < 0) generateError(status);
 
     nb_files = dossiers_to_list(dossiers, files, dirs_n, *files_nb, dir_sizes);
 

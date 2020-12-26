@@ -1,25 +1,6 @@
 #include "selection_optimale.h"
 #include "manage_selected.h"
 
-// unsigned int somme (int * buffer) {
-//     unsigned int sommeVal = 0;
-//     while (buffer[i] != 0) sommeVal += buffer[i];
-//     return sommeVal;
-// }
-
-// int getDay (void) {
-//     time_t t = time(NULL);
-//     struct tm tm = *localtime(&t);
-//     return tm.tm_mday;
-// }
-
-// void RemplirLignes (char ** lns1, char ** lns2) {
-//     unsigned int i = 0;
-
-//     while (lns2[i][0] != 0) lns1[i] = lns2[i];
-//     return;
-// }
-
 int selection_optimale (Camera * camera, GPContext * context, char ** transferts, unsigned int * transferts_nb, unsigned int * command, unsigned int * freed, char *** dossiers, char ** dirs_n, unsigned int * dir_sizes, char ** files, char ** images_list) {
     int status = 0;
     printf("1\n");
@@ -64,6 +45,8 @@ int selection_optimale (Camera * camera, GPContext * context, char ** transferts
 
     status = eachFileRating_1(images_list, transferts, nb_files, transferts_nb, camera, context);
     if (status < 0) return status;
+
+    status = transferer_noms (transferts, *transferts_nb, context, camera);
 
     // status = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, &transferts_nb, camera, context);
 

@@ -2,8 +2,6 @@
 #include "auto.h"
 #include "connexions.h"
 
-// Ce programme s'applique aux photos et aux photos
-
 // Il faudra mettre en place un filtre dans les deux
 
 int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsigned int * nb_transferts, unsigned int * command, unsigned int * freed, int * nb, char ** liste_captures, unsigned int * nb_list) {
@@ -69,29 +67,13 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
     printf("4\n");
 
     printf ("%d\n%d\n", ret_comp, *nb_list);
+
     if (ret_comp != 0) {
         // Store list
         *nb_list = save_clist_slist(liste_captures, files, nb_medias, *nb_list); // curent to stored   
-    
-        printf("%d\n", ret_comp);
-        while (x < ret_comp) {
-            // Command transfert on new file
-            printf("%s\n", transferts[x++]);
-        }
+        *nb_transferts = x;
+        status = transferer_noms (transferts, *nb_transferts, context, camera);
     }
-
-    *nb_transferts = x;
-
-    // afficher_liste(transferts, ret_comp);
-
-    // if (nb == 0) {
-    //     free_usb(camera, context);
-    // }
-
-    *freed = 0;
-    *command = 1;
-
-    //usleep(500000);
 
     // FIN RÉPÉTITIONS
 

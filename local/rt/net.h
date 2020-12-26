@@ -3,14 +3,13 @@
 #ifndef __NET_H__
 #define __NET_H__
 
+#include "mods.h"
 #include <curl/curl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define MAX_CAPTURES 10000
 #define TAILLE_NOM 100
 
+void send_medias_transfert (char ** files, unsigned int transferts_nb);
 void handle_error_net_status(int status);
 int send_request (char *name);
 // int generateError (int status);

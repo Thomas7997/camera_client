@@ -21,13 +21,7 @@
 #include <gphoto2/gphoto2-abilities-list.h>
 
 #include "errors.h"
-
-#define MAX 80
-#define MAX_CAPTURES 10000
-#define TAILLE_NOM 100
-#define MIN_DIRS 10
-#define NB_PARTS 2
-#define PART_NB 49
+#include "usb_transactions.h"
 
 struct _Dossier {
     char * title;
@@ -43,13 +37,11 @@ void cut_list(char ** files, unsigned int size, char ** newList);
 
 void mirroir (char * buf, unsigned int n);
 int getCameraModel (Camera * cam);
-char * getName (char * buf, char * dossier);
 void clearBufLast (char * buf, unsigned int len, unsigned int nb);
 void vider_buffer (char *buffer);
 void afficher_tab2 (char ** tab);
 void transform_noms (char ** liste, char ** nouvelleListe, int size);
 void linearize (char *base, char **lines);
-int compare_file_historique (char * file, char ** historique, int lines);
 int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera, int wifiStatus);
 int getPlacements(int * rating, char * dir, char * file, GPContext * context, Camera * camera);
 int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera);

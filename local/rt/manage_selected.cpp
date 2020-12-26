@@ -27,6 +27,7 @@ int getCameraModel (Camera * cam) {
 
     free(camera_model);
     fclose(MODEL);
+
     return 0;
 }
 
@@ -72,40 +73,6 @@ void linearize (char *base, char **lines) {
     }
 }
 
-int compare_file_historique (char * file, char ** historique, int lines) {
-    int i;
-    unsigned int file_s = strlen(file)-1;
-
-    for (i = 0; i < lines; i++) {
-        if (strncmp(historique[i], file, file_s) == 0) {
-           return 1;
-        }
-    }
-
-    return 0;
-}
-
-char * getName (char * buf, char * dossier) {
-    unsigned int n = strlen(buf), x = 0, y = 0;
-    char * buffer = (char*) calloc(100, sizeof(char));
-
-    unsigned int i = n-1;
-
-    while (buf[i] != '/') {
-        buffer[x++] = buf[i--];
-    }
-
-    while (i > 0) {
-        dossier[y++] = buf[i-1];
-        i--;
-    }
-
-    mirroir(buffer, x);
-    mirroir(dossier, y);
-
-    return buffer;
-}
-
 int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
     int i = 0, file_transfered = 0, x = 0, nb_historique;
     char * commande = (char*) calloc(300, sizeof(char));
@@ -141,103 +108,6 @@ int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * cont
     fclose(HISTORIQUER);
     free(hist_lines);
     free(commande);
-}
-
-// Pour l'envoi
-int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera, int online) {
-    int i = 0;
-
-    char * commande = (char*) calloc(250, sizeof(char));
-    int file_transfered = 0;
-
-    printf ("1\n");
-    FILE * HISTORIQUE = fopen("/home/remote/sources/camera_client/local/data/images/historique.txt", "a+");
-    printf("2\n");
-
-    char ** hist_lines = (char**) calloc(MAX_CAPTURES, sizeof(char*));
-
-    int x;
-
-    for (x = 0; x < MAX_CAPTURES; x++) {
-        hist_lines[x] = (char*) calloc(TAILLE_NOM, sizeof(char));
-    }
-
-    x = 0;
-
-    while (fgets(hist_lines[x++], TAILLE_NOM, HISTORIQUE));
-
-    char * current_file = (char*) calloc(TAILLE_NOM, sizeof(char));
-    char * dossier = (char*) calloc(TAILLE_NOM, sizeof(char));
-    int status = 0;
-    CameraFile * file;
-    gp_file_new(&file);
-    char * filename = (char*) calloc(100, sizeof(char));
-
-    for (i = 0; i < n_transferts; i++) {
-        strcpy(dossier, "");
-        filename = getName(liste[i], dossier);
-        // Il y aura peut être besoin d'insérer les lignes précédentes dans cette boucle
-
-        // A corriger
-        file_transfered = compare_file_historique(filename, hist_lines, x);
-        if (file_transfered == 0) {
-            if (online) {
-                sprintf(commande, "data/images/gets/%s", filename);
-            }
-
-            else {
-                sprintf(commande, "data/images/cloud/%s", filename);
-            }
-
-            printf ("%s\n", commande);
-            status = gp_camera_file_get(camera, dossier, filename, GP_FILE_TYPE_NORMAL, file, context);
-            handleError(status);
-            printf("%s\n", dossier);
-
-            if (status < 0) return generateError(status);
-
-            status = gp_file_save(file, (const char*) commande);
-
-            if (status < 0) return generateError(status);
-
-            if (online) {
-                sprintf(commande, "mv data/images/gets/%s /home/thomas/camera_server/public", filename);
-                // system(commande);
-                // send_request(filename);
-            }
-
-            else {
-                sprintf(commande, "mv data/images/gets/%s data/images/cloud", filename);
-                // system(commande);
-
-                // Indiquer que des fichiers ont été transférés hors ligne.
-
-                // Ou détecter dans un autre script que des fichiers existent dans le mode hors ligne.
-            
-            }
-
-            // Envoyer le nom du nouveau fichier transféré au socket
-
-            // ÉCIRE DANS L'HISTORIQUE DES TRANSFERTS
-            printf("%s\n", commande);
-            printf ("Transfert !\n");
-            fprintf(HISTORIQUE, "%s\n", filename);
-        }
-    }
-
-    for (x = 0; x < MAX_CAPTURES; x++) {
-        free(hist_lines[x]);
-    }
-
-    free(current_file);
-    fclose(HISTORIQUE);
-    free(hist_lines);
-    free(filename);
-    free(commande);
-    free(dossier);
-    gp_file_free(file);
-
-    return 0;
 }
 
 void enlever_last_car(char *chaine) {
