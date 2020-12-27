@@ -16,6 +16,7 @@ static char ** files;
 static unsigned int * dir_sizes;
 static char ** images_list;
 static char ** liste_captures;
+static char ** transferts_tmp;
 
 #include "constants.h"
 

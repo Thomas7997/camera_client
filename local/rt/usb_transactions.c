@@ -88,7 +88,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
 }
 
 // Pour l'envoi
-int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
+int transferer_noms (char ** liste, char ** envois, unsigned int n_transferts, GPContext * context, Camera * camera) {
     int i = 0;
 
     char * commande = (char*) calloc(250, sizeof(char));
@@ -116,7 +116,7 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
     CameraFile * file;
     gp_file_new(&file);
     char * filename = (char*) calloc(100, sizeof(char));
-
+    
     for (i = 0; i < n_transferts; i++) {
         strcpy(dossier, "");
         filename = getName(liste[i], dossier);
@@ -144,6 +144,8 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
             printf("%s\n", commande);
             printf ("Transfert !\n");
             fprintf(HISTORIQUE, "%s\n", filename);
+
+            strcpy(envois[x++], liste[i]);
         }
     }
 
@@ -159,7 +161,7 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
     free(dossier);
     gp_file_free(file);
 
-    return 0;
+    return x;
 }
 
 // L'idéal serait de directement transferer un nom individuelement

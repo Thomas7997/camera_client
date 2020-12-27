@@ -56,7 +56,7 @@ void send_medias_transfert (char ** files, unsigned int transferts_nb) {
 
     for (i = 0; i < transferts_nb; i++) {
         sprintf(commande, "mv ../data/images/gets/%s /home/remote/camera_client/public", files[i]);
-        send_request(files[i]); // Recupérer le status prochainement
+        // send_request(files[i]); // Recupérer le status prochainement
         printf("FICHIER %s envoyé.\n", files[i]);
         strcpy(files[i], "");
     }

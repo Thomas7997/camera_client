@@ -11,6 +11,7 @@ int main (void) {
     images_list = (char**) calloc(PART_NB, sizeof(char*));
     dir_sizes = (unsigned int*) calloc(MIN_DIRS, sizeof(unsigned int*));
     liste_captures = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
+    transferts_tmp = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -33,6 +34,7 @@ int main (void) {
 
     for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
         transferts_send[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        transferts_tmp[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
     context = sample_create_context();
@@ -69,6 +71,7 @@ int main (void) {
 
     for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
         free(transferts_send[e]);
+        free(transferts_tmp[e]);
     }
 
     free(transferts_send);
@@ -105,11 +108,12 @@ int main (void) {
     free(files);
     free(images_list);
     free(liste_captures);
+    free(transferts_tmp);
 }
 
 void check_transfert_choice (void * arg) {
 	while (1) {
-        transfert_choice = 1;
+        transfert_choice = 2;
 		printf ("CHECK TRANSFERT CHOICE\n");
 		sleep(1);
 	}
@@ -144,7 +148,7 @@ void enable_transfert_image_selection (void * arg) {
         printf("TRANSFERT D'IMAGES SÉLECTIONNÉ LANCÉ\n");
         camera_usb_connection_1 (NULL);
 
-        status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list);
+        status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list, transferts_tmp);
 
         camera_usb_free_1 (NULL);
     }
