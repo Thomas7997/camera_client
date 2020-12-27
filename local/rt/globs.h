@@ -17,6 +17,9 @@ static unsigned int * dir_sizes;
 static char ** images_list;
 static char ** liste_captures;
 static char ** transferts_tmp;
+static char* model;
+
+int send_model = 0;
 
 #include "constants.h"
 

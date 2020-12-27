@@ -1,7 +1,5 @@
 #include "telecam.h"
 
-CameraAbilities abilities;
-
 int main (void) {
 	// Initialisations
     dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
@@ -12,6 +10,7 @@ int main (void) {
     dir_sizes = (unsigned int*) calloc(MIN_DIRS, sizeof(unsigned int*));
     liste_captures = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
     transferts_tmp = (char**) calloc(MAX_CAPTURES, sizeof(char*));
+    model = (char*) calloc(MAX_CAPTURES, sizeof(char*));
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -109,6 +108,7 @@ int main (void) {
     free(images_list);
     free(liste_captures);
     free(transferts_tmp);
+    free(model);
 }
 
 void check_transfert_choice (void * arg) {
@@ -123,7 +123,7 @@ void check_transfert_choice (void * arg) {
 
 void check_wifi_status (void * arg) {
 	while (1) {
-		wifi_status = 1;
+		wifi_status = 0;
 		// Emettre un message
 
 		usleep(50000);
@@ -150,7 +150,17 @@ void enable_transfert_image_selection (void * arg) {
         printf("TRANSFERT D'IMAGES SÉLECTIONNÉ LANCÉ\n");
         camera_usb_connection_1 (NULL);
 
+        strcpy(model, "");
+
+        status = getModel(model, camera, &send_model);
+
+        if (status < 0) generateError(status);
+
+        printf("%s\n", model);
+
         status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list, transferts_tmp);
+
+        if (status < 0) generateError(status);
 
         camera_usb_free_1 (NULL);
     }
@@ -164,6 +174,12 @@ void enable_transfert_image_auto (void * arg) {
         printf("TRANSFERT D'IMAGES AUTO LANCÉ\n");
 
         camera_usb_connection_1 (NULL);
+
+        status = getModel(model, camera, &send_model);
+
+        if (status < 0) generateError(status);
+
+        printf("%s\n", model);
 
         status = photo_auto(camera, context, transferts_send, &nb_transferts, &nb_tours, liste_captures, &liste_captures_size);
 
@@ -371,12 +387,19 @@ void manage_errors (void * arg) {
             handleError(status);
             error = 0;
         }
-
-        usleep(5000);
     }
 }
 
-void generateError(int status) {
+void generateError (int status) {
     error = 1;
     // Peut être sauvegarder dans les logs
+}
+
+void sendModel (void * arg) {
+    while (1) {
+        if (send_model) {
+            sendModelHTTP(model);
+            send_model = 0;
+        }
+    }
 }

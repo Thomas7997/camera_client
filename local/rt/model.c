@@ -1,55 +1,53 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <curl/curl.h>
+#include "model.h"
 
 // Travailler dessus et vérifier que ca fonctionne
-int model (void) {
-    char * model = calloc(50, sizeof(char));
-    int stop = -1;
-    FILE * STOP;
-    FILE * MODEL;
+int getModel (char * model, Camera * camera, int * send) {
+    int status = 0;
+    CameraAbilities abilities;
+    char * current_model = (char*) calloc(50, sizeof(char));
 
-    while (1) {
-        if (stop == 0) {
-            STOP = fopen("data/stop/transferts.txt", "r");
-            MODEL = fopen("data/tmp/model.txt", "r");
-            fscanf(STOP, "%d", &stop);
-            strcpy(model, "");
-            fgets(model, 50, MODEL);
+    do {
+        status = gp_camera_get_abilities (camera, &abilities);
 
-            if (model[0] != 0) {
-                CURL *curl;
-                CURLcode res;
+        if (status < 0) return status;
 
-                char * request_string = (char*) calloc(1000, sizeof(char));
-                sprintf(request_string, "model=%s", model);
-                
-                curl_global_init(CURL_GLOBAL_ALL);
-                
-                curl = curl_easy_init();
-                if(curl) {
-                    curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/transfert/camera");
-                    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_string);
-                
-                    res = curl_easy_perform(curl);
-                    if(res != CURLE_OK)
-                    fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                    curl_easy_strerror(res));
-                
-                    curl_easy_cleanup(curl);
-                }
-                curl_global_cleanup();
-                printf ("\n");
-                fclose(MODEL);
-                fclose(STOP);
-                usleep(500);
-            }
+        strcpy(current_model, abilities.model);
+        
+        if (strcmp(current_model, model) != 0) {
+            *send = 1;
         }
+
+        else {
+            *send = 0;
+        }
+    } while (model[0] == 0);
+
+    CURL *curl;
+    CURLcode res;
+
+    char * request_string = (char*) calloc(1000, sizeof(char));
+    sprintf(request_string, "model=%s", model);
+    
+    curl_global_init(CURL_GLOBAL_ALL);
+    
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/transfert/camera");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_string);
+    
+        res = curl_easy_perform(curl);
+        if(res != CURLE_OK)
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+        curl_easy_strerror(res));
+    
+        curl_easy_cleanup(curl);
     }
+    curl_global_cleanup();
+    printf ("\n");
 
-    free(model);
+    return res;
+}
 
-    return 0;
+void sendModelHTTP (char * model) {
+    // Requête à envoyer au serveur
 }

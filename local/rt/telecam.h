@@ -17,6 +17,7 @@
 #include "errors.h"
 #include "selection_optimale.h"
 #include "usb_transactions.h"
+#include "model.h"
 
 // CONSTANTS
 #define TASK_PRIO  99             /* Highest RT priority */
