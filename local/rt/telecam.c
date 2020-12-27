@@ -113,9 +113,11 @@ int main (void) {
 
 void check_transfert_choice (void * arg) {
 	while (1) {
-        transfert_choice = 2;
+        FILE * TRANSFERT_CHOICE = fopen("../data/tmp/transfert_choice.txt", "r"); // Changera de chemin
+        fscanf(TRANSFERT_CHOICE, "%d", &transfert_choice);
 		printf ("CHECK TRANSFERT CHOICE\n");
-		sleep(1);
+        fclose(TRANSFERT_CHOICE);
+        usleep(50000);
 	}
 }
 
@@ -163,7 +165,9 @@ void enable_transfert_image_auto (void * arg) {
 
         camera_usb_connection_1 (NULL);
 
-        status = photo_auto(camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, &nb_tours, liste_captures, &liste_captures_size);
+        status = photo_auto(camera, context, transferts_send, &nb_transferts, &nb_tours, liste_captures, &liste_captures_size);
+
+        if (status < 0) generateError(status);
 
         camera_usb_free_1(NULL);
 
@@ -272,6 +276,7 @@ void camera_usb_connection_1 (void * arg) {
 
                 // connected_once++;
                 usb_connected = 1;
+                generateError(status);
                 // command_usb_reconnexion = 0;
             }
         }
@@ -355,3 +360,23 @@ void send_transferts_online (void * arg) {
 //         usleep(50000);
 //     }
 // }
+
+void manage_errors (void * arg) {
+    while (1) {
+        if (status != prevStatus && error) {
+            prevStatus = status;
+            res = send_status_request(status);
+            printf("res : %d\n", res);
+            printf("%d\n", status);
+            handleError(status);
+            error = 0;
+        }
+
+        usleep(5000);
+    }
+}
+
+void generateError(int status) {
+    error = 1;
+    // Peut être sauvegarder dans les logs
+}

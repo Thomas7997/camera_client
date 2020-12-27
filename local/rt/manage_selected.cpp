@@ -17,7 +17,7 @@ int getCameraModel (Camera * cam) {
     if (status < 0) {
         free(camera_model);
         fclose(MODEL);
-        return generateError(status);
+        return status;
     }
 
     strcpy(camera_model, cam_abilities.model);
@@ -250,7 +250,7 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
             printf("%s\n", dossiers[y][i]);
             int status = getPlacements(&rates, dirs[y], dossiers[y][i], data, context, camera);
 
-            if (status < 0) return generateError(status);
+            if (status < 0) return status;
 
             if (rates == 5) {
                 sprintf(transferts[x++], "%s/%s", dirs[y], dossiers[y][i]);
@@ -293,7 +293,7 @@ int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, 
         printf ("%s\n", nom);
         int status = getPlacements(&rates, dirname, nom, data, context, camera);
 
-        if (status < 0) return generateError(status);
+        if (status < 0) return status;
 
         if (rates == 5) {
             sprintf(transferts[x], "%s/%s", dirname, nom);

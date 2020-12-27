@@ -6,10 +6,10 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
     gp_list_new(&folderList);
     const char * dir;
     int status = gp_camera_folder_list_folders(camera, "/", folderList, context);
-    if (status < 0) return generateError(status);
+    if (status < 0) return status;
 
     status = gp_list_get_name(folderList, 0, (const char**) &dir);
-    if (status < 0) return generateError(status);
+    if (status < 0) return status;
 
     // status = gp_list_reset(folderList);
 
@@ -37,12 +37,12 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
 		folderList,
 		context 
 	);
-    if (status < 0) return generateError(status);
+    if (status < 0) return status;
 
     int local_nb = gp_list_count(folderList);
     int nb_files = 0;
 
-    if (local_nb < 0) return generateError(local_nb);
+    if (local_nb < 0) return local_nb;
     *nb = local_nb;
 
     for (unsigned int i = 0; i < *nb; i++) {
@@ -57,13 +57,13 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
         strcpy(dirs_n[i], tmp_dir);
 
         status = gp_list_reset(fileList);
-        if (status < 0) return generateError(status);
+        if (status < 0) return status;
 
         status = gp_camera_folder_list_files(camera, tmp_dir, fileList, context);
-        if (status < 0) return generateError(status);
+        if (status < 0) return status;
 
         nb_files = gp_list_count(fileList);
-        if (nb_files < 0) return generateError(nb_files);
+        if (nb_files < 0) return status;
 
         dir_sizes[i] = nb_files;
 
@@ -71,7 +71,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
             const char * file;
             status = gp_list_get_name(fileList, j, (const char**) &file);
             // handleError(status);
-            if (status < 0) return generateError(status);
+            if (status < 0) return status;
             strcpy(dirs_b[i][j], file);
             // printf ("%s\n", dirs_b[i][j]);
         }
@@ -88,7 +88,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
 }
 
 // Pour l'envoi
-int transferer_noms (char ** liste, char ** envois, unsigned int n_transferts, GPContext * context, Camera * camera) {
+int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
     int i = 0;
 
     char * commande = (char*) calloc(250, sizeof(char));
@@ -116,7 +116,7 @@ int transferer_noms (char ** liste, char ** envois, unsigned int n_transferts, G
     CameraFile * file;
     gp_file_new(&file);
     char * filename = (char*) calloc(100, sizeof(char));
-    
+
     for (i = 0; i < n_transferts; i++) {
         strcpy(dossier, "");
         filename = getName(liste[i], dossier);
@@ -131,12 +131,12 @@ int transferer_noms (char ** liste, char ** envois, unsigned int n_transferts, G
             handleError(status);
             printf("%s\n", dossier);
 
-            if (status < 0) return generateError(status);
+            if (status < 0) return status;
 
             // TÉLÉCHARGEMENT DE LA PHOTO UNIQUEMENT
             status = gp_file_save(file, (const char*) commande);
 
-            if (status < 0) return generateError(status);
+            if (status < 0) return status;
 
             // Envoyer le nom du nouveau fichier transféré au socket
 
@@ -144,8 +144,6 @@ int transferer_noms (char ** liste, char ** envois, unsigned int n_transferts, G
             printf("%s\n", commande);
             printf ("Transfert !\n");
             fprintf(HISTORIQUE, "%s\n", filename);
-
-            strcpy(envois[x++], liste[i]);
         }
     }
 
@@ -188,12 +186,12 @@ int transferer_nom_auto (char * nom, GPContext * context, Camera * camera) {
     status = gp_camera_file_get(camera, dossier, filename, GP_FILE_TYPE_NORMAL, file, context);
     handleError(status);
 
-    if (status < 0) return generateError(status);
+    if (status < 0) return status;
 
     // TÉLÉCHARGEMENT DE LA PHOTO UNIQUEMENT
     status = gp_file_save(file, (const char*) commande);
 
-    if (status < 0) return generateError(status);
+    if (status < 0) return status;
 
     // Envoyer le nom du nouveau fichier transféré au socket
 
@@ -252,12 +250,12 @@ int transferer_noms_auto (char ** liste, unsigned int n_transferts, GPContext * 
         handleError(status);
         printf("%s\n", dossier);
 
-        if (status < 0) return generateError(status);
+        if (status < 0) return status;
 
         // TÉLÉCHARGEMENT DE LA PHOTO UNIQUEMENT
         status = gp_file_save(file, (const char*) commande);
 
-        if (status < 0) return generateError(status);
+        if (status < 0) return status;
 
         // Envoyer le nom du nouveau fichier transféré au socket
 

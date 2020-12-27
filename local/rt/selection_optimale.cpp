@@ -32,10 +32,6 @@ int selection_optimale (Camera * camera, GPContext * context, char ** transferts
     for (unsigned int e = 0; e < PART_NB; e++) {
         strcpy(images_list[e], "");
     }
-
-    for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
-        strcpy(transferts_tmp[e], "");
-    }
     
     printf("1\n");
 
@@ -50,11 +46,13 @@ int selection_optimale (Camera * camera, GPContext * context, char ** transferts
     status = eachFileRating_1(images_list, transferts_tmp, nb_files, transferts_nb, camera, context);
     if (status < 0) return status;
 
-    status = transferer_noms (transferts_tmp, transferts, *transferts_nb, context, camera);
+    status = transferer_noms (transferts_tmp, *transferts_nb, context, camera);
 
-    if (status < 0) return generateError(status);
+    if (status < 0) return status;
 
     *transferts_nb = status;
+
+    // Copier transferts_tmp à transferts là
 
     int online = 0;
 

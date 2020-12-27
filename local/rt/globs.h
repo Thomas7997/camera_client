@@ -6,7 +6,7 @@ unsigned int wifi_status, transfert_choice, usb_connected = 0, nb_transferts; //
 static char ** transferts_send;
 static Camera * camera;
 static GPContext* context;
-int status, connected_once;
+int status = 0, connected_once, prevStatus = 0, error = 0, res = 0;
 unsigned int result, command_usb_reconnexion, usb_freed, liste_captures_size;
 
 // Stockage de fichiers

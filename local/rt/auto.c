@@ -73,6 +73,7 @@ int compareFilesLists(char ** transferts, char ** files, char ** liste_captures,
         if (newP == 0) {
             printf("\n\n\n\n\n\n\n\n\nT : %s\n%d\n", files[i], i);
             sprintf(transferts[a], "%s", files[i]);
+            // Gérer le prochain return
             transferer_nom_auto(transferts[a], context, camera);
             printf("%s\n", transferts[a++]);
         }
@@ -100,14 +101,12 @@ void afficher_liste(char ** transferts, unsigned int ret_comp) {
     }
 }
 
-unsigned int getVideoDatas (char *** dossiers, char ** dirs_n, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
+int getVideoDatas (char *** dossiers, char ** dirs_n, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
     int status = get_files_and_dirs(dossiers, dirs_n, files_nb, dir_sizes, camera, context);
     // generateError(status);
     unsigned int nb_files = 0;
 
-    if (status < 0)  generateError(status);
-
-    nb_files = dossiers_to_list(dossiers, files, dirs_n, *files_nb, dir_sizes);
+    if (status < 0) return status;
 
     // afficher_liste(liste_captures, nb_list);
 
@@ -117,14 +116,12 @@ unsigned int getVideoDatas (char *** dossiers, char ** dirs_n, char ** photos, c
     return filterVideos(photos, files, nb_files);
 }
 
-unsigned int getPhotoDatas (char *** dossiers, char ** dirs_n, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
+int getPhotoDatas (char *** dossiers, char ** dirs_n, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
     int status = get_files_and_dirs(dossiers, dirs_n, files_nb, dir_sizes, camera, context);
     // generateError(status);
     unsigned int nb_files = 0;
 
-    if (status < 0) generateError(status);
-
-    nb_files = dossiers_to_list(dossiers, files, dirs_n, *files_nb, dir_sizes);
+    if (status < 0) return status;
 
     // afficher_liste(liste_captures, nb_list);
 

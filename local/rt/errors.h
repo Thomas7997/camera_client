@@ -21,12 +21,11 @@
 #include <gphoto2/gphoto2-abilities-list.h>
 
 void handleError(int status);
-int generateError (int status);
 static void
 ctx_error_func (GPContext *context, const char *str, void *data);
 static void
 ctx_status_func (GPContext *context, const char *str, void *data);
 GPContext* sample_create_context();
-void send_status_request (int status);
+int send_status_request (int status);
 
 #endif

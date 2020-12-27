@@ -4,7 +4,7 @@
 
 // Il faudra mettre en place un filtre dans les deux
 
-int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsigned int * nb_transferts, unsigned int * command, unsigned int * freed, int * nb, char ** liste_captures, unsigned int * nb_list) {
+int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsigned int * nb_transferts, int * nb, char ** liste_captures, unsigned int * nb_list) {
     int status = 0;
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
     char ** dirs_n = (char**) calloc(MIN_DIRS, sizeof(char*));
@@ -55,20 +55,22 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
 
     nb_medias = getPhotoDatas(dossiers, dirs_n, photos, files, liste_captures, &files_nb, camera, context, dir_sizes);
 
+    if (nb_medias < 0) return nb_medias; // Code d'erreur
+
     if (*nb == 0) {
         *nb_list = save_clist_slist(liste_captures, photos, nb_medias, *nb_list);
     }
 
-    unsigned int ret_comp = compareFilesLists(transferts, photos, liste_captures, nb_medias, *nb_list, files_index_list, camera, context);
-    x = 0;
+    int ret_comp = compareFilesLists(transferts, photos, liste_captures, nb_medias, *nb_list, files_index_list, camera, context);
 
-    printf ("%d\n%d\n", ret_comp, *nb_list);
+    if (ret_comp < 0) return ret_comp; // Code d'erreur
+
+    x = 0;
 
     if (ret_comp != 0) {
         // Store list
         *nb_list = save_clist_slist(liste_captures, files, nb_medias, *nb_list); // curent to stored   
         *nb_transferts = ret_comp;
-        // status = transferer_noms_auto (transferts, *nb_transferts, context, camera);
     }
 
     // FIN RÉPÉTITIONS

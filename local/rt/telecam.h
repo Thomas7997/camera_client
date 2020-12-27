@@ -54,4 +54,8 @@ void free_usb (void * arg);
 void camera_usb_connection_1 (void * arg);
 void camera_usb_free_1(void * arg);
 
+// Nouvelle version de fonction
+void generateError(int status);
+void manage_errors (void * arg);
+
 #endif

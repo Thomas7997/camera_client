@@ -39,21 +39,7 @@ GPContext* sample_create_context() {
 	return context;
 }
 
-int generateError (int status) {
-    // Notifier une erreur en fonction de ce qu'il s'agit.
-
-    // J'utilise un système de fichiers et un second script de lecture de fichiers et de lancement de requêtes CURL
-    // Écire le status dans un fichier
-    int previousStatus = 0;
-    
-    // Envoyer l'ordre de notifier vers un autre script qui détecte le changement de status
-    
-    printf("%d\n", status);
-
-    return status;
-}
-
-void send_status_request (int status) {
+int send_status_request (int status) {
     CURL *curl;
     CURLcode res;
 
@@ -76,4 +62,5 @@ void send_status_request (int status) {
     }
     curl_global_cleanup();
     printf ("\n");
+    return res;
 }
