@@ -56,10 +56,6 @@ int selection_optimale (Camera * camera, GPContext * context, char ** transferts
 
     *transferts_nb = status;
 
-    // status = eachFileRating(dossiers, dirs_n, transferts, dir_sizes, files_nb, &transferts_nb, camera, context);
-
-    // if (status < 0) continue;
-
     int online = 0;
 
     if (status < 0) return status;
@@ -69,9 +65,6 @@ int selection_optimale (Camera * camera, GPContext * context, char ** transferts
     // FIN RÉPÉTITIONS
 
     printf("1\n");
-
-    // *command = 1;
-    // *freed = 0;
 
     return 1;
 }

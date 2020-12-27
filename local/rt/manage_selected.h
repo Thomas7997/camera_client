@@ -44,7 +44,6 @@ void linearize (char *base, char **lines);
 int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera, int wifiStatus);
 int getPlacements(int * rating, char * dir, char * file, GPContext * context, Camera * camera);
 int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera);
-void enlever_last_car(char *chaine);
 void select_medias ();
 void getFiles (void);
 void findPathIndex(char ** files, char * name, char * path);

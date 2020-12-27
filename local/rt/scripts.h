@@ -7,6 +7,7 @@
 
 // Fonctions
 
+void enlever_last_car(char *chaine);
 void mirroir (char * buf, unsigned int n);
 
 #endif

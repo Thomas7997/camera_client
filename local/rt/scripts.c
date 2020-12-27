@@ -10,3 +10,7 @@ void mirroir (char * buf, unsigned int n) {
         buf[i] = car;
     }
 }
+
+void enlever_last_car(char *chaine) {
+    chaine[strlen(chaine)-1] = 0;
+}

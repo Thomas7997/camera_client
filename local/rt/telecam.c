@@ -339,11 +339,19 @@ void script_apply_choice (void * arg) {
 
 void send_transferts_online (void * arg) {
     while (1) {
-        if (wifi_status == 1) {
-            send_medias_transfert (transferts_send, nb_transferts);
-            nb_transferts = 0;
-        }
+        send_medias_transfert_online(wifi_status);
 
         usleep(50000);
     }
 }
+
+// void send_transferts_online (void * arg) {
+//     while (1) {
+//         if (wifi_status == 1) {
+//             send_medias_transfert (transferts_send, nb_transferts);
+//             nb_transferts = 0;
+//         }
+
+//         usleep(50000);
+//     }
+// }
