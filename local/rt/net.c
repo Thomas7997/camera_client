@@ -65,6 +65,7 @@ void send_medias_transfert (char ** files, unsigned int transferts_nb) {
 }
 
 void send_medias_transfert_online (int online) {
+    int status = 0;
     if (!online) return;
 
     unsigned int i = 0;
@@ -82,12 +83,17 @@ void send_medias_transfert_online (int online) {
         enlever_last_car(files[i++]);
     }
 
-    unsigned int transferts_nb = i-1;
+    unsigned int transferts_nb = i;
 
     for (i = 0; i < transferts_nb; i++) {
-        sprintf(commande, "mv ../data/images/gets/%s /home/remote/camera_client/public", files[i]);
-        // send_request(files[i]); // Recupérer le status prochainement
-        // system(commande);
+        sprintf(commande, "mv ../data/images/gets/%s /home/remote/camera_server/public", files[i]);
+        
+        system(commande);
+
+        status = send_request(files[i]); // Recupérer le status prochainement
+        
+        if (status != 0) return;
+        
         printf("FICHIER %s envoyé.\n", files[i]);
     }
 

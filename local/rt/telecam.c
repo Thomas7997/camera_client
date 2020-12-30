@@ -123,7 +123,7 @@ void check_transfert_choice (void * arg) {
 
 void check_wifi_status (void * arg) {
 	while (1) {
-		wifi_status = 0;
+		wifi_status = 1;
 		// Emettre un message
 
 		usleep(50000);
@@ -150,11 +150,9 @@ void enable_transfert_image_selection (void * arg) {
         printf("TRANSFERT D'IMAGES SÉLECTIONNÉ LANCÉ\n");
         camera_usb_connection_1 (NULL);
 
-        strcpy(model, "");
-
         status = getModel(model, camera, &send_model);
 
-        if (status < 0) generateError(status);
+        if (status != 0) generateError(status);
 
         printf("%s\n", model);
 
@@ -292,7 +290,8 @@ void camera_usb_connection_1 (void * arg) {
 
                 // connected_once++;
                 usb_connected = 1;
-                generateError(status);
+                
+                // status = getModel(model, camera, &send_model);
                 // command_usb_reconnexion = 0;
             }
         }
