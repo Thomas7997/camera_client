@@ -123,9 +123,12 @@ void check_transfert_choice (void * arg) {
 
 void check_wifi_status (void * arg) {
 	while (1) {
-		wifi_status = 1;
-		// Emettre un message
+        FILE * WIFI = fopen("../data/tmp/wifi_status.txt", "r");
+		fscanf(WIFI, "%d", &wifi_status);
+		
+        // Emettre un message
 
+        fclose(WIFI);
 		usleep(50000);
 	}
 }
@@ -192,9 +195,27 @@ void enable_transfert_image_auto (void * arg) {
 
 // A travailler
 void enable_transfert_video_auto (void * arg) {
+    int nb_tours = 0;
+
     while (1) {
         printf("TRANSFERT DE VIDEOS AUTO LANCÉ\n");
-        sleep(1);
+
+        camera_usb_connection_1(NULL);
+
+        status = getModel(model, camera, &send_model);
+
+        if (status < 0) generateError(status);
+
+        printf("%s\n", model);
+
+        status = video_auto(camera, context, transferts_send, &nb_transferts, &nb_tours, liste_captures, &liste_captures_size);
+
+        if (status < 0) generateError(status);
+
+        camera_usb_free_1(NULL);
+
+        printf("tours : %d\n", nb_tours++);
+        usleep(5000);
     }
 }
 
@@ -298,12 +319,16 @@ void camera_usb_connection_1 (void * arg) {
     }
 }
 
+// Problème ici lors du passage d'un mode à un autre
+
 void script_apply_choice (void * arg) {
     while (1) {
         printf("USB CONNECTED : %d\n", usb_connected);
 
+        // Je pourrais mettre
+        // if (allowChoiceChange == 1)
+
 		if (1) { // USB CONNECTED ?
-            printf("%d\n", 2);
             switch (transfert_choice) {
                 case 0 :
                     printf("NONE\n");

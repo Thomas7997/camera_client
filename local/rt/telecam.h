@@ -18,6 +18,7 @@
 #include "selection_optimale.h"
 #include "usb_transactions.h"
 #include "model.h"
+#include "video_auto.h"
 
 // CONSTANTS
 #define TASK_PRIO  99             /* Highest RT priority */

@@ -184,12 +184,12 @@ int transferer_nom_auto (char * nom, GPContext * context, Camera * camera) {
     sprintf(commande, "../data/images/gets/%s", filename);
     printf ("%s\n", commande);
     status = gp_camera_file_get(camera, dossier, filename, GP_FILE_TYPE_NORMAL, file, context);
-    handleError(status);
 
     if (status < 0) return status;
 
     // TÉLÉCHARGEMENT DE LA PHOTO UNIQUEMENT
     status = gp_file_save(file, (const char*) commande);
+    handleError(status);
 
     if (status < 0) return status;
 

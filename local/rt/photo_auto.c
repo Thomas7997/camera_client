@@ -69,7 +69,7 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
 
     if (ret_comp != 0) {
         // Store list
-        *nb_list = save_clist_slist(liste_captures, files, nb_medias, *nb_list); // curent to stored   
+        *nb_list = save_clist_slist(liste_captures, photos, nb_medias, *nb_list); // curent to stored   
         *nb_transferts = ret_comp;
     }
 
