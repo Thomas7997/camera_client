@@ -117,7 +117,7 @@ void check_transfert_choice (void * arg) {
         fscanf(TRANSFERT_CHOICE, "%d", &transfert_choice);
 		printf ("CHECK TRANSFERT CHOICE\n");
         fclose(TRANSFERT_CHOICE);
-        usleep(50000);
+        usleep(500000);
 	}
 }
 
@@ -127,9 +127,10 @@ void check_wifi_status (void * arg) {
 		fscanf(WIFI, "%d", &wifi_status);
 		
         // Emettre un message
+        printf ("wifi_status : %d\n", wifi_status);
 
         fclose(WIFI);
-		usleep(50000);
+		usleep(500000);
 	}
 }
 
@@ -189,7 +190,7 @@ void enable_transfert_image_auto (void * arg) {
         camera_usb_free_1(NULL);
 
         printf("tours : %d\n", nb_tours++);
-        usleep(5000);
+        usleep(500000);
     }
 }
 
@@ -215,7 +216,7 @@ void enable_transfert_video_auto (void * arg) {
         camera_usb_free_1(NULL);
 
         printf("tours : %d\n", nb_tours++);
-        usleep(5000);
+        usleep(500000);
     }
 }
 
@@ -280,7 +281,7 @@ void camera_usb_connection (void * arg) {
             }
         }
 
-        usleep(100);
+        usleep(500000);
     }
 }
 
@@ -298,7 +299,7 @@ void camera_usb_connection_1 (void * arg) {
                 generateError(status);
                 gp_camera_exit(camera, context);
                 gp_camera_free(camera);
-                usleep(100000);
+                usleep(500000); // Important sinon le programme consomme trop de CPU
                 usb_connected = 0;
             }
 
@@ -386,7 +387,7 @@ void send_transferts_online (void * arg) {
     while (1) {
         send_medias_transfert_online(wifi_status);
 
-        usleep(50000);
+        usleep(500000);
     }
 }
 
@@ -397,7 +398,7 @@ void send_transferts_online (void * arg) {
 //             nb_transferts = 0;
 //         }
 
-//         usleep(50000);
+//         usleep(500000);
 //     }
 // }
 
