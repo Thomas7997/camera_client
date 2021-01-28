@@ -24,6 +24,14 @@ mkdir $INSTALL_MOD_PATH/boot
 cd $INSTALL_MOD_PATH/boot
 cd ..
 mv $KERNEL.img kernel7_rt.img
-tar czf ../rt-kernel.tgz *
+sudo cp -rf * /tmp
 
-# A transferer sur le dossier tmp/ de la raspberry pi
+cd /tmp
+cd boot
+sudo cp -rd * /boot/
+cd ../lib
+sudo cp -dr * /lib/
+cd ../overlays
+sudo cp -d * /boot/overlays
+cd ..
+sudo cp -d bcm* /boot
