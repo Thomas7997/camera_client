@@ -2,7 +2,7 @@
 #define __GLOBS_H__
 
 // Variables globales
-unsigned int wifi_status, transfert_choice, usb_connected = 0, nb_transferts; // 0 : none, 1 : image auto, 2 : image selection, 3 : video auto
+unsigned int wifi_status, transfert_choice, prevTransfertChoice, ttsk = 0, usb_connected = 0, nb_transferts; // 0 : none, 1 : image auto, 2 : image selection, 3 : video auto
 static char ** transferts_send;
 static Camera * camera;
 static GPContext* context;
@@ -19,6 +19,7 @@ static char ** liste_captures;
 static char ** transferts_tmp;
 static char * model;
 static char ** photos;
+static int * transfert_tasks;
 
 int send_model = 0;
 
