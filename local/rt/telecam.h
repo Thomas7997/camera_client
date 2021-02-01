@@ -33,7 +33,7 @@ RT_TASK task_reconnexion, task_free_usb;
 RT_TASK task_transfert_choice;
 
 // Checking connections
-RT_TASK task_wifi, task_usb_connection;
+RT_TASK task_wifi, task_usb_connection, task_manage_errors;
 
 // Procedures
 RT_TASK task_save_files_offline, task_send_files_online, task_enable_transfert_image_auto, task_enable_transfert_image_selection, task_enable_transfert_video_auto, task_enable_transfert;

@@ -13,7 +13,6 @@ int main (void) {
     transferts_tmp = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     model = (char*) calloc(MAX_CAPTURES, sizeof(char));
     photos = (char**) calloc(MAX_CAPTURES, sizeof(char*));
-    transfert_tasks = (int*) calloc(200, sizeof(int)); // Jusqu à 200 changements possibles
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -52,6 +51,7 @@ int main (void) {
     // Scripts de vérification
 	result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
 	result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
+    result = rt_task_spawn (&task_manage_errors, "MANAGE ERRORS", 4096, 99, TASK_PERM, &manage_errors, NULL);
 
 	// Scripts d'action
 	result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
@@ -85,6 +85,7 @@ int main (void) {
 	rt_task_delete(&task_send_files_online);
     rt_task_delete(&task_apply_choice);
     rt_task_delete(&task_wifi_transfert);
+    rt_task_delete(&task_manage_errors);
 
     for (int d = 0; d < MIN_DIRS; d++) {
         for (int dy = 0; dy < MAX_CAPTURES; dy++) {
@@ -112,7 +113,6 @@ int main (void) {
     free(transferts_tmp);
     free(model);
     free(photos);
-    free(transfert_tasks);
 }
 
 void check_transfert_choice (void * arg) {
@@ -161,13 +161,19 @@ void enable_transfert_image_selection (void * arg) {
 
         status = getModel(model, camera, &send_model);
 
-        if (status != 0) generateError(status);
+        if (status != 0) {
+            generateError(status);
+            continue;
+        }
 
         printf("%s\n", model);
 
         status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list, transferts_tmp, photos);
 
-        if (status < 0) generateError(status);
+        if (status < 0) {
+            generateError(status);
+            continue;
+        }
 
         camera_usb_free_1 (NULL);
 
@@ -186,13 +192,19 @@ void enable_transfert_image_auto (void * arg) {
 
         status = getModel(model, camera, &send_model);
 
-        if (status < 0) generateError(status);
+        if (status < 0) {
+            generateError(status);
+            continue;
+        }
 
         printf("%s\n", model);
 
         status = photo_auto(camera, context, transferts_send, &nb_transferts, &nb_tours, liste_captures, &liste_captures_size);
 
-        if (status < 0) generateError(status);
+        if (status < 0) {
+            generateError(status);
+            continue;
+        }
 
         camera_usb_free_1(NULL);
 
@@ -214,13 +226,19 @@ void enable_transfert_video_auto (void * arg) {
 
         status = getModel(model, camera, &send_model);
 
-        if (status < 0) generateError(status);
+        if (status < 0) {
+            generateError(status);
+            continue;
+        }
 
         printf("%s\n", model);
 
         status = video_auto(camera, context, transferts_send, &nb_transferts, &nb_tours, liste_captures, &liste_captures_size);
 
-        if (status < 0) generateError(status);
+        if (status < 0) {
+            generateError(status);
+            continue;
+        }
 
         camera_usb_free_1(NULL);
 
@@ -315,17 +333,7 @@ void camera_usb_connection_1 (void * arg) {
             }
 
             else {
-                // if (connected_once > 0) {
-                //     usb_freed = 0;
-                // }
-
-                // gp_camera_get_abilities (camera, &abilities);
-
-                // connected_once++;
                 usb_connected = 1;
-                
-                // status = getModel(model, camera, &send_model);
-                // command_usb_reconnexion = 0;
             }
         }
     }
@@ -382,19 +390,23 @@ void send_transferts_online (void * arg) {
     }
 }
 
-// Travailler dessus
+// Travailler dessus car trop de répétitions ou rectifier côté réception
 void manage_errors (void * arg) {
     while (1) {
-        if (status != prevStatus && error) {
+        // printf("\nstatus : %d et prevStatus : %d\n\n", status, prevStatus);
+        if (status != prevStatus && error == 1 && status != 0) {
+            printf("prevStatus : %d\n", prevStatus);
             prevStatus = status;
             res = send_status_request(status);
             printf("res : %d\n", res);
-            printf("%d\n", status);
+            printf("status : %d\n", status);
             handleError(status);
             error = 0;
         }
     }
 }
+
+// Les valeurs de status oscillent
 
 // Travailler dessus
 void generateError (int status) {
