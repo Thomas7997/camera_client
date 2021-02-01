@@ -36,7 +36,7 @@ RT_TASK task_transfert_choice;
 RT_TASK task_wifi, task_usb_connection;
 
 // Procedures
-RT_TASK task_save_files_offline, task_send_files_online, task_enable_transfert_image_auto, task_enable_transfert_image_selection, task_enable_transfert_video_auto;
+RT_TASK task_save_files_offline, task_send_files_online, task_enable_transfert_image_auto, task_enable_transfert_image_selection, task_enable_transfert_video_auto, task_enable_transfert;
 
 // Général
 RT_TASK task_apply_choice, task_wifi_transfert;
@@ -59,5 +59,6 @@ void camera_usb_free_1(void * arg);
 // Nouvelle version de fonction
 void generateError(int status);
 void manage_errors (void * arg);
+void enable_transfert (void * arg);
 
 #endif

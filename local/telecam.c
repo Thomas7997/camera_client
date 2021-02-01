@@ -53,18 +53,26 @@ int main (void) {
 	result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
 	result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
 
+    // Reconnexion
+    //result = rt_task_spawn (&task_free_usb, "FREE USB", 4096, 99, TASK_PERM, &free_usb, NULL);
+    //result = rt_task_spawn (&task_usb_connection, "USB CONNECTION", 4096, 99, TASK_PERM, &camera_usb_connection, NULL);
+
 	// Scripts d'action
 	result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
 	result = rt_task_create (&task_send_files_online, "SEND MEDIAS", 4096, 99, TASK_PERM);
-
-    result = rt_task_create (&task_enable_transfert, "LANCER TRANSFERT IMAGE AUTO", 4096, 99, TASK_PERM);
+    result = rt_task_create (&task_enable_transfert_image_auto, "LANCER TRANSFERT IMAGE AUTO", 4096, 99, TASK_PERM);
+    result = rt_task_create (&task_enable_transfert_image_selection, "LANCER TRANSFERT IMAGE SELECTION", 4096, 99, TASK_PERM);
+    result = rt_task_create (&task_enable_transfert_video_auto, "LANCER TRANSFERT VIDEO AUTO", 4096, 99, TASK_PERM);
 
     // MAIN SCRIPTS
     result = rt_task_spawn (&task_apply_choice, "APPLIQUER LE CHOIX DE L'UTILISATEUR", 4096, 99, TASK_PERM, &script_apply_choice, NULL);
     result = rt_task_spawn (&task_wifi_transfert, "APPLIQUER LE TRANSFERT WIFI AUTONOME", 4096, 99, TASK_PERM, &send_transferts_online, NULL);
 
     // Lancement des tâches et suspension de certaines
-
+    // rt_task_start(&task_enable_transfert_image_auto, &enable_transfert_image_auto, NULL);
+    // rt_task_start(&task_enable_transfert_image_selection, &enable_transfert_image_selection, NULL);
+    // rt_task_start(&task_enable_transfert_video_auto, &enable_transfert_video_auto, NULL);
+	
     while (1) {
 		pause();
 	}
@@ -170,8 +178,6 @@ void enable_transfert_image_selection (void * arg) {
         if (status < 0) generateError(status);
 
         camera_usb_free_1 (NULL);
-
-        if (transfert_choice != 2) return;
     }
 }
 
@@ -195,8 +201,6 @@ void enable_transfert_image_auto (void * arg) {
         if (status < 0) generateError(status);
 
         camera_usb_free_1(NULL);
-
-        if (transfert_choice != 1) return;
 
         printf("tours : %d\n", nb_tours++);
         usleep(500000);
@@ -223,8 +227,6 @@ void enable_transfert_video_auto (void * arg) {
         if (status < 0) generateError(status);
 
         camera_usb_free_1(NULL);
-
-        if (transfert_choice != 3) return;
 
         printf("tours : %d\n", nb_tours++);
         usleep(500000);
@@ -342,32 +344,69 @@ void script_apply_choice (void * arg) {
         // Je pourrais mettre
         // if (allowChoiceChange == 1)
 
-        switch (transfert_choice) {
-            // Trouver un moyen de stoquer les historiques des tâches en TMP
+		if (1) { // USB CONNECTED ?
+            switch (transfert_choice) {
+                // Trouver un moyen de stoquer les historiques des tâches en TMP
 
-            if (transfert_choice != prevTransfertChoice) {
-                transfert_tasks[ttsk++] = transfert_choice;
-                prevTransfertChoice = transfert_choice;
-                printf("Changement de transfert.\n");
+                if (transfert_choice != prevTransfertChoice) {
+                    transfert_tasks[ttsk++] = transfert_choice;
+                    prevTransfertChoice = transfert_choice;
+                    printf("Changement de transfert.\n");
+                }
+
+                case 0 :
+                    printf("NONE\n");
+                    rt_task_suspend(&task_enable_transfert_image_auto);
+                    rt_task_suspend(&task_enable_transfert_image_selection);
+                    rt_task_suspend(&task_enable_transfert_video_auto);
+                break;
+                case 1 :
+                    printf("IMAGE AUTO\n");
+                    rt_task_suspend(&task_enable_transfert_image_selection);
+                    rt_task_suspend(&task_enable_transfert_video_auto);
+                    ret_task = rt_task_resume(&task_enable_transfert_image_auto);
+                    printf("ret_task : %d\n", ret_task);
+                    ret_task = rt_task_start(&task_enable_transfert_image_auto, &enable_transfert_image_auto, NULL);
+                    printf("ret_task : %d\n", ret_task);
+                break;
+                case 2 :
+                    printf("IMAGE SELECTIONNÉ\n");
+                    rt_task_suspend(&task_enable_transfert_image_auto);
+                    rt_task_suspend(&task_enable_transfert_video_auto);
+                    ret_task = rt_task_resume(&task_enable_transfert_image_selection);
+                    printf("ret_task : %d\n", ret_task);
+                    ret_task = rt_task_start(&task_enable_transfert_image_selection, &enable_transfert_image_selection, NULL);
+                    printf("ret_task : %d\n", ret_task);
+                break;
+                case 3 :
+                    printf("VIDEO AUTO\n");
+                    rt_task_suspend(&task_enable_transfert_image_auto);
+                    rt_task_suspend(&task_enable_transfert_image_selection);
+                    ret_task = rt_task_resume(&task_enable_transfert_video_auto);
+                    printf("ret_task : %d\n", ret_task);
+                    ret_task = rt_task_start(&task_enable_transfert_video_auto, &enable_transfert_video_auto, NULL);
+                    printf("ret_task : %d\n", ret_task);
+                break;
+                default : printf("Erreur\n");
+                break;
             }
 
-            case 0 :
-                printf("NONE\n");
-            break;
-            case 1 :
-                printf("IMAGE AUTO\n");
-                enable_transfert_image_auto(NULL);
-            break;
-            case 2 :
-                printf("IMAGE SELECTIONNÉ\n");
-                enable_transfert_image_selection(NULL);
-            break;
-            case 3 :
-                printf("VIDEO AUTO\n");
-                enable_transfert_video_auto(NULL);
-            break;
-            default : printf("Erreur\n");
-            break;
+            if (wifi_status == 1) {
+                result = rt_task_suspend(&task_send_files_online);
+                result = rt_task_start(&task_save_files_offline, &send_medias, NULL);
+            }
+
+            else {
+                result = rt_task_suspend(&task_save_files_offline);
+                result = rt_task_start(&task_send_files_online, &save_medias, NULL);
+            }
+        }
+
+        else {
+            printf("%d\n", 1);
+            rt_task_suspend(&task_enable_transfert_image_auto);
+            rt_task_suspend(&task_enable_transfert_image_selection);
+            rt_task_suspend(&task_enable_transfert_video_auto);
         }
 
         usleep(500000);
@@ -404,25 +443,9 @@ void generateError (int status) {
 
 void sendModel (void * arg) {
     while (1) {
-        if (send_model && wifi_status) {
+        if (send_model) {
             sendModelHTTP(model);
             send_model = 0;
         }
-    }
-}
-
-void apply_networking (void * arg) {
-    while (1) {
-        if (wifi_status == 1) {
-            rt_task_suspend(&task_send_files_online);
-            rt_task_start(&task_save_files_offline, &send_medias, NULL);
-        }
-
-        else {
-            rt_task_suspend(&task_save_files_offline);
-            rt_task_start(&task_send_files_online, &save_medias, NULL);
-        }
-
-        usleep(100000);
     }
 }
