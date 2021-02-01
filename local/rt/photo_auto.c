@@ -65,6 +65,7 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
 
     if (ret_comp < 0) return ret_comp; // Code d'erreur
 
+
     x = 0;
 
     if (ret_comp != 0) {

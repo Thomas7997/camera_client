@@ -1,9 +1,12 @@
-all : COMP
+XENO_CONFIG := /usr/xenomai/bin/xeno-config
+CFLAGS := $(shell $(XENO_CONFIG) --cflags --skin=alchemy) -g
+LDFLAGS := $(shell $(XENO_CONFIG) --ldflags --skin=alchemy) -lgphoto2 -lcurl -lexiv2
+CC := g++
+SOURCES := telecam.c transferts.c video_auto.c photo_auto.c auto.c net.c connexions.c selection_optimale.cpp manage_selected.cpp errors.c scripts.c transactions.c usb_transactions.c model.c
 
-COMP : telecam.c transferts.c photo_auto.c auto.c net.c connexions.c usb_transactions.c transactions.c errors.c scripts.c selection_optimale.cpp net.c
-	g++ -Wl,--no-as-needed -lalchemy  -lcopperplate /usr/xenomai/lib/xenomai/bootstrap.o -Wl,--wrap=main -Wl,--dynamic-list=/usr/xenomai/lib/dynlist.ld -L/usr/xenomai/lib -lmercury -lpthread -lrt -march=armv4t -I/usr/xenomai/include/mercury -I/usr/xenomai/include -march=armv4t -D_GNU_SOURCE -D_REENTRANT -fasynchronous-unwind-tables -D__MERCURY__ -I/usr/xenomai/include/alchemy -o telecam telecam.c transferts.c video_auto.c photo_auto.c auto.c net.c connexions.c selection_optimale.cpp manage_selected.cpp errors.c scripts.c transactions.c usb_transactions.c model.c -lgphoto2 -lcurl -lexiv2
+EXECUTABLE := telecam
 
-COMPILATION : telecam.c transferts.c photo_auto.c auto.c net.c connexions.c usb_transactions.c transactions.c errors.c scripts.c selection_optimale.cpp net.c
-	g++ -I/usr/xenomai/include/mercury -I/usr/xenomai/include -march=armv4t -D_GNU_SOURCE -D_REENTRANT -fasynchronous-unwind-tables -D__MERCURY__ -Wl,--no-as-needed -lcopperplate /usr/xenomai/lib/xenomai/bootstrap.o -Wl,--wrap=main -Wl,--dynamic-list=/usr/xenomai/lib/dynlist.ld -L/usr/xenomai/lib -lalchemy -lmercury -lpthread -lrt -march=armv4t -o telecam telecam.c transferts.c photo_auto.c auto.c net.c connexions.c selection_optimale.cpp manage_selected.cpp errors.c scripts.c transactions.c usb_transactions.c -lgphoto2 -lcurl -lexiv2
+all: $(EXECUTABLE)
 
-EXEC : ./telecam
+%: $(SOURCES)
+	$(CC) -o $(EXECUTABLE) $(SOURCES) $(CFLAGS) $(LDFLAGS)

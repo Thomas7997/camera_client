@@ -17,7 +17,8 @@ static unsigned int * dir_sizes;
 static char ** images_list;
 static char ** liste_captures;
 static char ** transferts_tmp;
-static char* model;
+static char * model;
+static char ** photos;
 
 int send_model = 0;
 

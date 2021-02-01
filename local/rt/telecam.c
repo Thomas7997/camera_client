@@ -1,5 +1,6 @@
 #include "telecam.h"
 
+// Actuellement le switch de mode génère un bug sur lequel il faut travailller
 int main (void) {
 	// Initialisations
     dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
@@ -10,7 +11,8 @@ int main (void) {
     dir_sizes = (unsigned int*) calloc(MIN_DIRS, sizeof(unsigned int*));
     liste_captures = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
     transferts_tmp = (char**) calloc(MAX_CAPTURES, sizeof(char*));
-    model = (char*) calloc(MAX_CAPTURES, sizeof(char*));
+    model = (char*) calloc(MAX_CAPTURES, sizeof(char));
+    photos = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -34,6 +36,7 @@ int main (void) {
     for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
         transferts_send[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
         transferts_tmp[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        photos[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
     context = sample_create_context();
@@ -71,6 +74,7 @@ int main (void) {
     for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
         free(transferts_send[e]);
         free(transferts_tmp[e]);
+        free(photos[e]);
     }
 
     free(transferts_send);
@@ -109,6 +113,7 @@ int main (void) {
     free(liste_captures);
     free(transferts_tmp);
     free(model);
+    free(photos);
 }
 
 void check_transfert_choice (void * arg) {
@@ -160,7 +165,7 @@ void enable_transfert_image_selection (void * arg) {
 
         printf("%s\n", model);
 
-        status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list, transferts_tmp);
+        status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list, transferts_tmp, photos);
 
         if (status < 0) generateError(status);
 
