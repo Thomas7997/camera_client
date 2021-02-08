@@ -14,6 +14,12 @@ int main (void) {
     model = (char*) calloc(MAX_CAPTURES, sizeof(char));
     photos = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
+    messages.status = 0;
+    messages.prevStatus = 0;
+    messages.netStatus = 0;
+    messages.prevNetStatus = 0;
+    messages.send = 0;
+
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
         for (int dy = 0; dy < MAX_CAPTURES; dy++) {
@@ -335,6 +341,9 @@ void camera_usb_connection_1 (void * arg) {
             else {
                 usb_connected = 1;
             }
+
+            messages.status = status;
+            trigger_request_status(&messages);
         }
     }
 }
@@ -394,15 +403,32 @@ void send_transferts_online (void * arg) {
 void manage_errors (void * arg) {
     while (1) {
         // printf("\nstatus : %d et prevStatus : %d\n\n", status, prevStatus);
-        if (status != prevStatus && error == 1 && status != 0) {
-            printf("prevStatus : %d\n", prevStatus);
-            prevStatus = status;
-            res = send_status_request(status);
-            printf("res : %d\n", res);
-            printf("status : %d\n", status);
+        // if (status != prevStatus && error == 1 && status != 0) {
+        //     printf("prevStatus : %d\n", prevStatus);
+        //     prevStatus = status;
+        //     res = send_status_request(status);
+        //     printf("res : %d\n", res);
+        //     printf("status : %d\n", status);
+        //     handleError(status);
+        //     error = 0;
+        // }
+
+        res = 1;
+
+        while (res != 0 && messages.send == 1) {
+            printf("status : %d et prevStatus : %d\n", messages.status, messages.prevStatus);
+            res = send_status_request(messages.status);
             handleError(status);
-            error = 0;
+
+            messages.netStatus = res;
+
+            if (res == 0) {
+                messages.send = 0;
+                messages.prevStatus = messages.status;
+            }
         }
+
+        usleep(500);
     }
 }
 
@@ -436,5 +462,11 @@ void apply_networking (void * arg) {
         }
 
         usleep(100000);
+    }
+}
+
+void trigger_request_status (Status * status) {
+    if (status->status != status->prevStatus) {
+        status->send = 1;
     }
 }

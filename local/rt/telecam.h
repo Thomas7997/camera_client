@@ -60,5 +60,6 @@ void camera_usb_free_1(void * arg);
 void generateError(int status);
 void manage_errors (void * arg);
 void enable_transfert (void * arg);
+void trigger_request_status (Status * status);
 
 #endif

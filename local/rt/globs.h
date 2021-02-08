@@ -6,7 +6,7 @@ unsigned int wifi_status, transfert_choice, prevTransfertChoice, ttsk = 0, usb_c
 static char ** transferts_send;
 static Camera * camera;
 static GPContext* context;
-int status = 0, connected_once, prevStatus = 0, error = 0, res = 0;
+int status = 0, connected_once, prevStatus = 0, error = 0, res = 0, send_req_status = 0;
 unsigned int result, command_usb_reconnexion, usb_freed, liste_captures_size;
 
 // Stockage de fichiers
@@ -22,6 +22,16 @@ static char ** photos;
 static int * transfert_tasks;
 
 int send_model = 0;
+
+typedef struct {
+    int status;
+    int prevStatus;
+    int netStatus;
+    int prevNetStatus;
+    int send; // 0 ou 1
+} Status;
+
+static Status messages;
 
 #include "constants.h"
 
