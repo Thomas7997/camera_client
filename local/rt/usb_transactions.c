@@ -35,7 +35,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
     status = gp_camera_folder_list_folders(camera,
 		folder,
 		folderList,
-		context 
+		context
 	);
     if (status < 0) return status;
 
@@ -94,9 +94,16 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
     char * commande = (char*) calloc(250, sizeof(char));
     int file_transfered = 0;
 
-    printf ("1\n");
     FILE * HISTORIQUE = fopen("/home/remote/camera_client/local/data/images/historique.txt", "a+");
-    printf("2\n");
+    FILE * RAW_FORMAT = fopen("../data/tmp/raw_format.txt", "r");
+    FILE * NORMAL_FORMAT = fopen("../data/tmp/normal_format.txt", "r");
+
+    unsigned int raw, normal;
+
+    fscanf(RAW_FORMAT, "%u", &raw);
+    fscanf(NORMAL_FORMAT, "%u", &normal);
+
+    if (raw == 0 && normal == 0) return 0; // Car aucun fichier transféré
 
     char ** hist_lines = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
@@ -124,19 +131,40 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
 
         // A corriger
         file_transfered = compare_file_historique(filename, hist_lines, x);
-        if (file_transfered == 0) {
-            sprintf(commande, "../data/images/gets/%s", filename);
-            printf ("%s\n", commande);
-            status = gp_camera_file_get(camera, dossier, filename, GP_FILE_TYPE_NORMAL, file, context);
-            handleError(status);
-            printf("%s\n", dossier);
+        if (file_transfered == 0) {            
+            if (normal == 1) {
+                sprintf(commande, "../data/images/gets/%s", filename);
+                printf ("%s\n", commande);
 
-            if (status < 0) return status;
+                status = gp_camera_file_get(camera, dossier, filename, GP_FILE_TYPE_NORMAL, file, context);
 
-            // TÉLÉCHARGEMENT DE LA PHOTO UNIQUEMENT
-            status = gp_file_save(file, (const char*) commande);
+                handleError(status);
+                printf("%s\n", dossier);
 
-            if (status < 0) return status;
+                if (status < 0) return status;
+
+                // TÉLÉCHARGEMENT DE LA PHOTO UNIQUEMENT
+                status = gp_file_save(file, (const char*) commande);
+
+                if (status < 0) return status;
+            }
+
+            if (raw == 1) {
+                status = gp_camera_file_get(camera, dossier, filename, GP_FILE_TYPE_RAW, file, context);
+
+                sprintf(commande, "../data/images/gets/RAW_%s", filename);
+                printf ("%s\n", commande);
+
+                handleError(status);
+                printf("%s\n", dossier);
+
+                if (status < 0) return status;
+
+                // TÉLÉCHARGEMENT DE LA PHOTO UNIQUEMENT
+                status = gp_file_save(file, (const char*) commande);
+
+                if (status < 0) return status;
+            }
 
             // Envoyer le nom du nouveau fichier transféré au socket
 
@@ -158,6 +186,8 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
     free(commande);
     free(dossier);
     gp_file_free(file);
+    fclose(RAW_FORMAT);
+    fclose(NORMAL_FORMAT);
 
     return x;
 }

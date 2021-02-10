@@ -65,8 +65,16 @@ void send_medias_transfert (char ** files, unsigned int transferts_nb) {
 }
 
 void send_medias_transfert_online (int online) {
+    FILE * NORMAL_FORMAT = fopen("../data/tmp/normal_format.txt", "r");
+    FILE * RAW_FORMAT = fopen("../data/tmp/raw_format.txt", "r");
+    unsigned int raw_format, normal_format;
+
+    fscanf(RAW_FORMAT, "%u", &raw_format);
+    fscanf(NORMAL_FORMAT, "%u", &normal_format);
+
     int status = 0;
     if (!online) return;
+    if (raw_format == 0 && normal_format == 0) return;
 
     unsigned int i = 0;
     char * commande = (char*) calloc(300, sizeof(char));
@@ -102,6 +110,8 @@ void send_medias_transfert_online (int online) {
     }
 
     fclose(GETS);
+    fclose(NORMAL_FORMAT);
+    fclose(RAW_FORMAT);
     free(files);
     free(commande);
 }

@@ -53,7 +53,11 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
         strcpy(files[e], "");
     }
 
+    printf("Lecture de la liste de photos ...\n");
+
     nb_medias = getPhotoDatas(dossiers, dirs_n, photos, files, liste_captures, &files_nb, camera, context, dir_sizes);
+
+    printf("Lecture de la liste de photos finie !\n");
 
     if (nb_medias < 0) return nb_medias; // Code d'erreur
 
@@ -61,10 +65,13 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
         *nb_list = save_clist_slist(liste_captures, photos, nb_medias, *nb_list);
     }
 
+    printf("Comparaison de la liste obtenue ...\n");
+
     int ret_comp = compareFilesLists(transferts, photos, liste_captures, nb_medias, *nb_list, files_index_list, camera, context);
 
     if (ret_comp < 0) return ret_comp; // Code d'erreur
 
+    printf("Comparaison de la liste obtenue finie !\n");
 
     x = 0;
 
@@ -73,6 +80,8 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
         *nb_list = save_clist_slist(liste_captures, photos, nb_medias, *nb_list); // curent to stored   
         *nb_transferts = ret_comp;
     }
+
+    printf("Script fini !!\n");
 
     // FIN RÉPÉTITIONS
 

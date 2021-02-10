@@ -14,7 +14,7 @@ int main (void) {
     model = (char*) calloc(MAX_CAPTURES, sizeof(char));
     photos = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
-    messages.status = 0;
+    messages.currentStatus = 0;
     messages.prevStatus = 0;
     messages.netStatus = 0;
     messages.prevNetStatus = 0;
@@ -63,7 +63,7 @@ int main (void) {
 	result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
 	result = rt_task_create (&task_send_files_online, "SEND MEDIAS", 4096, 99, TASK_PERM);
 
-    result = rt_task_create (&task_enable_transfert, "LANCER TRANSFERT IMAGE AUTO", 4096, 99, TASK_PERM);
+    result = rt_task_create (&task_enable_transfert, "LANCER TRANSFERT IMAGE AUTO", 10000, 99, TASK_PERM);
 
     // MAIN SCRIPTS
     result = rt_task_spawn (&task_apply_choice, "APPLIQUER LE CHOIX DE L'UTILISATEUR", 4096, 99, TASK_PERM, &script_apply_choice, NULL);
@@ -324,15 +324,15 @@ void camera_usb_connection_1 (void * arg) {
     if (transfert_choice > 0) {
         while (status != 0) {
             printf("CONNEXION USB ...\n");
-            status = gp_camera_new (&camera);
-            handleError(status);
+            gp_camera_new (&camera);
             status = gp_camera_init(camera, context);
             handleError(status);
 
             if (status < 0) {
                 printf("ERREUR DE CONNEXION !\n");
                 generateError(status);
-                gp_camera_exit(camera, context);
+                status = gp_camera_exit(camera, context);
+                handleError(status);
                 gp_camera_free(camera);
                 usleep(500000); // Important sinon le programme consomme trop de CPU
                 usb_connected = 0;
@@ -342,8 +342,11 @@ void camera_usb_connection_1 (void * arg) {
                 usb_connected = 1;
             }
 
-            messages.status = status;
-            trigger_request_status(&messages);
+            messages.currentStatus = status;
+            // trigger_request_status(&messages);
+
+            printf("Commande de l'envoi ...\n");
+            messages.send = 1;
         }
     }
 }
@@ -413,22 +416,18 @@ void manage_errors (void * arg) {
         //     error = 0;
         // }
 
-        res = 1;
-
-        while (res != 0 && messages.send == 1) {
-            printf("status : %d et prevStatus : %d\n", messages.status, messages.prevStatus);
-            res = send_status_request(messages.status);
+        if (messages.send == 1 && messages.prevStatus != messages.currentStatus) {
+            printf("status : %d et prevStatus : %d\n", messages.currentStatus, messages.prevStatus);
+            res = send_status_request(messages.currentStatus);
             handleError(status);
 
             messages.netStatus = res;
 
-            if (res == 0) {
-                messages.send = 0;
-                messages.prevStatus = messages.status;
-            }
+            messages.send = 0;
+            messages.prevStatus = messages.currentStatus;
         }
 
-        usleep(500);
+        usleep(50000);
     }
 }
 
@@ -465,8 +464,10 @@ void apply_networking (void * arg) {
     }
 }
 
-void trigger_request_status (Status * status) {
-    if (status->status != status->prevStatus) {
-        status->send = 1;
-    }
-}
+// void trigger_request_status (Status * status) {
+//     printf("Trigger\n");
+//     if (status->status != status->prevStatus) {
+//         printf("Commande de l'envoi ...\n");
+//         status->send = 1;
+//     }
+// }

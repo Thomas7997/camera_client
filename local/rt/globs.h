@@ -24,14 +24,14 @@ static int * transfert_tasks;
 int send_model = 0;
 
 typedef struct {
-    int status;
+    int currentStatus;
     int prevStatus;
     int netStatus;
     int prevNetStatus;
     int send; // 0 ou 1
 } Status;
 
-static Status messages;
+Status messages;
 
 #include "constants.h"
 

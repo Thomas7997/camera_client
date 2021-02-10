@@ -56,7 +56,7 @@ int selection_optimale (Camera * camera, GPContext * context, char ** transferts
 
     // Copier transferts_tmp à transferts là
 
-    int online = 0;
+    // int online = 0;
 
     if (status < 0) return status;
 
