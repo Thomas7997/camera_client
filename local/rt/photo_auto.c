@@ -1,8 +1,6 @@
-// AUTO PHOTO ET VIDEO
+// AUTO PHOTO
 #include "auto.h"
 #include "connexions.h"
-
-// Il faudra mettre en place un filtre dans les deux
 
 int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsigned int * nb_transferts, int * nb, char ** liste_captures, unsigned int * nb_list) {
     int status = 0;
@@ -55,11 +53,12 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
 
     printf("Lecture de la liste de photos ...\n");
 
+    // Segmentation fault généré quand la connexion usb est interrompue à cette fonction
     nb_medias = getPhotoDatas(dossiers, dirs_n, photos, files, liste_captures, &files_nb, camera, context, dir_sizes);
 
-    printf("Lecture de la liste de photos finie !\n");
-
     if (nb_medias < 0) return nb_medias; // Code d'erreur
+
+    printf("Lecture de la liste de photos finie !\n");
 
     if (*nb == 0) {
         *nb_list = save_clist_slist(liste_captures, photos, nb_medias, *nb_list);
@@ -108,5 +107,5 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
     free(files);
     free(files_index_list);
 
-    return 1;
+    return 0;
 }

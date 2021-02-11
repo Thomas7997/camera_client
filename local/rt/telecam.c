@@ -14,11 +14,8 @@ int main (void) {
     model = (char*) calloc(MAX_CAPTURES, sizeof(char));
     photos = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
-    messages.currentStatus = 0;
-    messages.prevStatus = 0;
-    messages.netStatus = 0;
-    messages.prevNetStatus = 0;
-    messages.send = 0;
+    prevStatus = 0;
+    status = 0;
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -49,7 +46,6 @@ int main (void) {
 
     usb_freed = 1;
     command_usb_reconnexion = 1;
-    status = 1;
     connected_once = -1;
 
 	// Main tasks
@@ -163,7 +159,15 @@ void save_medias (void * arg) {
 void enable_transfert_image_selection (void * arg) {
     while (1) {
         printf("TRANSFERT D'IMAGES SÉLECTIONNÉ LANCÉ\n");
+
+        reset = 1;
+
         camera_usb_connection_1 (NULL);
+
+        // Avant de récupérer le modèle
+        while (usb_connected != 1) {
+            usleep(500);
+        }
 
         status = getModel(model, camera, &send_model);
 
@@ -194,11 +198,18 @@ void enable_transfert_image_auto (void * arg) {
     while (1) {
         printf("TRANSFERT D'IMAGES AUTO LANCÉ\n");
 
+        reset = 1;
+
         camera_usb_connection_1 (NULL);
 
+        while (usb_connected != 1) {
+            usleep(500);
+        }
+
+        // Attention aux code d'erreurs des requêtes http
         status = getModel(model, camera, &send_model);
 
-        if (status < 0) {
+        if (status != 0) {
             generateError(status);
             continue;
         }
@@ -208,6 +219,7 @@ void enable_transfert_image_auto (void * arg) {
         status = photo_auto(camera, context, transferts_send, &nb_transferts, &nb_tours, liste_captures, &liste_captures_size);
 
         if (status < 0) {
+            handleError(status);
             generateError(status);
             continue;
         }
@@ -227,6 +239,8 @@ void enable_transfert_video_auto (void * arg) {
 
     while (1) {
         printf("TRANSFERT DE VIDEOS AUTO LANCÉ\n");
+
+        reset = 1;
 
         camera_usb_connection_1(NULL);
 
@@ -322,7 +336,7 @@ void camera_usb_connection (void * arg) {
 
 void camera_usb_connection_1 (void * arg) {
     if (transfert_choice > 0) {
-        while (status != 0) {
+        while (status != 0 || reset == 1) {
             printf("CONNEXION USB ...\n");
             gp_camera_new (&camera);
             status = gp_camera_init(camera, context);
@@ -330,9 +344,7 @@ void camera_usb_connection_1 (void * arg) {
 
             if (status < 0) {
                 printf("ERREUR DE CONNEXION !\n");
-                generateError(status);
-                status = gp_camera_exit(camera, context);
-                handleError(status);
+                gp_camera_exit(camera, context);
                 gp_camera_free(camera);
                 usleep(500000); // Important sinon le programme consomme trop de CPU
                 usb_connected = 0;
@@ -340,13 +352,8 @@ void camera_usb_connection_1 (void * arg) {
 
             else {
                 usb_connected = 1;
+                reset = 0;
             }
-
-            messages.currentStatus = status;
-            // trigger_request_status(&messages);
-
-            printf("Commande de l'envoi ...\n");
-            messages.send = 1;
         }
     }
 }
@@ -416,15 +423,12 @@ void manage_errors (void * arg) {
         //     error = 0;
         // }
 
-        if (messages.send == 1 && messages.prevStatus != messages.currentStatus) {
-            printf("status : %d et prevStatus : %d\n", messages.currentStatus, messages.prevStatus);
-            res = send_status_request(messages.currentStatus);
+        if (prevStatus != status) {
+            printf("status : %d et prevStatus : %d\n", status, prevStatus);
+            res = send_status_request(status);
             handleError(status);
 
-            messages.netStatus = res;
-
-            messages.send = 0;
-            messages.prevStatus = messages.currentStatus;
+            prevStatus = status;
         }
 
         usleep(50000);

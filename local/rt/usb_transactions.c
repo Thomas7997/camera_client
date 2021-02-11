@@ -1,5 +1,6 @@
 #include "usb_transactions.h"
 
+// Segmentation fault généré quand il y a une déconnexion
 int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context) {
     CameraList * folderList;
     char * folder = (char*) calloc(100, sizeof(char));
@@ -50,6 +51,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
 
         const char * subdir;
         status = gp_list_get_name(folderList, i, (const char**) &subdir);
+        if (status < 0) return status;
 
         sprintf (tmp_dir, "%s/%s", folder, subdir);
         // printf ("%s\n", tmp_dir);
