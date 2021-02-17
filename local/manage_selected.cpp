@@ -557,6 +557,7 @@ int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsi
         for (unsigned int j = 0; j < nb_files; j++) {
             const char * file;
             status = gp_list_get_name(fileList, j, (const char**) &file);
+            printf("%s\n", file);
             // handleError(status);
             if (status < 0) return generateError(status);
             strcpy(dirs_b[i][j], file);
@@ -650,13 +651,14 @@ int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, 
     char * data = (char*) calloc(150000, sizeof(char));
     char * dirname = (char*) calloc(100, sizeof(char));
 
-    FILE * RATING = fopen("data/images/rating.txt", "w");
+    // FILE * RATING = fopen("data/images/rating.txt", "w");
 
     int i, x = 0;
 
     for (int y = 0; y < PART_NB; y++) {
         // Commande
         nom = getName(files[y], dirname);
+        printf("%s\n%s\n", nom, dirname);
         int status = getPlacements(&rates, dirname, nom, data, context, camera);
 
         if (status < 0) return generateError(status);
@@ -665,10 +667,10 @@ int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, 
             sprintf(transferts[x++], "%s/%s", dirname, nom);
         }
 
-        fprintf(RATING, "%s : %d\n", files[y], rates);
+        // fprintf(RATING, "%s : %d\n", files[y], rates);
     }
 
-    fclose(RATING);
+    // fclose(RATING);
     free(nom);
     free(data);
     free(dirname);

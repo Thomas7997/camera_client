@@ -59,8 +59,9 @@ int main (void) {
     // DÉBUT RÉPÉTITIONS
 
     int stop = -1;
+    status = 1;
     do {
-        do {
+        while (status != 0) {
             gp_camera_new (&camera);
             status = gp_camera_init(camera, context);
             handleError(status);
@@ -72,7 +73,7 @@ int main (void) {
             }
 
             usleep(5000);
-        } while (status != 0);
+        }
 
         int i, j, number = 0;
 

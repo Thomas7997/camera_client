@@ -84,5 +84,8 @@ VIDEO_AUTO : video_auto.c auto.c
 PHOTO_AUTO : photo_auto.c auto.c
 	gcc -o photo_auto photo_auto.c auto.c -lgphoto2 -lgphoto2_port
 
+SD : sd.c sd.h
+	gcc -o sd sd.c -lgphoto2 -lcurl
+
 CONSTRUCTION : architecture
 	./architecture
