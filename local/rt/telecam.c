@@ -165,9 +165,9 @@ void enable_transfert_image_selection (void * arg) {
         camera_usb_connection_1 (NULL);
 
         // Avant de récupérer le modèle
-        while (usb_connected != 1) {
-            usleep(500);
-        }
+        // while (usb_connected != 1) {
+        //     usleep(500);
+        // }
 
         status = getModel(model, camera, &send_model);
 
@@ -269,6 +269,33 @@ void enable_transfert_video_auto (void * arg) {
     }
 }
 
+void cart_SD_mode (void * arg) {
+    while (1) {
+        camera_usb_connection_1(NULL);
+
+        while (usb_connected != 1) {
+            usleep(500);
+        }
+
+        status = getModel(model, camera, &send_model);
+
+        if (status != 0) {
+            generateError(status);
+            continue;
+        }
+
+        status = sd_card_lecture_mode (dossiers, dirs_n, files, camera, context);
+
+        if (status < 0) continue;
+
+        camera_usb_free_1(NULL);
+
+        if (transfert_choice != 4) return;
+
+        usleep(500000);
+    }
+}
+
 void reconnexion_usb (void * arg) {
     while (1) {
         // printf("RECONNEXION USB ...\n");
@@ -338,7 +365,10 @@ void camera_usb_connection_1 (void * arg) {
     if (transfert_choice > 0) {
         while (status != 0 || reset == 1) {
             printf("CONNEXION USB ...\n");
-            gp_camera_new (&camera);
+            printf("0");
+            status = gp_camera_new (&camera);
+            printf("1\n");
+            handleError(status);
             status = gp_camera_init(camera, context);
             handleError(status);
 
@@ -392,6 +422,10 @@ void script_apply_choice (void * arg) {
             case 3 :
                 printf("VIDEO AUTO\n");
                 enable_transfert_video_auto(NULL);
+            break;
+            case 4 :
+                printf("LECTURE CARTE SD\n");
+                cart_SD_mode(NULL);
             break;
             default : printf("Erreur\n");
             break;
@@ -467,11 +501,3 @@ void apply_networking (void * arg) {
         usleep(100000);
     }
 }
-
-// void trigger_request_status (Status * status) {
-//     printf("Trigger\n");
-//     if (status->status != status->prevStatus) {
-//         printf("Commande de l'envoi ...\n");
-//         status->send = 1;
-//     }
-// }

@@ -19,6 +19,7 @@
 #include "usb_transactions.h"
 #include "model.h"
 #include "video_auto.h"
+#include "sd.h"
 
 // CONSTANTS
 #define TASK_PRIO  99             /* Highest RT priority */
@@ -61,5 +62,8 @@ void generateError(int status);
 void manage_errors (void * arg);
 void enable_transfert (void * arg);
 void trigger_request_status (Status * status);
+
+// Carte SD
+void cart_SD_mode (void * arg);
 
 #endif
