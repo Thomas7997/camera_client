@@ -18,15 +18,16 @@ typedef struct _Dossiers {
     struct _Dossiers * suiv;
 } Dossiers;
 
-Fichiers * insertenqueue_Fichiers (Fichiers * liste, const char * valeur, const char * type);
-Dossiers * insertenqueue_Dossiers (Dossiers * liste, const char * valeur, Fichiers * fichiers, Dossiers * fils);
+Fichiers* insertenqueue_Fichiers (Fichiers * liste, const char * valeur, const char * type);
+Dossiers* insertenqueue_Dossiers (Dossiers * liste, const char * valeur, Fichiers * fichiers, Dossiers * fils);
 Fichiers * new_fichiers_list (void);
 Dossiers * new_dossiers_list (void);
 void free_fichiers (Fichiers * fichiers);
 void free_dossiers (Dossiers * dossiers);
 int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context);
-int sd_card_lecture_mode (char *** dossiers, char ** dirs_n, char ** files, Camera * camera, GPContext * context);
+int sd_card_lecture_mode (Camera * camera, GPContext * context);
 void afficher_fichiers_liste (Fichiers * fichiers);
 void afficher_carte_sd_liste (Dossiers * dossiers);
+int get_files_and_dirs (Dossiers ** dirs_b, Camera * camera, GPContext * context);
 
 #endif

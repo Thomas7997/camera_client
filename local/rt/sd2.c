@@ -1,6 +1,6 @@
-#include "sd.h"
+#include "sd2.h"
 
-int get_files_and_dirs (Dossiers * dirs_b, Fichiers * dirs_n, Camera * camera, GPContext * context) {
+int get_files_and_dirs (Dossiers ** dirs_b, Camera * camera, GPContext * context) {
     Dossiers * dossiers_fils = new_dossiers_list();
     Fichiers * fichiers_liste = new_fichiers_list();
     CameraList * folderList;
@@ -12,6 +12,10 @@ int get_files_and_dirs (Dossiers * dirs_b, Fichiers * dirs_n, Camera * camera, G
 
     status = gp_list_get_name(folderList, 0, (const char**) &dir);
     if (status < 0) return status;
+
+    printf("1 ...\n");
+    *dirs_b = insertenqueue_Dossiers(*dirs_b, dir, NULL, NULL);
+    printf("1 fini.\n");
 
     // status = gp_list_reset(folderList);
 
@@ -32,13 +36,19 @@ int get_files_and_dirs (Dossiers * dirs_b, Fichiers * dirs_n, Camera * camera, G
     }
 
     // Insérer
-    dirs_b = insertenqueue_Dossiers(dossiers_fils, tmp_dir, NULL, NULL);
+    printf("2 ...\n%s\n", tmp_dir);
+    dossiers_fils = insertenqueue_Dossiers(dossiers_fils, tmp_dir, NULL, NULL);
+    printf("2 fini.\n");
 
     sprintf(folder, "%s/DCIM", tmp_dir);
     // printf ("%s\n", folder);
 
+    // Peut etre ajouter une autre lecture des dossiers dans le répertoire
+
+    printf("3 ...\n");
     // Insérer
     dossiers_fils->fils = insertenqueue_Dossiers(dossiers_fils->fils, "DCIM", NULL, NULL);
+    printf("3 fini.\n");
 
     status = gp_camera_folder_list_folders(camera,
 		folder,
@@ -52,6 +62,7 @@ int get_files_and_dirs (Dossiers * dirs_b, Fichiers * dirs_n, Camera * camera, G
 
     if (local_nb < 0) return local_nb;
 
+    printf("4 ...\n");
     for (unsigned int i = 0; i < local_nb; i++) {
         // status = gp_list_reset(fileList);
 
@@ -81,17 +92,26 @@ int get_files_and_dirs (Dossiers * dirs_b, Fichiers * dirs_n, Camera * camera, G
             // handleError(status);
             if (status < 0) return status;
             // strcpy(dirs_b[i][j], file);
+            printf("4[i][j] ...\n");
             fichiers_liste = insertenqueue_Fichiers(fichiers_liste, file, "jpg");
             // printf ("%s\n", dirs_b[i][j]);
+            printf("4[i][j] fini.\n");
         }
 
         // INSÉRER
+        printf("4[i] ...\n");
         dossiers_fils->fils->fils = insertenqueue_Dossiers(dossiers_fils->fils->fils, subdir, fichiers_liste, NULL);
+        printf("4[i] fini.\n");
 
         // sprintf(dirs_n[i], "/%s", dir);
     }
 
-    dirs_b = insertenqueue_Dossiers(dirs_b, "", NULL, dossiers_fils);
+    printf("4 fini ...");
+
+    printf("Insérer le tout ...\n");
+
+    *dirs_b = insertenqueue_Dossiers(*dirs_b, "", NULL, dossiers_fils);
+    printf("Insertion totale terminée.\n");
 
     free(tmp_dir);
     free(folder);
@@ -123,8 +143,8 @@ Fichiers* insertenqueue_Fichiers (Fichiers * liste, const char * valeur, const c
 
     P = (Fichiers*) malloc(sizeof(Fichiers));
 
-    strcpy(liste->nom, valeur);
-    strcpy(liste->type, type);
+    liste->nom = (char*) valeur;
+    liste->type = (char*) type;
 
     if (liste == NULL) {
         return P;
@@ -146,12 +166,16 @@ Dossiers* insertenqueue_Dossiers (Dossiers * liste, const char * valeur, Fichier
     Dossiers * Q;
     Dossiers * tete;
 
-    P = (Dossiers*) malloc(sizeof(Dossiers));
+    P = (Dossiers*) new_dossiers_list();
+    
+    printf("1\n");
+    if (strcmp(valeur, "") != 0) strcpy(P->nom, valeur);
+    printf("2\n");
+    if (fichiers != NULL) P->fichiers = fichiers;
+    if (fils != NULL) P->fils = fils;
 
-    strcpy(P->nom, valeur);
-    P->fichiers = fichiers;
-    strcpy(P->fils->nom, fils->nom);
-    P->fils->fichiers = fils->fichiers;
+    // if (fils != NULL) strcpy(P->fils->nom, fils->nom);
+    // if (fils != NULL) P->fils->fichiers = fils->fichiers;
 
     if (liste == NULL) {
         return P;
@@ -170,8 +194,9 @@ Dossiers* insertenqueue_Dossiers (Dossiers * liste, const char * valeur, Fichier
 
 Fichiers * new_fichiers_list (void) {
     Fichiers * fichiers = (Fichiers*) malloc(sizeof(Fichiers));
-    fichiers->nom = (char*) malloc(sizeof(char));
-    fichiers->type = (char*) malloc(sizeof(char));
+    fichiers->nom = (char*) calloc(100, sizeof(char));
+    fichiers->type = (char*) calloc(100, sizeof(char));
+    fichiers = NULL;
 
     return fichiers;
 }
@@ -179,10 +204,11 @@ Fichiers * new_fichiers_list (void) {
 Dossiers * new_dossiers_list (void) {
     Dossiers * dossiers = (Dossiers*) malloc(sizeof(Dossiers));
     dossiers->fichiers = (Fichiers*) new_fichiers_list();
-    dossiers->nom = (char*) malloc(sizeof(char));
+    dossiers->nom = (char*) calloc(100, sizeof(char));
     dossiers->fils = (Dossiers*) malloc(sizeof(Dossiers));
-    dossiers->fils->nom = (char*) malloc(sizeof(char));
+    dossiers->fils->nom = (char*) calloc(100, sizeof(char));
     dossiers->fils->fichiers = (Fichiers*) new_fichiers_list();
+    dossiers = NULL;
 
     return dossiers;
 }
@@ -231,38 +257,33 @@ int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPCon
     gp_file_free(file);
 }
 
-int sd_card_lecture_mode (char *** dossiers, char ** dirs_n, char ** files, Camera * camera, GPContext * context) {
+int sd_card_lecture_mode (Camera * camera, GPContext * context) {
     int status = 0;
+    Dossiers * dossiers = (Dossiers*) new_dossiers_list();
 
-    int i, j, number = 0;
-    unsigned int * dir_sizes = (unsigned int*) calloc(MIN_DIRS, sizeof(int));
-    unsigned int files_nb;
-
-    for (unsigned int e = 0; e < MIN_DIRS; e++) {
-        for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
-            strcpy(dossiers[e][j], "");
-        }
-        strcpy(dirs_n[e], "");          
-    }
-
-    for (unsigned int e = 0; e < MAX_CAPTURES*MIN_DIRS; e++) {
-        strcpy(files[e], "");
-    }
-
-    status = get_files_and_dirs(dossiers, dirs_n, &files_nb, dir_sizes, camera, context);
+    printf("LECTURE DE LA LISTE ...\n");
+    status = get_files_and_dirs(&dossiers, camera, context);
     handleError(status);
+
+    printf ("LECTURE DE LA LISTE TERMINÉE.\n");
 
     if (status < 0) return status;
 
-    unsigned int nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
-    printf("%u\n", nb_files);
+    // unsigned int nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
+    // printf("%u\n", nb_files);
 
-    status = get_sd_card_previews (files, nb_files, camera, context);
-    handleError(status);
+    printf("AFFICHAGE DE LA LISTE ...\n");
+
+    afficher_carte_sd_liste(dossiers);
+
+    printf("AFFICHAGE DE LA LISTE TERMINÉ.\n");
+
+    // status = get_sd_card_previews (files, nb_files, camera, context);
+    // handleError(status);
+    
+    free_dossiers(dossiers);
 
     if (status < 0) return status;
-
-    free(dir_sizes);
 
     return 1;
 }

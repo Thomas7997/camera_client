@@ -52,8 +52,8 @@ int main (void) {
 
     // Scripts de vérification
 	result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
-	result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
-    result = rt_task_spawn (&task_manage_errors, "MANAGE ERRORS", 4096, 99, TASK_PERM, &manage_errors, NULL);
+	// result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
+    // result = rt_task_spawn (&task_manage_errors, "MANAGE ERRORS", 4096, 99, TASK_PERM, &manage_errors, NULL);
 
 	// Scripts d'action
 	result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
@@ -271,6 +271,8 @@ void enable_transfert_video_auto (void * arg) {
 
 void cart_SD_mode (void * arg) {
     while (1) {
+        reset = 1;
+
         camera_usb_connection_1(NULL);
 
         while (usb_connected != 1) {
@@ -284,7 +286,7 @@ void cart_SD_mode (void * arg) {
             continue;
         }
 
-        status = sd_card_lecture_mode (dossiers, dirs_n, files, camera, context);
+        status = sd_card_lecture_mode (camera, context);
 
         if (status < 0) continue;
 

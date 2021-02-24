@@ -87,5 +87,8 @@ PHOTO_AUTO : photo_auto.c auto.c
 SD : sd.c sd.h
 	gcc -o sd sd.c -lgphoto2 -lcurl
 
+SD2 : sd2.c sd2.h
+	gcc -o sd2 sd2.c -lgphoto2 -lcurl
+
 CONSTRUCTION : architecture
 	./architecture

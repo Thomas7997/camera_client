@@ -51,7 +51,7 @@ int getModel (char * model, Camera * camera, int * send) {
 
         free(request_string);
 
-        return res;
+        *send = res;
     }
 
     return 0;
