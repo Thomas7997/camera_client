@@ -1,5 +1,8 @@
 #include "usb_transactions.h"
 
+int x_sd = -1;
+int dir_nb_sd = 0;
+
 // Segmentation fault généré quand il y a une déconnexion
 int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context) {
     CameraList * folderList;
@@ -344,4 +347,86 @@ char * getName (char * buf, char * dossier) {
     mirroir(dossier, y);
 
     return buffer;
+}
+
+int
+recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char *folder, GPContext *context) {
+	int		i, ret, y;
+	CameraList	*list;
+	const char	*newfile;
+	CameraFileInfo	fileinfo;
+	CameraFile	*file;
+
+	ret = gp_list_new (&list);
+	if (ret < GP_OK) {
+		printf ("Could not allocate list.\n");
+		return ret;
+	}
+
+	ret = gp_camera_folder_list_folders (camera, folder, list, context);
+	if (ret < GP_OK) {
+		printf ("Could not list folders.\n");
+		
+        gp_list_free (list);
+		return ret;
+	}
+	gp_list_sort (list);
+
+	for (i = 0; i < gp_list_count (list); i++) {
+		const char *newfolder;
+		char *buf;
+		int havefile = 0;
+
+		gp_list_get_name (list, i, &newfolder);
+
+		if (!strlen(newfolder)) continue;
+
+		buf = (char*) malloc (strlen(folder) + 1 + strlen(newfolder) + 1);
+		strcpy(buf, folder);
+		if (strcmp(folder,"/"))		/* avoid double / */
+			strcat(buf, "/");
+		strcat(buf, newfolder);
+
+		fprintf(stderr,"newfolder=%s\n", newfolder);
+        printf("%d\n", dir_nb_sd);
+        strcpy(dirs[dir_nb_sd++], newfolder);
+
+		ret = recursive_directory (dossiers, dirs, camera, buf, context);
+		free (buf);
+		if (ret != GP_OK) {
+			gp_list_free (list);
+			printf ("Failed to recursively list folders.\n");
+			return ret;
+		}
+		if (havefile) /* only look for the first directory with a file */
+			break;
+	}
+	gp_list_reset (list);
+
+	ret = gp_camera_folder_list_files (camera, folder, list, context);
+	if (ret < GP_OK) {
+		gp_list_free (list);
+		printf ("Could not list files.\n");
+		return ret;
+	}
+	gp_list_sort (list);
+	if (gp_list_count (list) <= 0) {
+		gp_list_free (list);
+		return GP_OK;
+	}
+
+    int countFiles = gp_list_count(list);
+    if (countFiles < 0) return countFiles;
+    else if (countFiles > 0) {
+        x_sd += 1;
+        y = 0;
+    }
+
+    for (int i = 0; i < countFiles; i++) {
+        gp_list_get_name (list, i, &newfile); /* only entry 0 needed */
+        sprintf(dossiers[x_sd][y++], "%s/%s", folder, newfile);
+    }
+
+	gp_list_free (list);
+	return GP_OK;
 }

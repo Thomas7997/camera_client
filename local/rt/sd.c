@@ -1,6 +1,7 @@
 #include "sd.h"
 
-int x_sd = -1, dir_nb_sd = 0;
+extern int x_sd;
+extern int dir_nb_sd;
 
 int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, GPContext * context) {
     int i, j, status;
@@ -34,89 +35,6 @@ int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, G
     gp_file_free(file);
     return 0;
 }
-
-static int
-recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char *folder, GPContext *context) {
-	int		i, ret, y;
-	CameraList	*list;
-	const char	*newfile;
-	CameraFileInfo	fileinfo;
-	CameraFile	*file;
-
-	ret = gp_list_new (&list);
-	if (ret < GP_OK) {
-		printf ("Could not allocate list.\n");
-		return ret;
-	}
-
-	ret = gp_camera_folder_list_folders (camera, folder, list, context);
-	if (ret < GP_OK) {
-		printf ("Could not list folders.\n");
-		
-        gp_list_free (list);
-		return ret;
-	}
-	gp_list_sort (list);
-
-	for (i = 0; i < gp_list_count (list); i++) {
-		const char *newfolder;
-		char *buf;
-		int havefile = 0;
-
-		gp_list_get_name (list, i, &newfolder);
-
-		if (!strlen(newfolder)) continue;
-
-		buf = (char*) malloc (strlen(folder) + 1 + strlen(newfolder) + 1);
-		strcpy(buf, folder);
-		if (strcmp(folder,"/"))		/* avoid double / */
-			strcat(buf, "/");
-		strcat(buf, newfolder);
-
-		fprintf(stderr,"newfolder=%s\n", newfolder);
-        printf("%d\n", dir_nb_sd);
-        strcpy(dirs[dir_nb_sd++], newfolder);
-
-		ret = recursive_directory (dossiers, dirs, camera, buf, context);
-		free (buf);
-		if (ret != GP_OK) {
-			gp_list_free (list);
-			printf ("Failed to recursively list folders.\n");
-			return ret;
-		}
-		if (havefile) /* only look for the first directory with a file */
-			break;
-	}
-	gp_list_reset (list);
-
-	ret = gp_camera_folder_list_files (camera, folder, list, context);
-	if (ret < GP_OK) {
-		gp_list_free (list);
-		printf ("Could not list files.\n");
-		return ret;
-	}
-	gp_list_sort (list);
-	if (gp_list_count (list) <= 0) {
-		gp_list_free (list);
-		return GP_OK;
-	}
-
-    int countFiles = gp_list_count(list);
-    if (countFiles < 0) return countFiles;
-    else if (countFiles > 0) {
-        x_sd += 1;
-        y = 0;
-    }
-
-    for (int i = 0; i < countFiles; i++) {
-        gp_list_get_name (list, i, &newfile); /* only entry 0 needed */
-        sprintf(dossiers[x_sd][y++], "%s/%s", folder, newfile);
-    }
-
-	gp_list_free (list);
-	return GP_OK;
-}
-
 
 int sd_card_lecture_mode (char *** dossiers, char ** dirs_n, Camera * camera, GPContext * context) {
     int status = 0;

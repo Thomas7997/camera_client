@@ -18,5 +18,7 @@ int compare_file_historique (char * file, char ** historique, int lines);
 char * getName (char * buf, char * dossier);
 int transferer_noms_auto (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera);
 int transferer_nom_auto (char * nom, GPContext * context, Camera * camera);
+int
+recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char *folder, GPContext *context);
 
 #endif

@@ -276,6 +276,7 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
     return 0;
 }
 
+// Revoir cette fonction
 int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context) {
     printf("For each rating\n");
     int y = 0;

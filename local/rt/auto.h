@@ -8,8 +8,8 @@
 // Fonctions
 #include "scripts.h"
 #include "errors.h"
-#include "transactions.h"
 #include "usb_transactions.h"
+#include "transactions.h"
 
 unsigned int filterPhotos (char ** photos_l, char ** files_l, unsigned int files_n);
 unsigned int filterVideos (char ** videos_l, char ** files_l, unsigned int files_n);
