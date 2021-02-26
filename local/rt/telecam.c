@@ -286,7 +286,7 @@ void cart_SD_mode (void * arg) {
             continue;
         }
 
-        status = sd_card_lecture_mode (camera, context);
+        status = sd_card_lecture_mode (dossiers, dirs_n, camera, context);
 
         if (status < 0) continue;
 

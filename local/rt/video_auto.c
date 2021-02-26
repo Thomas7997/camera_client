@@ -1,8 +1,6 @@
-// AUTO PHOTO ET VIDEO
+// AUTO VIDEO
 #include "auto.h"
 #include "connexions.h"
-
-// Il faudra mettre en place un filtre dans les deux
 
 int video_auto (Camera * camera, GPContext * context, char ** transferts, unsigned int * nb_transferts, int * nb, char ** liste_captures, unsigned int * nb_list) {
     int status = 0;

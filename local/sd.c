@@ -1,33 +1,23 @@
 #include "sd.h"
 
-int main (void) {
-    char *** dossiers = (char***) calloc(1000, sizeof(char**));
-    int status = 0;
+int x_sd = -1, dir_nb_sd = 0;
 
+int main (void) {
     Camera * camera;
     GPContext *context = sample_create_context();
+    int status = 0, nb_directories;
+    char *** dossiers = (char***) calloc(10, sizeof(char**));
+    char ** dirs = (char**) calloc(10000, sizeof(char*));
 
-    char ** liste_captures = (char**) calloc(10000, sizeof(char*));
-    char ** transferts = (char**) calloc(10000, sizeof(char*));
-    char ** dirs_n = (char**) calloc(1000, sizeof(char*));
-    unsigned int * dir_sizes = (unsigned int *) calloc(1000, sizeof(unsigned int));
-    char ** files = (char**) calloc(1000*10000, sizeof(char*));
-
-    for (int d = 0; d < 1000; d++) {
-        dossiers[d] = (char**) calloc(10000, sizeof(char*));
-        for (int dy = 0; dy < 10000; dy++) {
-            dossiers[d][dy] = (char*) calloc(TAILLE_NOM, sizeof(char));
+    for (int i = 0; i < 10; i++) {
+        dossiers[i] = (char**) calloc(10000, sizeof(char*));
+        for (int j = 0; j < 10000; j++) {
+            dossiers[i][j] = (char*) calloc(100, sizeof(char));
         }
-        dirs_n[d] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
-    for (int i = 0; i < 10000; i++) {
-        liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
-        transferts[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
-    }
-
-    for (unsigned int i = 0; i < 1000*10000; i++) {
-        files[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+    for (int i = 0; i < 10; i++) {
+        dirs[i] = (char*) calloc(100, sizeof(char));
     }
 
     do {
@@ -35,190 +25,207 @@ int main (void) {
         status = gp_camera_init(camera, context);
         
         if (status < 0) {
-            printf("%d\n", status);
+            handleError(status);
+            gp_camera_exit(camera, context);
+            gp_camera_free(camera);
+            usleep(50000);
         }
-
-        usleep(5000);
     } while (status != 0);
 
-    unsigned int files_nb;
+    printf("LECTURE DE LA LISTE ...\n");
 
-    status = get_files_and_dirs(dossiers, dirs_n, &files_nb, dir_sizes, camera, context);
-    printf("Fichiers lus\n");
+    status = recursive_directory(dossiers, dirs, camera, "/", context);
+    printf("%d\n", status);
 
-    if (status < 0) printf("%d\n", status);
+    if (status < 0) handleError(status);
 
-    unsigned int nb_files = dossiers_to_list(dossiers, files, dirs_n, files_nb, dir_sizes);
+    printf ("LECTURE DE LA LISTE TERMINÉE.\n");
 
-    status = get_sd_card_previews (files, nb_files, camera, context);
+    printf("AFFICHAGE DE LA LISTE ...\n");
 
-    if (status < 0) printf("%d\n", status);
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10000; j++) {
+            printf("%s\n", dossiers[i][j]);
+        }
+    }
+
+    for (int i = 0; i < dir_nb_sd; i++) {
+        printf("%s\n", dirs[i]);
+    }
+
+    printf("AFFICHAGE DE LA LISTE TERMINÉ.\n");
+
+    status = get_sd_card_previews (dossiers, x_sd, camera, context);
+    handleError(status);
+
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10000; j++) {
+            free(dossiers[i][j]);
+        }
+        free(dossiers[i]);
+    }
+
+    for (int i = 0; i < 10; i++) {
+        free(dirs[i]);
+    }
+
+    free(dirs);
+    free(dossiers);
 
     // FIN RÉPÉTITIONS
 
-    for (int i = 0; i < 10000; i++) {
-        free(liste_captures[i]);
-        free(transferts[i]);
-    }
-
-    for (int d = 0; d < 1000; d++) {
-        for (int dy = 0; dy < 10000; dy++) {
-            free(dossiers[d][dy]);
-        }
-        free(dossiers[d]);
-        free(dirs_n[d]);
-    }
-
-    for (int i = 0; i < 10000*1000; i++) {
-        free(files[i]);
-    }
-
-    free(dirs_n);
-    free(liste_captures);
-    free(transferts);
-    free(dir_sizes);
-    free(dossiers);
-    free(files);
-
     return 0;
 }
 
-int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context) {
-    CameraList * folderList;
-    char * folder = (char*) calloc(100, sizeof(char));
-    gp_list_new(&folderList);
-    const char * dir;
-    int status = gp_camera_folder_list_folders(camera, "/", folderList, context);
-    if (status < 0) printf("%d\n", status);
-
-    status = gp_list_get_name(folderList, 0, (const char**) &dir);
-    if (status < 0) printf("%d\n", status);
-
-    // status = gp_list_reset(folderList);
-
-    char * tmp = (char*) calloc(100, sizeof(char));
-    char * tmp_dir = (char*) calloc(100, sizeof(char));
-
-    CameraList * fileList;
-    gp_list_new(&fileList);
-
-    unsigned int n = strlen(dir)-1;
-    strcpy(tmp_dir, "/store_");
-
-    unsigned int x = 0, z = 0;
-
-    while (dir[z++] != '_');
-    while (dir[z] != 0) {
-        tmp_dir[7+x++] = dir[z++];
-    }
-
-    sprintf(folder, "%s/DCIM", tmp_dir);
-
-    // printf ("%s\n", folder);
-
-    status = gp_camera_folder_list_folders(camera,
-		folder,
-		folderList,
-		context 
-	);
-    if (status < 0) printf("%d\n", status);
-
-    int local_nb = gp_list_count(folderList);
-    int nb_files = 0;
-
-    if (local_nb < 0) printf ("%d\n", local_nb);
-    *nb = local_nb;
-
-    for (unsigned int i = 0; i < *nb; i++) {
-        // status = gp_list_reset(fileList);
-
-        const char * subdir;
-        status = gp_list_get_name(folderList, i, (const char**) &subdir);
-
-        sprintf (tmp_dir, "%s/%s", folder, subdir);
-        // printf ("%s\n", tmp_dir);
-
-        strcpy(dirs_n[i], tmp_dir);
-
-        status = gp_list_reset(fileList);
-        if (status < 0) printf("%d\n", status);
-
-        status = gp_camera_folder_list_files(camera, tmp_dir, fileList, context);
-        if (status < 0) printf("%d\n", status);
-
-        nb_files = gp_list_count(fileList);
-        if (nb_files < 0) printf("%d\n", nb_files);
-
-        dir_sizes[i] = nb_files;
-
-        for (unsigned int j = 0; j < nb_files; j++) {
-            const char * file;
-            status = gp_list_get_name(fileList, j, (const char**) &file);
-            // 
-            if (status < 0) printf("%d\n", status);
-            strcpy(dirs_b[i][j], file);
-            // printf ("%s\n", dirs_b[i][j]);
-        }
-
-        // sprintf(dirs_n[i], "/%s", dir);
-    }
-
-    free(tmp_dir);
-    free(folder);
-    free(tmp);
-    gp_list_free(folderList);
-    gp_list_free(fileList);
-
-    return 0;
-}
-
-int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context) {
+int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, GPContext * context) {
     int i, j, status;
     CameraFile * file;
     status = gp_file_new(&file);
 
-    char * dir = (char*) calloc(TAILLE_NOM, sizeof(char));
+    char * dir = (char*) calloc(100, sizeof(char));
+    char * targetPath = (char*) calloc(100, sizeof(char));
 
+    printf("%d\n", nb);
     for (i = 0; i < nb; i++) {
-        printf("1");
-        char * filename = (char*) getName(files[i], dir);
-        printf("2\n");
-        printf("%s\n%s\n", dir, filename);
-        status = gp_camera_file_get(camera, dir, filename, GP_FILE_TYPE_PREVIEW, file, context);
-        printf("RECEPTION...\n");
+        j = 0;
+        while (dossiers[i][j][0] != 0) {
+            printf("1\n");
+            char * filename = (char*) getName(dossiers[i][j++], dir);
+            printf("1\n");
+            printf("%s\n%s\n", dir, filename);
+            status = gp_camera_file_get(camera, dir, filename, GP_FILE_TYPE_PREVIEW, file, context);
+            printf("RECEPTION...\n");
 
-        if (status < 0) return status;
+            if (status < 0) return status;
 
-        status = gp_file_save(file, (const char*) "tmp.jpg");
+            // sprintf(targetPath, "/home/remote/camera_server/public/sd/%s", filename);
+            sprintf(targetPath, "./data/images/cloud/%s", filename);
+            status = gp_file_save(file, (const char*) targetPath);
 
-        printf("SAUVEGARDE ...\n");
+            printf("SAUVEGARDE ...\n");
 
-        if (status < 0) return status;
+            if (status < 0) return status;
+        }
     }
 
     free(dir);
+    free(targetPath);
     gp_file_free(file);
+    return 0;
 }
 
-char * getName (char * buf, char * dossier) {
-    unsigned int n = strlen(buf), x = 0, y = 0;
-    char * buffer = (char*) calloc(100, sizeof(char));
+static int
+recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char *folder, GPContext *context) {
+	int		i, ret, y;
+	CameraList	*list;
+	const char	*newfile;
+	CameraFileInfo	fileinfo;
+	CameraFile	*file;
 
-    unsigned int i = n-1;
+	ret = gp_list_new (&list);
+	if (ret < GP_OK) {
+		printf ("Could not allocate list.\n");
+		return ret;
+	}
 
-    while (buf[i] != '/') {
-        buffer[x++] = buf[i--];
+	ret = gp_camera_folder_list_folders (camera, folder, list, context);
+	if (ret < GP_OK) {
+		printf ("Could not list folders.\n");
+		
+        gp_list_free (list);
+		return ret;
+	}
+	gp_list_sort (list);
+
+	for (i = 0; i < gp_list_count (list); i++) {
+		const char *newfolder;
+		char *buf;
+		int havefile = 0;
+
+		gp_list_get_name (list, i, &newfolder);
+
+		if (!strlen(newfolder)) continue;
+
+		buf = (char*) malloc (strlen(folder) + 1 + strlen(newfolder) + 1);
+		strcpy(buf, folder);
+		if (strcmp(folder,"/"))		/* avoid double / */
+			strcat(buf, "/");
+		strcat(buf, newfolder);
+
+		fprintf(stderr,"newfolder=%s\n", newfolder);
+        printf("%d\n", dir_nb_sd);
+        strcpy(dirs[dir_nb_sd++], newfolder);
+
+		ret = recursive_directory (dossiers, dirs, camera, buf, context);
+		free (buf);
+		if (ret != GP_OK) {
+			gp_list_free (list);
+			printf ("Failed to recursively list folders.\n");
+			return ret;
+		}
+		if (havefile) /* only look for the first directory with a file */
+			break;
+	}
+	gp_list_reset (list);
+
+	ret = gp_camera_folder_list_files (camera, folder, list, context);
+	if (ret < GP_OK) {
+		gp_list_free (list);
+		printf ("Could not list files.\n");
+		return ret;
+	}
+	gp_list_sort (list);
+	if (gp_list_count (list) <= 0) {
+		gp_list_free (list);
+		return GP_OK;
+	}
+
+    int countFiles = gp_list_count(list);
+    if (countFiles < 0) return countFiles;
+    if (countFiles > 0) {
+        x_sd += 1;
+        y = 0;
     }
 
-    while (i > 0) {
-        dossier[y++] = buf[i-1];
-        i--;
+    for (int i = 0; i < countFiles; i++) {
+        gp_list_get_name (list, i, &newfile); /* only entry 0 needed */
+        sprintf(dossiers[x_sd][y], "%s/%s", folder, newfile);
+        printf("%s\n", dossiers[x_sd][y++]);
     }
 
-    mirroir(buffer, x);
-    mirroir(dossier, y);
+	gp_list_free (list);
+	return GP_OK;
+}
 
-    return buffer;
+
+int sd_card_lecture_mode (char *** dossiers, char ** dirs_n, Camera * camera, GPContext * context) {
+    int status = 0;
+
+    int i, j, number = 0;
+    unsigned int * dir_sizes = (unsigned int*) calloc(10, sizeof(int));
+    unsigned int files_nb;
+
+    for (unsigned int e = 0; e < 10; e++) {
+        for (unsigned int j = 0; j < 10000; j++) {
+            strcpy(dossiers[e][j], "");
+        }
+        strcpy(dirs_n[e], "");
+    }
+
+    x_sd = -1;
+    dir_nb_sd = 0;
+
+    status = recursive_directory(dossiers, dirs_n, camera, "/", context);
+    handleError(status);
+
+    status = get_sd_card_previews (dossiers, x_sd, camera, context);
+    handleError(status);
+
+    if (status < 0) return status;
+
+    free(dir_sizes);
+
+    return 1;
 }
 
 static void
@@ -256,6 +263,31 @@ GPContext* sample_create_context() {
 	return context;
 }
 
+void handleError(int status) {
+    printf ("%s\n", gp_result_as_string(status));
+}
+
+char * getName (char * buf, char * dossier) {
+    unsigned int n = strlen(buf), x = 0, y = 0;
+    char * buffer = (char*) calloc(100, sizeof(char));
+
+    unsigned int i = n-1;
+
+    while (buf[i] != '/') {
+        buffer[x++] = buf[i--];
+    }
+
+    while (i > 0) {
+        dossier[y++] = buf[i-1];
+        i--;
+    }
+
+    mirroir(buffer, x);
+    mirroir(dossier, y);
+
+    return buffer;
+}
+
 void mirroir (char * buf, unsigned int n) {
     int i = 0;
     char car;
@@ -267,18 +299,3 @@ void mirroir (char * buf, unsigned int n) {
     }
 }
 
-unsigned int dossiers_to_list (char *** dossiers, char ** list, char ** dirs, unsigned int nb_dossiers, unsigned int * nb_files) {
-    unsigned int x = 0, item = 0;
-
-    while (x < nb_dossiers) {
-        for (unsigned int y = 0; y < nb_files[x]; y++) {
-            sprintf(list[item++], "%s/%s", dirs[x], dossiers[x][y]);
-        }
-        
-        x++;
-    }
-
-    return item;
-}
-
-// status = gp_camera_file_get(camera, dossier, filename, GP_FILE_TYPE_NORMAL, file, context);
