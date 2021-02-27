@@ -5,6 +5,9 @@
 // LIBS
 #include "mods.h"
 
+// Constantes
+#include "constants.h"
+
 // Fonctions
 #include "scripts.h"
 #include "errors.h"
@@ -17,7 +20,7 @@ unsigned int getImageNumber (char * buffer);
 unsigned int save_clist_slist(char ** liste_captures, char ** files, unsigned int files_nb, unsigned int nb_list);
 void afficher_liste(char ** transferts, unsigned int ret_comp);
 int compareFilesLists(char ** transferts, char ** files, char ** liste_captures, int files_nb, int nb_list, unsigned int * indexs, Camera * camera, GPContext * context);
-int getVideoDatas (char *** dossiers, char ** dirs_n, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes);
-int getPhotoDatas (char *** dossiers, char ** dirs_n, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes);
+int getVideoDatas (char *** dossiers, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes);
+int getPhotoDatas (char *** dossiers, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes);
 
 #endif

@@ -33,9 +33,10 @@ GPContext* sample_create_context();
 
 void mirroir (char * buf, unsigned int n);
 char * getName (char * buf, char * dossier);
-int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, GPContext * context);
+int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context);
 // int sd_card_lecture_mode (Camera * camera, GPContext * context);
-static int
-recursive_directory(char *** dossiers, Camera *camera, const char *folder, GPContext *context, unsigned int * x);
+int
+recursive_directory(char ** files, Camera *camera, const char * folder, GPContext *context, unsigned int * x);
+int get_files (char ** files, Camera * camera, GPContext * context, unsigned int * x);
 
 #endif

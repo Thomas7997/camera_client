@@ -350,7 +350,7 @@ char * getName (char * buf, char * dossier) {
 }
 
 int
-recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char *folder, GPContext *context) {
+recursive_directory(char *** dossiers, Camera *camera, const char *folder, GPContext *context, unsigned int * x) {
 	int		i, ret, y;
 	CameraList	*list;
 	const char	*newfile;
@@ -388,12 +388,11 @@ recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char 
 		strcat(buf, newfolder);
 
 		fprintf(stderr,"newfolder=%s\n", newfolder);
-        printf("%d\n", dir_nb_sd);
-        strcpy(dirs[dir_nb_sd++], newfolder);
 
-		ret = recursive_directory (dossiers, dirs, camera, buf, context);
+        *x++;
+		ret = recursive_directory (dossiers, camera, buf, context, x);
 		free (buf);
-		if (ret != GP_OK) {
+		if (ret < GP_OK) {
 			gp_list_free (list);
 			printf ("Failed to recursively list folders.\n");
 			return ret;
@@ -416,16 +415,22 @@ recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char 
 	}
 
     int countFiles = gp_list_count(list);
+    printf("%d\n", countFiles);
     if (countFiles < 0) return countFiles;
     else if (countFiles > 0) {
         x_sd += 1;
         y = 0;
     }
 
-    for (int i = 0; i < countFiles; i++) {
-        gp_list_get_name (list, i, &newfile); /* only entry 0 needed */
-        sprintf(dossiers[x_sd][y++], "%s/%s", folder, newfile);
+    for (int z = 0; z < countFiles; z++) {
+        gp_list_get_name (list, z, &newfile); /* only entry 0 needed */
+        sprintf(dossiers[x_sd][y], "%s/%s", folder, newfile);
+        printf("x : %d\npath : %s\n", x_sd, dossiers[*x][y++]);
     }
+
+    // Reset ici
+    // *x = x_sd+1;
+    // x_sd = -1;
 
 	gp_list_free (list);
 	return GP_OK;

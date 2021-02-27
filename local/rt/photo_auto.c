@@ -54,7 +54,7 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
     printf("Lecture de la liste de photos ...\n");
 
     // Segmentation fault généré quand la connexion usb est interrompue à cette fonction
-    nb_medias = getPhotoDatas(dossiers, dirs_n, photos, files, liste_captures, &files_nb, camera, context, dir_sizes);
+    nb_medias = getPhotoDatas(dossiers, photos, files, liste_captures, &files_nb, camera, context, dir_sizes);
 
     if (nb_medias < 0) return nb_medias; // Code d'erreur
 

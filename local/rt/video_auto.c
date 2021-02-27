@@ -51,7 +51,7 @@ int video_auto (Camera * camera, GPContext * context, char ** transferts, unsign
         strcpy(files[e], "");
     }
 
-    nb_medias = getVideoDatas(dossiers, dirs_n, videos, files, liste_captures, &files_nb, camera, context, dir_sizes);
+    nb_medias = getVideoDatas(dossiers, videos, files, liste_captures, &files_nb, camera, context, dir_sizes);
 
     printf("%d\n", nb_medias);
 

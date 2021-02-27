@@ -4,7 +4,6 @@
 int main (void) {
 	// Initialisations
     dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
-    dirs_n = (char**) calloc(MIN_DIRS, sizeof(char*));
     files = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
     dir_sizes = (unsigned int*) calloc(1000, sizeof(unsigned int));
     images_list = (char**) calloc(PART_NB, sizeof(char*));
@@ -18,11 +17,10 @@ int main (void) {
     status = 0;
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
-        dossiers[d] = (char**) calloc(MAX_CAPTURES, sizeof(char*));
-        for (int dy = 0; dy < MAX_CAPTURES; dy++) {
+        dossiers[d] = (char**) calloc(MAX_DIR_CAPTURES, sizeof(char*));
+        for (int dy = 0; dy < MAX_DIR_CAPTURES; dy++) {
             dossiers[d][dy] = (char*) calloc(TAILLE_NOM, sizeof(char));
         }
-        dirs_n[d] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
     for (unsigned int i = 0; i < PART_NB; i++) {
@@ -44,9 +42,9 @@ int main (void) {
 
     context = sample_create_context();
 
-    usb_freed = 1;
-    command_usb_reconnexion = 1;
-    connected_once = -1;
+    // usb_freed = 1;
+    // command_usb_reconnexion = 1;
+    // connected_once = -1;
 
 	// Main tasks
 
@@ -90,11 +88,10 @@ int main (void) {
     rt_task_delete(&task_manage_errors);
 
     for (int d = 0; d < MIN_DIRS; d++) {
-        for (int dy = 0; dy < MAX_CAPTURES; dy++) {
+        for (int dy = 0; dy < MAX_DIR_CAPTURES; dy++) {
             free(dossiers[d][dy]);
         }
         free(dossiers[d]);
-        free(dirs_n[d]);
     }
 
     for (int i = 0; i < MIN_DIRS*MAX_CAPTURES; i++) {
@@ -106,7 +103,6 @@ int main (void) {
         free(images_list[i]);
     }
 
-    free(dirs_n);
     free(dir_sizes);
     free(dossiers);
     free(files);

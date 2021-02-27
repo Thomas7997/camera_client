@@ -1,8 +1,5 @@
 #include "auto.h"
 
-extern int x_sd;
-extern int dir_nb_sd;
-
 unsigned int filterVideos (char ** videos_l, char ** files_l, unsigned int files_n) {
     unsigned int x = 0, i, j, y;
     char ext[5] = "";
@@ -104,29 +101,23 @@ void afficher_liste(char ** transferts, unsigned int ret_comp) {
     }
 }
 
-int getVideoDatas (char *** dossiers, char ** dirs_n, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
-    x_sd = -1;
-    dir_nb_sd = 0;
-    
-    int status = recursive_directory(dossiers, dirs_n, camera, "/", context);
+int getVideoDatas (char *** dossiers, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
+    int status = recursive_directory(dossiers, camera, "/", context, files_nb);
 
     if (status < 0) return status;
 
-    unsigned int nb_files = dossiers_to_list(dossiers, files, dirs_n, x_sd);
+    unsigned int nb_files = dossiers_to_list(dossiers, files, *files_nb);
 
     // La matière sortante est la liste de vidéos totale
     return filterVideos(photos, files, nb_files);
 }
 
-int getPhotoDatas (char *** dossiers, char ** dirs_n, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
-    x_sd = -1;
-    dir_nb_sd = 0;
-    
-    int status = recursive_directory(dossiers, dirs_n, camera, "/", context);
+int getPhotoDatas (char *** dossiers, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
+    int status = recursive_directory(dossiers, camera, "/", context, files_nb);
 
     if (status < 0) return status;
 
-    unsigned int nb_files = dossiers_to_list(dossiers, files, dirs_n, x_sd);
+    unsigned int nb_files = dossiers_to_list(dossiers, files, *files_nb);
 
     // La matière sortante est la liste de vidéos totale
     return filterPhotos(photos, files, nb_files);

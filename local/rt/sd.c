@@ -3,8 +3,8 @@
 extern int x_sd;
 extern int dir_nb_sd;
 
-int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, GPContext * context) {
-    int i, j, status;
+int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context) {
+    int i, status;
     CameraFile * file;
     status = gp_file_new(&file);
 
@@ -12,22 +12,20 @@ int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, G
     char * targetPath = (char*) calloc(100, sizeof(char));
 
     for (i = 0; i < nb; i++) {
-        j = 0;
-        while (dossiers[i][j][0] != 0) {
-            char * filename = (char*) getName(dossiers[i][j++], dir);
-            status = gp_camera_file_get(camera, dir, filename, GP_FILE_TYPE_PREVIEW, file, context);
-            printf("RECEPTION...\n");
+        char * filename = (char*) getName(files[i], dir);
+        status = gp_camera_file_get(camera, dir, filename, GP_FILE_TYPE_PREVIEW, file, context);
+        printf("RECEPTION...\n");
 
-            if (status < 0) return status;
+        if (status < 0) return status;
 
-            // sprintf(targetPath, "/home/remote/camera_server/public/sd/%s", filename);
-            sprintf(targetPath, "../data/images/cloud/%s", filename);
-            status = gp_file_save(file, (const char*) targetPath);
+        // sprintf(targetPath, "/home/remote/camera_server/public/sd/%s", filename);
+        sprintf(targetPath, "../data/images/cloud/%s", filename);
+        status = gp_file_save(file, (const char*) targetPath);
 
-            printf("SAUVEGARDE ...\n");
+        printf("SAUVEGARDE ...\n");
 
-            if (status < 0) return status;
-        }
+        if (status < 0) return status;
+        i++;
     }
 
     free(dir);
@@ -36,27 +34,26 @@ int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, G
     return 0;
 }
 
-int sd_card_lecture_mode (char *** dossiers, char ** dirs_n, Camera * camera, GPContext * context) {
+int sd_card_lecture_mode (char *** dossiers, char ** files, Camera * camera, GPContext * context) {
     int status = 0;
 
     int i, j, number = 0;
     unsigned int * dir_sizes = (unsigned int*) calloc(MIN_DIRS, sizeof(int));
-    unsigned int files_nb;
+    unsigned int dir_nb = 0;
+    unsigned int files_nb = 0;
 
     for (unsigned int e = 0; e < MIN_DIRS; e++) {
         for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
             strcpy(dossiers[e][j], "");
         }
-        strcpy(dirs_n[e], "");
     }
 
-    x_sd = -1;
-    dir_nb_sd = 0;
-
-    status = recursive_directory(dossiers, dirs_n, camera, "/", context);
+    status = recursive_directory(dossiers, camera, "/", context, &dir_nb);
     handleError(status);
 
-    status = get_sd_card_previews (dossiers, x_sd, camera, context);
+    files_nb = dossiers_to_list (dossiers, files, dir_nb);
+
+    status = get_sd_card_previews (files, files_nb, camera, context);
     handleError(status);
 
     if (status < 0) return status;

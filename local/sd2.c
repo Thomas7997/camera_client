@@ -1,23 +1,16 @@
 #include "sd2.h"
 
 // Déclaration ici
+int x_sd = -1;
 
 int main (void) {
     Camera * camera;
     GPContext *context = sample_create_context();
     int status = 0, nb_directories;
-    char *** dossiers = (char***) calloc(100, sizeof(char**));
-    char ** dirs = (char**) calloc(10000, sizeof(char*));
-
-    for (int i = 0; i < 100; i++) {
-        dossiers[i] = (char**) calloc(10000, sizeof(char*));
-        for (int j = 0; j < 10000; j++) {
-            dossiers[i][j] = (char*) calloc(100, sizeof(char));
-        }
-    }
+    char ** files = (char**) calloc(10000, sizeof(char*));
 
     for (int i = 0; i < 10000; i++) {
-        dirs[i] = (char*) calloc(100, sizeof(char));
+        files[i] = (char*) calloc(100, sizeof(char));
     }
 
     do {
@@ -35,7 +28,7 @@ int main (void) {
     printf("LECTURE DE LA LISTE ...\n");
 
     unsigned int files_nb;
-    status = recursive_directory(dossiers, camera, "/", context, &files_nb);
+    status = get_files(files, camera, context, &files_nb);
     printf("%d\n", files_nb);
 
     if (status < 0) handleError(status);
@@ -44,33 +37,23 @@ int main (void) {
 
     printf("AFFICHAGE DE LA LISTE ...\n");
 
-    for (int i = 0; i < 100; i++) {
-        for (int j = 0; j < 10000 && dossiers[i][j][0] != 0; j++) {
-            printf("%s\n", dossiers[i][j]);
-        }
+    for (int j = 0; j < 10000 && files[j][0] != 0; j++) {
+        printf("%s\n", files[j]);
     }
 
     printf("AFFICHAGE DE LA LISTE TERMINÉ.\n");
 
     printf("%d\n", files_nb);
 
-    status = get_sd_card_previews (dossiers, files_nb, camera, context);
+    status = get_sd_card_previews (files, files_nb, camera, context);
 
     if (status < 0) handleError(status);
 
-    for (int i = 0; i < 100; i++) {
-        for (int j = 0; j < 10000; j++) {
-            free(dossiers[i][j]);
-        }
-        free(dossiers[i]);
-    }
-
     for (int i = 0; i < 10000; i++) {
-        free(dirs[i]);
+        free(files[i]);
     }
 
-    free(dirs);
-    free(dossiers);
+    free(files);
 
     // FIN RÉPÉTITIONS
 
@@ -112,15 +95,25 @@ GPContext* sample_create_context() {
 	return context;
 }
 
+// Fonction principale pour la lecture de fichiers
+int get_files (char ** files, Camera * camera, GPContext * context, unsigned int * x) {
+    x_sd = -1;
+    int status = recursive_directory(files, camera, "/", context, x);
+    handleError(status);
+
+
+
+    return GP_OK;
+}
+
 // Bonne version
-static int
-recursive_directory(char *** dossiers, Camera *camera, const char *folder, GPContext *context, unsigned int * x) {
-	int		i, ret, y;
+int
+recursive_directory(char ** files, Camera *camera, const char *folder, GPContext *context, unsigned int * x) {
+	int		i, ret;
 	CameraList	*list;
 	const char	*newfile;
 	CameraFileInfo	fileinfo;
 	CameraFile	*file;
-    static int x_sd = -1;
 
 	ret = gp_list_new (&list);
 	if (ret < GP_OK) {
@@ -146,7 +139,7 @@ recursive_directory(char *** dossiers, Camera *camera, const char *folder, GPCon
 
 		if (!strlen(newfolder)) continue;
 
-		buf = malloc (strlen(folder) + 1 + strlen(newfolder) + 1);
+		buf = (char*) malloc (strlen(folder) + 1 + strlen(newfolder) + 1);
 		strcpy(buf, folder);
 		if (strcmp(folder,"/"))		/* avoid double / */
 			strcat(buf, "/");
@@ -154,7 +147,7 @@ recursive_directory(char *** dossiers, Camera *camera, const char *folder, GPCon
 
 		fprintf(stderr,"newfolder=%s\n", newfolder);
 
-		ret = recursive_directory (dossiers, camera, buf, context, x);
+		ret = recursive_directory (files, camera, buf, context, x);
 		free (buf);
 		if (ret < GP_OK) {
 			gp_list_free (list);
@@ -181,24 +174,21 @@ recursive_directory(char *** dossiers, Camera *camera, const char *folder, GPCon
     int countFiles = gp_list_count(list);
     printf("%d\n", countFiles);
     if (countFiles < 0) return countFiles;
-    else if (countFiles > 0) {
-        x_sd += 1;
-        y = 0;
-    }
 
     for (int z = 0; z < countFiles; z++) {
-        gp_list_get_name (list, z, &newfile); /* only entry 0 needed */
-        sprintf(dossiers[x_sd][y++], "%s/%s", folder, newfile);
-        printf("path : %s\n", dossiers[x_sd][y-1]);
+        gp_list_get_name (list, z, &newfile);
+        sprintf(files[++x_sd], "%s/%s", folder, newfile);
+        printf("x : %d\npath : %s\n", x_sd, files[x_sd]);
     }
 
-    *x = x_sd+1;
+    // Reset ici
+    *x = x_sd;
 
 	gp_list_free (list);
 	return GP_OK;
 }
 
-int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, GPContext * context) {
+int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context) {
     int i, j, status;
     CameraFile * file;
     status = gp_file_new(&file);
@@ -207,24 +197,21 @@ int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, G
     char * targetPath = (char*) calloc(100, sizeof(char));
 
     for (i = 0; i < nb; i++) {
-        j = 0;
-        while (dossiers[i][j][0] != 0) {
-            char * filename = (char*) getName(dossiers[i][j++], dir);
-            printf("%s\n%s\n", dir, filename);
-            status = gp_camera_file_get(camera, dir, filename, GP_FILE_TYPE_PREVIEW, file, context);
-            printf("RECEPTION...\n");
+        char * filename = (char*) getName(files[i], dir);
+        printf("%s\n%s\n", dir, filename);
+        status = gp_camera_file_get(camera, dir, filename, GP_FILE_TYPE_PREVIEW, file, context);
+        printf("RECEPTION...\n");
 
-            if (status < 0) return status;
+        if (status < 0) return status;
 
-            // sprintf(targetPath, "/home/remote/camera_server/public/sd/%s", filename);
-            sprintf(targetPath, "./data/images/cloud/%s", filename);
-            status = gp_file_save(file, (const char*) targetPath);
+        // sprintf(targetPath, "/home/remote/camera_server/public/sd/%s", filename);
+        sprintf(targetPath, "./data/images/cloud/%s", filename);
+        status = gp_file_save(file, (const char*) targetPath);
 
-            printf("SAUVEGARDE ...\n");
+        printf("SAUVEGARDE ...\n");
 
-            printf("%d\n", status);
-            if (status < 0) return status;
-        }
+        printf("%d\n", status);
+        if (status < 0) return status;
     }
 
     free(dir);
