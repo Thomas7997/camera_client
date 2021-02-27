@@ -85,8 +85,20 @@ int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * cont
         hist_lines[u] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
-    FILE * HISTORIQUE = fopen("data/images/historique.txt", "a");
-    FILE * HISTORIQUER = fopen("data/images/historique.txt", "r");
+    FILE * HISTORIQUE;
+    FILE * HISTORIQUER;
+
+    do {
+        HISTORIQUE = fopen("data/images/historique.txt", "a");
+
+        if (HISTORIQUE == NULL) printf("ERREUR DE LECTURE DE FICHIER.\n");
+    } while (HISTORIQUE == NULL);
+
+    do {
+        HISTORIQUER = fopen("data/images/historique.txt", "r");
+
+        if (HISTORIQUER == NULL) printf("ERREUR DE LECTURE DE FICHIER.\n");
+    } while (HISTORIQUER == NULL);
 
     while (fgets(hist_lines[x++], TAILLE_NOM, HISTORIQUER));
 
@@ -286,7 +298,7 @@ int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, 
     char * data = (char*) calloc(150000, sizeof(char));
     char * dirname = (char*) calloc(100, sizeof(char));
 
-    int i, x = 0;
+    unsigned int i, x = 0;
 
     for (int y = 0; y < PART_NB; y++) {
         // Commande

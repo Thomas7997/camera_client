@@ -101,24 +101,20 @@ void afficher_liste(char ** transferts, unsigned int ret_comp) {
     }
 }
 
-int getVideoDatas (char *** dossiers, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
-    int status = recursive_directory(dossiers, camera, "/", context, files_nb);
+int getVideoDatas (char ** videos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
+    int status = get_files(files, camera, context, files_nb);
 
     if (status < 0) return status;
 
-    unsigned int nb_files = dossiers_to_list(dossiers, files, *files_nb);
-
     // La matière sortante est la liste de vidéos totale
-    return filterVideos(photos, files, nb_files);
+    return filterVideos(videos, files, *files_nb);
 }
 
-int getPhotoDatas (char *** dossiers, char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
-    int status = recursive_directory(dossiers, camera, "/", context, files_nb);
+int getPhotoDatas (char ** photos, char ** files, char ** liste_captures, unsigned int * files_nb, Camera* camera, GPContext * context, unsigned int * dir_sizes) {
+    int status = get_files(files, camera, context, files_nb);
 
     if (status < 0) return status;
 
-    unsigned int nb_files = dossiers_to_list(dossiers, files, *files_nb);
-
     // La matière sortante est la liste de vidéos totale
-    return filterPhotos(photos, files, nb_files);
+    return filterPhotos(photos, files, *files_nb);
 }

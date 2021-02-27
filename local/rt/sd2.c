@@ -1,7 +1,5 @@
 #include "sd2.h"
 
-int x_sd = -1, dir_nb_sd = 0;
-
 int get_files_and_dirs (Dossiers ** dirs_b, Camera * camera, GPContext * context) {
     Dossiers * dossiers_fils = new_dossiers_list();
     Fichiers * fichiers_liste = new_fichiers_list();

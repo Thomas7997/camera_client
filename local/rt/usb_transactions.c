@@ -1,7 +1,6 @@
 #include "usb_transactions.h"
 
 int x_sd = -1;
-int dir_nb_sd = 0;
 
 // Segmentation fault généré quand il y a une déconnexion
 int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context) {
@@ -97,11 +96,56 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
     int i = 0;
 
     char * commande = (char*) calloc(250, sizeof(char));
-    int file_transfered = 0;
+    int file_transfered = 0, first_use = -1;
 
-    FILE * HISTORIQUE = fopen("/home/remote/camera_client/local/data/images/historique.txt", "a+");
-    FILE * RAW_FORMAT = fopen("../data/tmp/raw_format.txt", "r");
-    FILE * NORMAL_FORMAT = fopen("../data/tmp/normal_format.txt", "r");
+    FILE * HISTORIQUE;
+    FILE * RAW_FORMAT;
+    FILE * NORMAL_FORMAT;
+    FILE * FIRST_USE;
+
+    // Il faudrait aussi vérifier si les fichiers sont bien ouverts
+
+    do {
+        HISTORIQUE = fopen("../data/images/historique.txt", "a+");
+
+        if (HISTORIQUE == NULL) {
+            printf("ERREUR DE LECTURE DE FICHIER.\n");
+            
+            fclose(HISTORIQUE);
+        }
+    } while (HISTORIQUE == NULL);
+
+
+    do {
+        FIRST_USE = fopen("../data/tmp/first_use.txt", "r");
+
+        if (FIRST_USE == NULL) {
+            printf("ERREUR DE LECTURE DE FICHIER.\n");
+            
+            fclose(FIRST_USE);
+        }
+    } while (FIRST_USE == NULL);
+
+
+    do {
+        NORMAL_FORMAT = fopen("../data/tmp/normal_format.txt", "r");
+
+        if (NORMAL_FORMAT == NULL) {
+            printf("ERREUR DE LECTURE DE FICHIER.\n");
+            
+            fclose(NORMAL_FORMAT);
+        }
+    } while (NORMAL_FORMAT == NULL);
+
+    do {
+        RAW_FORMAT = fopen("../data/tmp/raw_format.txt", "r");
+
+        if (RAW_FORMAT == NULL) {
+            printf("ERREUR DE LECTURE DE FICHIER.\n");
+            
+            fclose(RAW_FORMAT);
+        }
+    } while (RAW_FORMAT == NULL);
 
     unsigned int raw, normal;
 
@@ -129,14 +173,24 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
     gp_file_new(&file);
     char * filename = (char*) calloc(100, sizeof(char));
 
+    if (fscanf(FIRST_USE, "%d", &first_use) != 1)
+    // Erreur
+    printf("Erreur de lecture du fichier.\n");
+
     for (i = 0; i < n_transferts; i++) {
         strcpy(dossier, "");
         filename = getName(liste[i], dossier);
         // Il y aura peut être besoin d'insérer les lignes précédentes dans cette boucle
 
         // A corriger
+        if (first_use == 1) {
+            // ECRIRE TOUS LES FICHIERS 5 ÉTOILES DANS L'HISTORIQUE
+            fprintf(HISTORIQUE, "%s\n", filename);
+            continue;
+        }
+
         file_transfered = compare_file_historique(filename, hist_lines, x);
-        if (file_transfered == 0) {            
+        if (file_transfered == 0) {
             if (normal == 1) {
                 sprintf(commande, "../data/images/gets/%s", filename);
                 printf ("%s\n", commande);
@@ -180,6 +234,24 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
         }
     }
 
+    if (first_use == 1) {
+        FILE * FIRST_USE_W;
+
+        do {
+            FIRST_USE_W = fopen("../data/tmp/first_use.txt", "w");
+
+            if (FIRST_USE_W == NULL) {
+                printf("ERREUR DE LECTURE DE FICHIER.\n");
+                
+                fclose(FIRST_USE_W);
+            }
+        } while (FIRST_USE_W == NULL);
+
+        printf ("ECRITURE DE LA PREMIÈRE UTILISATION.\n");
+        fprintf (FIRST_USE_W, "0");
+        fclose(FIRST_USE_W);
+    }
+
     for (x = 0; x < MAX_CAPTURES; x++) {
         free(hist_lines[x]);
     }
@@ -193,6 +265,7 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
     gp_file_free(file);
     fclose(RAW_FORMAT);
     fclose(NORMAL_FORMAT);
+    fclose(FIRST_USE);
 
     return x;
 }
@@ -250,9 +323,13 @@ int transferer_noms_auto (char ** liste, unsigned int n_transferts, GPContext * 
     char * commande = (char*) calloc(250, sizeof(char));
     int file_transfered = 0;
 
-    printf ("1\n");
-    FILE * HISTORIQUE = fopen("/home/remote/camera_client/local/data/images/historique.txt", "a+");
-    printf("2\n");
+    FILE * HISTORIQUE;
+
+    do {
+        HISTORIQUE = fopen("/home/remote/camera_client/local/data/images/historique.txt", "a+");
+
+        if (HISTORIQUE == NULL) printf("LECTURE DE FICHIER HISTORIQUE.\n");
+    } while (HISTORIQUE == NULL);
 
     char ** hist_lines = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
@@ -349,9 +426,19 @@ char * getName (char * buf, char * dossier) {
     return buffer;
 }
 
+// Fonction principale pour la lecture de fichiers
+int get_files (char ** files, Camera * camera, GPContext * context, unsigned int * x) {
+    x_sd = -1;
+    int status = recursive_directory(files, camera, "/", context, x);
+    handleError(status);
+
+    return GP_OK;
+}
+
+// Bonne version
 int
-recursive_directory(char *** dossiers, Camera *camera, const char *folder, GPContext *context, unsigned int * x) {
-	int		i, ret, y;
+recursive_directory(char ** files, Camera *camera, const char *folder, GPContext *context, unsigned int * x) {
+	int		i, ret;
 	CameraList	*list;
 	const char	*newfile;
 	CameraFileInfo	fileinfo;
@@ -389,8 +476,7 @@ recursive_directory(char *** dossiers, Camera *camera, const char *folder, GPCon
 
 		fprintf(stderr,"newfolder=%s\n", newfolder);
 
-        *x++;
-		ret = recursive_directory (dossiers, camera, buf, context, x);
+		ret = recursive_directory (files, camera, buf, context, x);
 		free (buf);
 		if (ret < GP_OK) {
 			gp_list_free (list);
@@ -417,20 +503,15 @@ recursive_directory(char *** dossiers, Camera *camera, const char *folder, GPCon
     int countFiles = gp_list_count(list);
     printf("%d\n", countFiles);
     if (countFiles < 0) return countFiles;
-    else if (countFiles > 0) {
-        x_sd += 1;
-        y = 0;
-    }
 
     for (int z = 0; z < countFiles; z++) {
-        gp_list_get_name (list, z, &newfile); /* only entry 0 needed */
-        sprintf(dossiers[x_sd][y], "%s/%s", folder, newfile);
-        printf("x : %d\npath : %s\n", x_sd, dossiers[*x][y++]);
+        gp_list_get_name (list, z, &newfile);
+        sprintf(files[++x_sd], "%s/%s", folder, newfile);
+        printf("x : %d\npath : %s\n", x_sd, files[x_sd]);
     }
 
     // Reset ici
-    // *x = x_sd+1;
-    // x_sd = -1;
+    *x = x_sd;
 
 	gp_list_free (list);
 	return GP_OK;

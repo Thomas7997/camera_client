@@ -3,12 +3,12 @@
 // Actuellement le switch de mode génère un bug sur lequel il faut travailller
 int main (void) {
 	// Initialisations
-    dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
+    dossiers = (char***) calloc(MIN_DIRS, sizeof(char**)); // A supprimer plus tard
     files = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
     dir_sizes = (unsigned int*) calloc(1000, sizeof(unsigned int));
     images_list = (char**) calloc(PART_NB, sizeof(char*));
     dir_sizes = (unsigned int*) calloc(MIN_DIRS, sizeof(unsigned int*));
-    liste_captures = (char**) calloc(MIN_DIRS*MAX_CAPTURES, sizeof(char*));
+    liste_captures = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     transferts_tmp = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     model = (char*) calloc(MAX_CAPTURES, sizeof(char));
     photos = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -27,7 +27,7 @@ int main (void) {
         images_list[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
-    for (unsigned int i = 0; i < MIN_DIRS*MAX_CAPTURES; i++) {
+    for (unsigned int i = 0; i < MAX_CAPTURES; i++) {
         files[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
         liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
@@ -41,10 +41,6 @@ int main (void) {
     }
 
     context = sample_create_context();
-
-    // usb_freed = 1;
-    // command_usb_reconnexion = 1;
-    // connected_once = -1;
 
 	// Main tasks
 
@@ -94,7 +90,7 @@ int main (void) {
         free(dossiers[d]);
     }
 
-    for (int i = 0; i < MIN_DIRS*MAX_CAPTURES; i++) {
+    for (int i = 0; i < MAX_CAPTURES; i++) {
         free(files[i]);
         free(liste_captures[i]);
     }
@@ -115,7 +111,17 @@ int main (void) {
 
 void check_transfert_choice (void * arg) {
 	while (1) {
-        FILE * TRANSFERT_CHOICE = fopen("../data/tmp/transfert_choice.txt", "r"); // Changera de chemin
+        FILE * TRANSFERT_CHOICE; // Changera de chemin
+
+        do {
+            TRANSFERT_CHOICE = fopen("../data/tmp/transfert_choice.txt", "r");
+            if (TRANSFERT_CHOICE == NULL) {
+                printf("Erreur de lecture du fichier TRANSFERT CHOICE.\n");
+                
+                fclose(TRANSFERT_CHOICE);
+            }
+        } while (TRANSFERT_CHOICE == NULL);
+
         fscanf(TRANSFERT_CHOICE, "%d", &transfert_choice);
         prevTransfertChoice = transfert_choice;
 		printf ("CHECK TRANSFERT CHOICE\n");
@@ -126,7 +132,17 @@ void check_transfert_choice (void * arg) {
 
 void check_wifi_status (void * arg) {
 	while (1) {
-        FILE * WIFI = fopen("../data/tmp/wifi_status.txt", "r");
+        FILE * WIFI;
+
+        do {
+            WIFI = fopen("../data/tmp/wifi_status.txt", "r");
+            if (WIFI == NULL) {
+                printf("Erreur de lecture du fichier.\n");
+                
+                fclose(WIFI);
+            }
+        } while (WIFI == NULL);
+
 		fscanf(WIFI, "%d", &wifi_status);
 		
         // Emettre un message
@@ -363,17 +379,17 @@ void camera_usb_connection_1 (void * arg) {
     if (transfert_choice > 0) {
         while (status != 0 || reset == 1) {
             printf("CONNEXION USB ...\n");
-            printf("0");
             status = gp_camera_new (&camera);
-            printf("1\n");
             handleError(status);
             status = gp_camera_init(camera, context);
             handleError(status);
 
             if (status < 0) {
                 printf("ERREUR DE CONNEXION !\n");
-                gp_camera_exit(camera, context);
-                gp_camera_free(camera);
+                status = gp_camera_exit(camera, context);
+                handleError(status);
+                status = gp_camera_free(camera);
+                handleError(status);
                 usleep(500000); // Important sinon le programme consomme trop de CPU
                 usb_connected = 0;
             }

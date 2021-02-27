@@ -1,8 +1,5 @@
 #include "sd.h"
 
-extern int x_sd;
-extern int dir_nb_sd;
-
 int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context) {
     int i, status;
     CameraFile * file;
@@ -42,16 +39,14 @@ int sd_card_lecture_mode (char *** dossiers, char ** files, Camera * camera, GPC
     unsigned int dir_nb = 0;
     unsigned int files_nb = 0;
 
-    for (unsigned int e = 0; e < MIN_DIRS; e++) {
-        for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
-            strcpy(dossiers[e][j], "");
-        }
+    for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
+        strcpy(files[e], "");
     }
 
-    status = recursive_directory(dossiers, camera, "/", context, &dir_nb);
+    status = recursive_directory(files, camera, "/", context, &files_nb);
     handleError(status);
 
-    files_nb = dossiers_to_list (dossiers, files, dir_nb);
+    if (status < 0) return status;
 
     status = get_sd_card_previews (files, files_nb, camera, context);
     handleError(status);

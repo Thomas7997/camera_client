@@ -1,6 +1,8 @@
 #include "selection_optimale.h"
 #include "manage_selected.h"
 
+// Segmentation fault au bout de beaucoup d'executions
+
 int selection_optimale (Camera * camera, GPContext * context, char ** transferts, unsigned int * transferts_nb, unsigned int * command, unsigned int * freed, char *** dossiers, char ** dirs_n, unsigned int * dir_sizes, char ** files, char ** images_list, char ** transferts_tmp, char ** photos) {
     int status = 0;
 
@@ -12,17 +14,11 @@ int selection_optimale (Camera * camera, GPContext * context, char ** transferts
 
     unsigned int files_nb = 0;
 
-    for (unsigned int e = 0; e < MIN_DIRS; e++) {
-        for (unsigned int j = 0; j < MAX_CAPTURES; j++) {
-            strcpy(dossiers[e][j], "");
-        }            
-    }
-
     for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
         strcpy(transferts[e], "");
     }
 
-    for (unsigned int e = 0; e < MAX_CAPTURES*MIN_DIRS; e++) {
+    for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
         strcpy(files[e], "");
     }
 
@@ -30,23 +26,26 @@ int selection_optimale (Camera * camera, GPContext * context, char ** transferts
         strcpy(images_list[e], "");
     }
 
+    int nb_files  = 0;
     
-    status = recursive_directory(dossiers, camera, "/", context, &files_nb);
+    status = get_files(files, camera, context, &files_nb);
 
     if (status < 0) return status;
 
-    unsigned int nb_files = dossiers_to_list(dossiers, files, files_nb);
-
-    nb_files = filterPhotos (photos, files, nb_files);
+    nb_files = filterPhotos (photos, files, files_nb);
 
     cut_list(photos, nb_files, images_list);
 
     status = eachFileRating_1(images_list, transferts_tmp, nb_files, transferts_nb, camera, context);
+    
     if (status < 0) return status;
 
+    printf("Transférer les noms.\n");
     status = transferer_noms (transferts_tmp, *transferts_nb, context, camera);
 
     if (status < 0) return status;
+
+    printf("Transferts terminés.\n");
 
     *transferts_nb = status;
 
@@ -54,13 +53,7 @@ int selection_optimale (Camera * camera, GPContext * context, char ** transferts
 
     // int online = 0;
 
-    if (status < 0) return status;
-
-    printf("1\n");
-
     // FIN RÉPÉTITIONS
-
-    printf("1\n");
 
     return 1;
 }

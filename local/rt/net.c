@@ -65,9 +65,29 @@ void send_medias_transfert (char ** files, unsigned int transferts_nb) {
 }
 
 void send_medias_transfert_online (int online) {
-    FILE * NORMAL_FORMAT = fopen("../data/tmp/normal_format.txt", "r");
-    FILE * RAW_FORMAT = fopen("../data/tmp/raw_format.txt", "r");
+    FILE * NORMAL_FORMAT;
+    FILE * RAW_FORMAT;
     unsigned int raw_format, normal_format;
+
+    printf ("Lecture des options de transfert.\n");
+
+    do {
+        NORMAL_FORMAT = fopen("../data/tmp/normal_format.txt", "r");
+        if (NORMAL_FORMAT == NULL) {
+            printf("ERREUR DE LECTURE DE FICHIER.\n");
+            
+            fclose(NORMAL_FORMAT);
+        }
+    } while (NORMAL_FORMAT == NULL);
+
+    do {
+        RAW_FORMAT = fopen("../data/tmp/raw_format.txt", "r");
+        if (RAW_FORMAT == NULL) {
+            printf("ERREUR DE LECTURE DE FICHIER.\n");
+            
+            fclose(RAW_FORMAT);
+        }
+    } while (RAW_FORMAT == NULL);
 
     fscanf(RAW_FORMAT, "%u", &raw_format);
     fscanf(NORMAL_FORMAT, "%u", &normal_format);
