@@ -1,1 +1,0 @@
-gp_libusb1_find_device_by_class_lib [libusb1.c:1454](0): Invalid parameters: 'class' is NULL/FALSE.

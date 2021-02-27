@@ -1,5 +1,7 @@
 #include "sd2.h"
 
+// Déclaration ici
+
 int main (void) {
     Camera * camera;
     GPContext *context = sample_create_context();
@@ -32,8 +34,9 @@ int main (void) {
 
     printf("LECTURE DE LA LISTE ...\n");
 
-    status = recursive_directory(dossiers, dirs, camera, "/", context);
-    printf("%d\n", status);
+    unsigned int files_nb;
+    status = recursive_directory(dossiers, camera, "/", context, &files_nb);
+    printf("%d\n", files_nb);
 
     if (status < 0) handleError(status);
 
@@ -47,14 +50,13 @@ int main (void) {
         }
     }
 
-    for (int i = 0; i < dir_nb; i++) {
-        printf("%s\n", dirs[i]);
-    }
-
     printf("AFFICHAGE DE LA LISTE TERMINÉ.\n");
 
-    status = get_sd_card_previews (dossiers, x, camera, context);
-    handleError(status);
+    printf("%d\n", files_nb);
+
+    status = get_sd_card_previews (dossiers, files_nb, camera, context);
+
+    if (status < 0) handleError(status);
 
     for (int i = 0; i < 100; i++) {
         for (int j = 0; j < 10000; j++) {
@@ -110,13 +112,15 @@ GPContext* sample_create_context() {
 	return context;
 }
 
+// Bonne version
 static int
-recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char *folder, GPContext *context) {
+recursive_directory(char *** dossiers, Camera *camera, const char *folder, GPContext *context, unsigned int * x) {
 	int		i, ret, y;
 	CameraList	*list;
 	const char	*newfile;
 	CameraFileInfo	fileinfo;
 	CameraFile	*file;
+    static int x_sd = -1;
 
 	ret = gp_list_new (&list);
 	if (ret < GP_OK) {
@@ -149,11 +153,10 @@ recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char 
 		strcat(buf, newfolder);
 
 		fprintf(stderr,"newfolder=%s\n", newfolder);
-        strcpy(dirs[dir_nb++], newfolder);
 
-		ret = recursive_directory (dossiers, dirs, camera, buf, context);
+		ret = recursive_directory (dossiers, camera, buf, context, x);
 		free (buf);
-		if (ret != GP_OK) {
+		if (ret < GP_OK) {
 			gp_list_free (list);
 			printf ("Failed to recursively list folders.\n");
 			return ret;
@@ -176,13 +179,20 @@ recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char 
 	}
 
     int countFiles = gp_list_count(list);
+    printf("%d\n", countFiles);
     if (countFiles < 0) return countFiles;
-    else if (countFiles > 0) x += 1;
-
-    for (int i = 0; i < countFiles; i++) {
-        gp_list_get_name (list, i, &newfile); /* only entry 0 needed */
-        sprintf(dossiers[x][y++], "%s/%s", folder, newfile);
+    else if (countFiles > 0) {
+        x_sd += 1;
+        y = 0;
     }
+
+    for (int z = 0; z < countFiles; z++) {
+        gp_list_get_name (list, z, &newfile); /* only entry 0 needed */
+        sprintf(dossiers[x_sd][y++], "%s/%s", folder, newfile);
+        printf("path : %s\n", dossiers[x_sd][y-1]);
+    }
+
+    *x = x_sd+1;
 
 	gp_list_free (list);
 	return GP_OK;
@@ -197,6 +207,7 @@ int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, G
     char * targetPath = (char*) calloc(100, sizeof(char));
 
     for (i = 0; i < nb; i++) {
+        j = 0;
         while (dossiers[i][j][0] != 0) {
             char * filename = (char*) getName(dossiers[i][j++], dir);
             printf("%s\n%s\n", dir, filename);
@@ -211,6 +222,7 @@ int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, G
 
             printf("SAUVEGARDE ...\n");
 
+            printf("%d\n", status);
             if (status < 0) return status;
         }
     }
