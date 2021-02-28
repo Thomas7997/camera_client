@@ -13,5 +13,6 @@
 #include <gphoto2/gphoto2-filesys.h>
 #include <gphoto2/gphoto2-list.h>
 #include <gphoto2/gphoto2-abilities-list.h>
+#include <errno.h>
 
 #endif

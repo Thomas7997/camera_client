@@ -16,6 +16,22 @@ int transferts (Camera * camera, GPContext * context, char ** transferts, unsign
     FILE * CLOUD = fopen("data/images/cloud.txt", "r");
     int reqStatus, prevReqStatus; // A utiliser
 
+    do {
+        HISTORIQUE = fopen("data/images/historique.txt", "a");
+
+        if (HISTORIQUE == NULL) {
+            printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
+        }
+    } while (HISTORIQUE == NULL);
+
+    do {
+        CLOUD = fopen("data/images/cloud.txt", "a");
+
+        if (CLOUD == NULL) {
+            printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
+        }
+    } while (CLOUD == NULL);
+
     for (unsigned int i = 0; i < MAX_CAPTURES; i++) {
         cloud[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }

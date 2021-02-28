@@ -109,8 +109,8 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
         HISTORIQUE = fopen("../data/images/historique.txt", "a+");
 
         if (HISTORIQUE == NULL) {
-            printf("ERREUR DE LECTURE DE FICHIER.\n");
-            
+            printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
+            printf("Error %d \n", errno);
             fclose(HISTORIQUE);
         }
     } while (HISTORIQUE == NULL);
@@ -120,8 +120,8 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
         FIRST_USE = fopen("../data/tmp/first_use.txt", "r");
 
         if (FIRST_USE == NULL) {
-            printf("ERREUR DE LECTURE DE FICHIER.\n");
-            
+            printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
+            printf("Error %d \n", errno);
             fclose(FIRST_USE);
         }
     } while (FIRST_USE == NULL);
@@ -131,8 +131,8 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
         NORMAL_FORMAT = fopen("../data/tmp/normal_format.txt", "r");
 
         if (NORMAL_FORMAT == NULL) {
-            printf("ERREUR DE LECTURE DE FICHIER.\n");
-            
+            printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
+            printf("Error %d \n", errno);
             fclose(NORMAL_FORMAT);
         }
     } while (NORMAL_FORMAT == NULL);
@@ -141,8 +141,8 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
         RAW_FORMAT = fopen("../data/tmp/raw_format.txt", "r");
 
         if (RAW_FORMAT == NULL) {
-            printf("ERREUR DE LECTURE DE FICHIER.\n");
-            
+            printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
+            printf("Error %d \n", errno);
             fclose(RAW_FORMAT);
         }
     } while (RAW_FORMAT == NULL);
@@ -241,8 +241,8 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
             FIRST_USE_W = fopen("../data/tmp/first_use.txt", "w");
 
             if (FIRST_USE_W == NULL) {
-                printf("ERREUR DE LECTURE DE FICHIER.\n");
-                
+                printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
+                printf("Error %d \n", errno);
                 fclose(FIRST_USE_W);
             }
         } while (FIRST_USE_W == NULL);
@@ -327,7 +327,7 @@ int transferer_noms_auto (char ** liste, unsigned int n_transferts, GPContext * 
 
     do {
         HISTORIQUE = fopen("/home/remote/camera_client/local/data/images/historique.txt", "a+");
-
+        printf("Error %d \n", errno);
         if (HISTORIQUE == NULL) printf("LECTURE DE FICHIER HISTORIQUE.\n");
     } while (HISTORIQUE == NULL);
 

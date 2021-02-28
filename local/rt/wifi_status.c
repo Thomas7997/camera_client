@@ -41,10 +41,23 @@ int wifi_status (void) {
 
     // On pourrait aussi faire d'autres opérations comme la puissance du signal du wifi
 
-    FILE * STATUS = fopen("data/tmp/wifi_status.txt", "w");
-    FILE * SIGNAL = fopen("data/tmp/wifi_signal.txt", "w");
+    FILE * STATUS;
+
+    do {
+        STATUS = fopen("data/tmp/wifi_status.txt", "w");
+
+        if (STATUS == NULL) printf ("Erreur de lecture de fichier.\n");
+    } while (STATUS == NULL);
+
+    FILE * SIGNAL;
+
+    do {
+        SIGNAL = fopen("data/tmp/wifi_signal.txt", "w");
+
+        if (SIGNAL == NULL) printf ("Erreur de lecture de fichier.\n");
+    } while (SIGNAL == NULL);
+    
     fprintf(STATUS, "%d", connected);
-    fclose(STATUS);
 
     fprintf(SIGNAL, "%d", signal);
 
@@ -55,6 +68,7 @@ int wifi_status (void) {
     free(txt);
     fclose(WIFI);
     fclose(SIGNAL);
+    fclose(STATUS);
     free(signal_str);
 
     return 0;

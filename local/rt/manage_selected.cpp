@@ -91,13 +91,13 @@ int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * cont
     do {
         HISTORIQUE = fopen("data/images/historique.txt", "a");
 
-        if (HISTORIQUE == NULL) printf("ERREUR DE LECTURE DE FICHIER.\n");
+        if (HISTORIQUE == NULL) printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
     } while (HISTORIQUE == NULL);
 
     do {
         HISTORIQUER = fopen("data/images/historique.txt", "r");
 
-        if (HISTORIQUER == NULL) printf("ERREUR DE LECTURE DE FICHIER.\n");
+        if (HISTORIQUER == NULL) printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
     } while (HISTORIQUER == NULL);
 
     while (fgets(hist_lines[x++], TAILLE_NOM, HISTORIQUER));

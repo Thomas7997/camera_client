@@ -31,7 +31,7 @@ int photo_auto (Camera * camera, GPContext * context, char ** transferts, unsign
         strcpy(transferts[e], "");
     }
 
-    for (unsigned int e = 0; e < MAX_CAPTURES*MIN_DIRS; e++) {
+    for (unsigned int e = 0; e < MAX_CAPTURES; e++) {
         strcpy(files[e], "");
     }
 

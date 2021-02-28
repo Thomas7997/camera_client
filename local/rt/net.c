@@ -74,8 +74,8 @@ void send_medias_transfert_online (int online) {
     do {
         NORMAL_FORMAT = fopen("../data/tmp/normal_format.txt", "r");
         if (NORMAL_FORMAT == NULL) {
-            printf("ERREUR DE LECTURE DE FICHIER.\n");
-            
+            printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
+            printf("Error %d \n", errno);
             fclose(NORMAL_FORMAT);
         }
     } while (NORMAL_FORMAT == NULL);
@@ -83,8 +83,8 @@ void send_medias_transfert_online (int online) {
     do {
         RAW_FORMAT = fopen("../data/tmp/raw_format.txt", "r");
         if (RAW_FORMAT == NULL) {
-            printf("ERREUR DE LECTURE DE FICHIER.\n");
-            
+            printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
+            printf("Error %d \n", errno);
             fclose(RAW_FORMAT);
         }
     } while (RAW_FORMAT == NULL);
@@ -93,8 +93,17 @@ void send_medias_transfert_online (int online) {
     fscanf(NORMAL_FORMAT, "%u", &normal_format);
 
     int status = 0;
-    if (!online) return;
-    if (raw_format == 0 && normal_format == 0) return;
+    if (!online) {
+        fclose(NORMAL_FORMAT);
+        fclose(RAW_FORMAT);
+        return;
+    }
+
+    if (raw_format == 0 && normal_format == 0) {
+        fclose(NORMAL_FORMAT);
+        fclose(RAW_FORMAT);
+        return;
+    }
 
     unsigned int i = 0;
     char * commande = (char*) calloc(300, sizeof(char));
