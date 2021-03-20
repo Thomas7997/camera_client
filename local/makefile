@@ -90,5 +90,14 @@ SD : sd.c sd.h
 SD2 : sd2.c sd2.h
 	gcc -o sd2 sd2.c -lgphoto2 -lcurl
 
+TRIGGER : trigger_capture.c
+	gcc -o trigger trigger_capture.c -lgphoto2
+
+CAPTURES : captures.c
+	gcc -o captures captures.c -lgphoto2
+
+PREVIEWS : previews.c
+	gcc -o previews previews.c -lgphoto2
+
 CONSTRUCTION : architecture
 	./architecture
