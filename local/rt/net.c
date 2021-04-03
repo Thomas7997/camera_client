@@ -55,7 +55,7 @@ void send_medias_transfert (char ** files, unsigned int transferts_nb) {
     char * commande = (char*) calloc(300, sizeof(char));
 
     for (i = 0; i < transferts_nb; i++) {
-        sprintf(commande, "mv ../data/images/gets/%s /home/remote/camera_client/public", files[i]);
+        sprintf(commande, "mv ../data/images/gets/%s /home/remote/camera_client/public/gets", files[i]);
         // send_request(files[i]); // Recupérer le status prochainement
         printf("FICHIER %s envoyé.\n", files[i]);
         strcpy(files[i], "");
@@ -123,7 +123,7 @@ void send_medias_transfert_online (int online) {
     unsigned int transferts_nb = i;
 
     for (i = 0; i < transferts_nb; i++) {
-        sprintf(commande, "mv ../data/images/gets/%s /home/remote/camera_server/public", files[i]);
+        sprintf(commande, "mv ../data/images/gets/%s /home/remote/camera_server/public/gets", files[i]);
         
         system(commande);
 

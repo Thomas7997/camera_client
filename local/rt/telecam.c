@@ -46,7 +46,7 @@ int main (void) {
 
     // Scripts de vérification
 	result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
-	// result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
+	result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
     // result = rt_task_spawn (&task_manage_errors, "MANAGE ERRORS", 4096, 99, TASK_PERM, &manage_errors, NULL);
 
 	// Scripts d'action
