@@ -1,4 +1,5 @@
 #include "sd_refresh.h"
+// Fonction diff_sd_list_refresh 
 
 int x_sd = -1, dir_nb_sd = 0;
 
@@ -8,14 +9,14 @@ int main (void) {
     int status = 0, nb_directories;
     char *** dossiers = (char***) calloc(10, sizeof(char**));
     char ** dirs = (char**) calloc(10, sizeof(char*));
-    char ** supp = (char**) calloc(100, sizeof(char*));
-    char ** add = (char**) calloc(100, sizeof(char*));
+    char ** supp = (char**) calloc(10000, sizeof(char*));
+    char ** add = (char**) calloc(10000, sizeof(char*));
     char ** files = (char**) calloc(10000, sizeof(char*));
     char ** cld = (char**) calloc(10000, sizeof(char*));
 
-    for (int i = 0; i < 100; i++) {
-        add[i] = (char*) calloc(100, sizeof(char));
-        supp[i] = (char*) calloc(100, sizeof(char));
+    for (int i = 0; i < 10000; i++) {
+        add[i] = (char*) calloc(10000, sizeof(char));
+        supp[i] = (char*) calloc(10000, sizeof(char));
     }
 
     for (int i = 0; i < 10; i++) {
@@ -55,28 +56,25 @@ int main (void) {
 
     printf ("LECTURE DE LA LISTE TERMINÉE.\n");
 
+    unsigned int n_files = dossiers_to_list (dossiers, files, dir_nb_sd), n_add, n_supp, n_cld;
+
     printf("AFFICHAGE DE LA LISTE ...\n");
 
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10000; j++) {
-            printf("%s\n", dossiers[i][j]);
-        }
+    for (int i = 0; i < n_files; i++) {
+        printf("%s\n", files[i]);
     }
 
-    for (int i = 0; i < dir_nb_sd; i++) {
-        printf("%s\n", dirs[i]);
-    }
+    // for (int i = 0; i < dir_nb_sd; i++) {
+    //     printf("%s\n", dirs[i]);
+    // }
 
     printf("AFFICHAGE DE LA LISTE TERMINÉ.\n");
-
-    unsigned int n_files = dossiers_to_list (dossiers, files, dir_nb_sd), n_add, n_supp, n_cld;
 
     // Lire le dossier cloud
     n_cld = read_cld(cld);
 
     // Comparaison des différences
     diff_sd_list_refresh(supp, add, cld, files, n_cld, n_files, &n_add, &n_supp);
-
 
     // status = get_sd_card_previews (dossiers, x_sd, camera, context);
     // handleError(status);
@@ -92,7 +90,7 @@ int main (void) {
         free(dirs[i]);
     }
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10000; i++) {
         free(supp[i]);
         free(add[i]);
     }
@@ -336,32 +334,67 @@ void mirroir (char * buf, unsigned int n) {
     }
 }
 
+int max (int a, int b) {
+    if (a > b) return a;
+    return b;
+}
+
 void diff_sd_list_refresh (char ** supp, char ** add, char ** cld_files, char ** sd_files, unsigned int cld_size, unsigned int sd_size, unsigned int * n_supp, unsigned int * n_add) {
     *n_add = 0;
+    *n_supp = 0;
 
     unsigned int i = 0, y = 0, newFile, x = 0, a = 0;
+    char * dir = (char*) calloc(100, sizeof(char));
+    char * suppName = (char*) calloc(100, sizeof(char));
 
     for (i = 0; i < sd_size; i++) {
         newFile = 0;
+        char * name = (char*) getName(sd_files[i], dir);
         for (y = 0; y < cld_size; y++) {
-            if (strcmp(sd_files[i], cld_files[y]) == 0) {
+            if (strncmp(name, cld_files[y], strlen(name)) == 0) {
                 newFile = 1;
                 break;
             }
         }
 
         if (newFile == 0) {
-            printf("\n\n\n\n\n\n\n\n\nT : %s\n%d\n", sd_files[i], i);
-            sprintf(add[*n_add++], "%s", sd_files[i]);
-            printf("%s\n", add[*n_add++]);
+            sprintf(add[*n_add], "%s", name);
+            *n_add = *n_add + 1;
         }
     }
 
-    *n_add += 1;
-    *n_supp = sd_size - (cld_size + *n_add);
+    for (i = 0; i < cld_size; i++) {
+        newFile = 0;
+        for (y = 0; y < sd_size; y++) {
+            char * name = (char*) getName(sd_files[y], dir);
+            if (strncmp(cld_files[i], name, strlen(name)) == 0) {
+                newFile = 1;
+                break;
+            }
+        }
+
+        if (newFile == 0) {
+            sprintf(supp[*n_supp], "%s", cld_files[i]);
+            *n_supp = *n_supp + 1;
+        }
+    }
+
     printf("\nNombre de fichiers supprimés : %u\nNombre de fichiers ajoutés : %u\n\n", *n_supp, *n_add);
 
-    // Si n_supp ≠ 0, détecter les fichiers supprimés
+    printf("Fichiers supprimés :\n\n");
+
+    for (int i = 0; i < *n_supp; i++) {
+        printf("%s\n", supp[i]);
+    }
+
+    printf("Fichiers ajoutés :\n\n");
+
+    for (int i = 0; i < *n_add; i++) {
+        printf("%s\n", add[i]);
+    }
+
+    free(dir);
+    free(suppName);
 }
 
 unsigned int dossiers_to_list (char *** dossiers, char ** list, unsigned int nb_dossiers) {
@@ -383,10 +416,16 @@ unsigned int read_cld (char ** cld) {
     FILE * CLD = fopen("data/images/cloud.txt", "r");
     unsigned int x = 0;
 
-    while (fgets(cld[x++], 99, CLD));
+    while (fgets(cld[x], 99, CLD)) {
+        enlever_last_car(cld[x++]);
+    }
 
     fclose(CLD);
 
     return x;
+}
+
+void enlever_last_car(char *chaine) {
+    chaine[strlen(chaine)-1] = 0;
 }
 

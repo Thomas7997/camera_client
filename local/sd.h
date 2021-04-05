@@ -19,11 +19,11 @@
 #define TAILLE_NOM 100
 
 // Fonctions
+unsigned int dossiers_to_list (char *** dossiers, char ** list, unsigned int nb_dossiers);
 void handleError(int status);
 static int
 recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char *folder, GPContext *context);
-int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, GPContext * context);
-unsigned int dossiers_to_list (char *** dossiers, char ** list, char ** dirs, unsigned int nb_dossiers, unsigned int * nb_files);
+int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context);
 static void
 ctx_error_func (GPContext *context, const char *str, void *data);
 static void

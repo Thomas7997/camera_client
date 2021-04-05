@@ -16,6 +16,8 @@
 #define TAILLE_NOM 100
 
 // Fonctions
+void enlever_last_car(char *chaine);
+int max (int a, int b);
 unsigned int read_cld (char ** cld);
 void handleError(int status);
 static int

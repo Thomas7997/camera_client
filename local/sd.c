@@ -8,6 +8,7 @@ int main (void) {
     int status = 0, nb_directories;
     char *** dossiers = (char***) calloc(10, sizeof(char**));
     char ** dirs = (char**) calloc(10000, sizeof(char*));
+    char ** files = (char**) calloc(10000, sizeof(char*));
 
     for (int i = 0; i < 10; i++) {
         dossiers[i] = (char**) calloc(10000, sizeof(char*));
@@ -16,8 +17,9 @@ int main (void) {
         }
     }
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10000; i++) {
         dirs[i] = (char*) calloc(100, sizeof(char));
+        files[i] = (char*) calloc(100, sizeof(char));
     }
 
     do {
@@ -41,21 +43,17 @@ int main (void) {
 
     printf ("LECTURE DE LA LISTE TERMINÉE.\n");
 
+    int nb_files = dossiers_to_list(dossiers, files, dir_nb_sd);
+
     printf("AFFICHAGE DE LA LISTE ...\n");
 
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10000; j++) {
-            printf("%s\n", dossiers[i][j]);
-        }
-    }
-
-    for (int i = 0; i < dir_nb_sd; i++) {
-        printf("%s\n", dirs[i]);
+    for (int i = 0; i < nb_files; i++) {
+        printf("%s\n", files[i]);
     }
 
     printf("AFFICHAGE DE LA LISTE TERMINÉ.\n");
 
-    status = get_sd_card_previews (dossiers, x_sd, camera, context);
+    status = get_sd_card_previews (files, nb_files, camera, context);
     handleError(status);
 
     for (int i = 0; i < 10; i++) {
@@ -65,10 +63,12 @@ int main (void) {
         free(dossiers[i]);
     }
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10000; i++) {
         free(dirs[i]);
+        free(files[i]);
     }
 
+    free(files);
     free(dirs);
     free(dossiers);
 
@@ -77,6 +77,8 @@ int main (void) {
     return 0;
 }
 
+// Appeler cette fonction avec toute la liste de fichiers
+/*
 int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, GPContext * context) {
     int i, j, status;
     CameraFile * file;
@@ -106,6 +108,39 @@ int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, G
 
             if (status < 0) return status;
         }
+    }
+
+    free(dir);
+    free(targetPath);
+    gp_file_free(file);
+    return 0;
+}
+*/
+
+int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context) {
+    int i, j, status;
+    CameraFile * file;
+    status = gp_file_new(&file);
+
+    char * dir = (char*) calloc(100, sizeof(char));
+    char * targetPath = (char*) calloc(100, sizeof(char));
+
+    printf("%d\n", nb);
+    for (i = 0; i < nb; i++) {
+        char * filename = (char*) getName(files[i], dir);
+        printf("%s\n%s\n", dir, filename);
+        status = gp_camera_file_get(camera, dir, filename, GP_FILE_TYPE_PREVIEW, file, context);
+        printf("RECEPTION...\n");
+
+        if (status < 0) return status;
+
+        // sprintf(targetPath, "/home/remote/camera_server/public/sd/%s", filename);
+        sprintf(targetPath, "./data/images/cloud/%s", filename);
+        status = gp_file_save(file, (const char*) targetPath);
+
+        printf("SAUVEGARDE ...\n");
+
+        if (status < 0) return status;
     }
 
     free(dir);
@@ -197,8 +232,9 @@ recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char 
 	return GP_OK;
 }
 
+/*
 
-int sd_card_lecture_mode (char *** dossiers, char ** dirs_n, Camera * camera, GPContext * context) {
+int sd_card_lecture_mode (char *** dossiers, char ** files, char ** dirs_n, unsigned int filesNb, Camera * camera, GPContext * context) {
     int status = 0;
 
     int i, j, number = 0;
@@ -218,7 +254,7 @@ int sd_card_lecture_mode (char *** dossiers, char ** dirs_n, Camera * camera, GP
     status = recursive_directory(dossiers, dirs_n, camera, "/", context);
     handleError(status);
 
-    status = get_sd_card_previews (dossiers, x_sd, camera, context);
+    status = get_sd_card_previews (files, files_nb, camera, context);
     handleError(status);
 
     if (status < 0) return status;
@@ -227,6 +263,7 @@ int sd_card_lecture_mode (char *** dossiers, char ** dirs_n, Camera * camera, GP
 
     return 1;
 }
+*/
 
 static void
 ctx_error_func (GPContext *context, const char *str, void *data)
@@ -297,5 +334,20 @@ void mirroir (char * buf, unsigned int n) {
         buf[n-i-1] = buf[i];
         buf[i] = car;
     }
+}
+
+
+unsigned int dossiers_to_list (char *** dossiers, char ** list, unsigned int nb_dossiers) {
+    unsigned int x = 0, item = 0;
+
+    while (x < nb_dossiers) {
+        for (unsigned int y = 0; dossiers[x][y][0] != 0; y++) {
+            sprintf(list[item++], "%s", dossiers[x][y]);
+        }
+        
+        x++;
+    }
+
+    return item;
 }
 

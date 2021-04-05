@@ -99,7 +99,7 @@ CAPTURES : captures.c
 PREVIEWS : previews.c
 	gcc -o previews previews.c -lgphoto2
 
-REFRESH : sd_refresh sd_refresh.c sd_refresh.h
+REFRESH : sd_refresh.c sd_refresh.h
 	gcc -o sd_refresh sd_refresh.c -lgphoto2
 
 CONSTRUCTION : architecture
