@@ -102,5 +102,8 @@ PREVIEWS : previews.c
 REFRESH : sd_refresh.c sd_refresh.h
 	gcc -o sd_refresh sd_refresh.c -lgphoto2
 
+DIRENT : dirent.c
+	gcc -o dirent dirent.c
+
 CONSTRUCTION : architecture
 	./architecture

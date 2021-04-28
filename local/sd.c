@@ -2,6 +2,28 @@
 
 int x_sd = -1, dir_nb_sd = 0;
 
+unsigned int listDir (char ** files, const char * path) {
+  DIR *dir;
+  struct dirent *entry;
+  unsigned int x = 0;
+
+  if ((dir = opendir(path)) == NULL)
+    perror("opendir() error");
+  else {
+    while ((entry = readdir(dir)) != NULL) {
+      if (entry->d_name[0] != '.') strcpy(files[x++], entry->d_name);
+    } // Store entry->name inside char * list here
+    closedir(dir);
+  }
+  return x;
+}
+
+void displayList (char ** list, unsigned int n) {
+  for (unsigned int i = 0; i < n; i++) {
+    printf("%s\n", list[i]);
+  }
+}
+
 int main (void) {
     Camera * camera;
     GPContext *context = sample_create_context();

@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "iterator": "c",
-        "list": "c"
+        "list": "c",
+        "filesystem": "c"
     }
 }

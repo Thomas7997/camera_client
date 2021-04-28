@@ -3,6 +3,40 @@
 
 int x_sd = -1, dir_nb_sd = 0;
 
+void removeFile (const char * path) {
+  int del;
+  
+  do {
+    del = remove(path);
+    if (!del)
+      printf("The file %s is Deleted successfully\n", path);
+    else
+      printf("The file %s is not Deleted\n", path);
+  } while (del);
+}
+
+unsigned int listDir (char ** files, const char * path) {
+  DIR *dir;
+  struct dirent *entry;
+  unsigned int x = 0;
+
+  if ((dir = opendir(path)) == NULL)
+    perror("opendir() error");
+  else {
+    while ((entry = readdir(dir)) != NULL) {
+      if (entry->d_name[0] != '.') strcpy(files[x++], entry->d_name);
+    } // Store entry->name inside char * list here
+    closedir(dir);
+  }
+  return x;
+}
+
+void displayList (char ** list, unsigned int n) {
+  for (unsigned int i = 0; i < n; i++) {
+    printf("%s\n", list[i]);
+  }
+}
+
 int main (void) {
     Camera * camera;
     GPContext *context = sample_create_context();
@@ -71,13 +105,20 @@ int main (void) {
     printf("AFFICHAGE DE LA LISTE TERMINÉ.\n");
 
     // Lire le dossier cloud
-    n_cld = read_cld(cld);
+    n_cld = listDir(cld, "data/images/cloud");
 
     // Comparaison des différences
     diff_sd_list_refresh(supp, add, cld, files, n_cld, n_files, &n_add, &n_supp);
 
     // status = get_sd_card_previews (dossiers, x_sd, camera, context);
     // handleError(status);
+
+    int nb_files = dossiers_to_list(dossiers, files, dir_nb_sd);
+
+    // status = get_sd_card_previews (files, nb_files, camera, context);
+
+    // Refresh : remove supp[] files and add add[] files
+    local_refresh(supp, add, n_add, camera, context);
 
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 10000; j++) {
@@ -107,10 +148,47 @@ int main (void) {
     free(files);
     free(cld);
 
+    gp_camera_exit(camera, context);
+    gp_camera_free(camera);
+
     // FIN RÉPÉTITIONS
 
     return 0;
 }
+
+int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context) {
+    int i, j, status;
+    CameraFile * file;
+    status = gp_file_new(&file);
+
+    char * dir = (char*) calloc(100, sizeof(char));
+    char * targetPath = (char*) calloc(100, sizeof(char));
+
+    printf("%d\n", nb);
+    for (i = 0; i < nb; i++) {
+        char * filename = (char*) getName(files[i], dir);
+        printf("%s\n%s\n", dir, filename);
+        status = gp_camera_file_get(camera, dir, filename, GP_FILE_TYPE_PREVIEW, file, context);
+        printf("RECEPTION...\n");
+
+        if (status < 0) return status;
+
+        // sprintf(targetPath, "/home/remote/camera_server/public/sd/%s", filename);
+        sprintf(targetPath, "./data/images/cloud/%s", filename);
+        status = gp_file_save(file, (const char*) targetPath);
+
+        printf("SAUVEGARDE ...\n");
+
+        if (status < 0) return status;
+    }
+
+    free(dir);
+    free(targetPath);
+    gp_file_free(file);
+    return 0;
+}
+
+/*
 
 int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, GPContext * context) {
     int i, j, status;
@@ -148,6 +226,8 @@ int get_sd_card_previews (char *** dossiers, unsigned int nb, Camera * camera, G
     gp_file_free(file);
     return 0;
 }
+
+*/
 
 static int
 recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char *folder, GPContext *context) {
@@ -232,7 +312,7 @@ recursive_directory(char *** dossiers, char ** dirs, Camera *camera, const char 
 	return GP_OK;
 }
 
-
+/*
 int sd_card_lecture_mode (char *** dossiers, char ** dirs_n, Camera * camera, GPContext * context) {
     int status = 0;
 
@@ -262,6 +342,7 @@ int sd_card_lecture_mode (char *** dossiers, char ** dirs_n, Camera * camera, GP
 
     return 1;
 }
+*/
 
 static void
 ctx_error_func (GPContext *context, const char *str, void *data)
@@ -339,7 +420,7 @@ int max (int a, int b) {
     return b;
 }
 
-void diff_sd_list_refresh (char ** supp, char ** add, char ** cld_files, char ** sd_files, unsigned int cld_size, unsigned int sd_size, unsigned int * n_supp, unsigned int * n_add) {
+void diff_sd_list_refresh (char ** supp, char ** add, char ** cld_files, char ** sd_files, unsigned int cld_size, unsigned int sd_size, unsigned int * n_add, unsigned int * n_supp) {
     *n_add = 0;
     *n_supp = 0;
 
@@ -358,7 +439,7 @@ void diff_sd_list_refresh (char ** supp, char ** add, char ** cld_files, char **
         }
 
         if (newFile == 0) {
-            sprintf(add[*n_add], "%s", name);
+            sprintf(add[*n_add], "%s", sd_files[i]);
             *n_add = *n_add + 1;
         }
     }
@@ -411,21 +492,27 @@ unsigned int dossiers_to_list (char *** dossiers, char ** list, unsigned int nb_
     return item;
 }
 
-unsigned int read_cld (char ** cld) {
-    system("ls data/images/cloud > data/images/cloud.txt");
-    FILE * CLD = fopen("data/images/cloud.txt", "r");
-    unsigned int x = 0;
-
-    while (fgets(cld[x], 99, CLD)) {
-        enlever_last_car(cld[x++]);
-    }
-
-    fclose(CLD);
-
-    return x;
+void enlever_last_car(char * chaine) {
+    chaine[strlen(chaine)-1] = 0;
 }
 
-void enlever_last_car(char *chaine) {
-    chaine[strlen(chaine)-1] = 0;
+void local_refresh(char ** supp, char ** add, unsigned int n_add, Camera * camera, GPContext * context) {
+    unsigned int x = 0;
+    char * path = calloc(200, sizeof(char));
+
+    // Removing files from the local "cloud" directory
+
+    for (char * str = *supp; *str != 0; str = *(supp+x)) {
+        strcpy(path, "");
+        sprintf(path, "data/images/cloud/%s", str);
+        removeFile(path);
+        x++;
+    }
+
+    // Adding files to the local "cloud" directory with usb transactions
+
+    get_sd_card_previews(add, n_add, camera, context);
+
+    free(path);
 }
 
