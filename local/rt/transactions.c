@@ -39,5 +39,5 @@ void removeFile (const char * path) {
       printf("The file %s is Deleted successfully\n", path);
     else
       printf("The file %s is not Deleted\n", path);
-  } while (del);
+  } while (del != 0);
 }

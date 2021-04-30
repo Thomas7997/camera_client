@@ -14,3 +14,11 @@ void mirroir (char * buf, unsigned int n) {
 void enlever_last_car(char *chaine) {
     chaine[strlen(chaine)-1] = 0;
 }
+
+void clearList (char ** list) {
+    unsigned int x = 0;
+
+    for (char * str = *list; str != 0; str = *(list+x), x++) {
+        strcpy(str, "");
+    }
+}

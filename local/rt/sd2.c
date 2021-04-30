@@ -53,6 +53,7 @@ int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPCon
     free(dir);
     free(targetPath);
     gp_file_free(file);
+
     return 0;
 }
 
@@ -78,6 +79,7 @@ void diff_sd_list_refresh (char ** supp, char ** add, char ** cld_files, char **
             sprintf(add[*n_add], "%s", sd_files[i]);
             *n_add = *n_add + 1;
         }
+        free(name);
     }
 
     for (i = 0; i < cld_size; i++) {
@@ -88,6 +90,7 @@ void diff_sd_list_refresh (char ** supp, char ** add, char ** cld_files, char **
                 newFile = 1;
                 break;
             }
+            free(name);
         }
 
         if (newFile == 0) {
@@ -114,35 +117,39 @@ void diff_sd_list_refresh (char ** supp, char ** add, char ** cld_files, char **
     free(suppName);
 }
 
-void sd_refresh (char ** files, char ** supp, char ** add, char ** cld_files, Camera * camera, GPContext * context) {
+int sd_refresh (char ** files, char ** supp, char ** add, char ** cld_files, Camera * camera, GPContext * context) {
     unsigned int cld_size, sd_size, n_add, n_supp;
 
     get_files (files, camera, context, &sd_size); // Read
 
-    listDir(cld_files, "../data/images/cloud");
+    cld_size = listDir(cld_files, "../data/images/cloud");
+
+    printf("STARTING ANALYSE ...\n");
 
     diff_sd_list_refresh (supp, add, cld_files, files, cld_size, sd_size, &n_add, &n_supp); // Analyse
 
-    local_refresh (supp, add, n_add, camera, context);
+    printf("ANALYSE ENDED.");
+
+    return local_refresh (supp, add, n_add, camera, context);
 }
 
-void local_refresh(char ** supp, char ** add, unsigned int n_add, Camera * camera, GPContext * context) {
+int local_refresh(char ** supp, char ** add, unsigned int n_add, Camera * camera, GPContext * context) {
     unsigned int x = 0;
     char * path = (char*) calloc(200, sizeof(char));
 
     // Removing files from the local "cloud" directory
 
-    for (char * str = *supp; *str != 0; str = *(supp+x)) {
+    for (char * str = *supp; *str != 0; str = *(supp+x), x++) {
         strcpy(path, "");
-        sprintf(path, "data/images/cloud/%s", str);
+        sprintf(path, "../data/images/cloud/%s", str);
         removeFile(path);
-        x++;
+
     }
 
     // Adding files to the local "cloud" directory with usb transactions
 
-    get_sd_card_previews(add, n_add, camera, context);
-
     free(path);
+
+    return get_sd_card_previews(add, n_add, camera, context);
 }
 

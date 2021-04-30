@@ -20,6 +20,9 @@ static char ** transferts_tmp;
 static char * model;
 static char ** photos;
 static int * transfert_tasks;
+static char ** add;
+static char ** supp;
+static char ** cld_files;
 
 int send_model = 0;
 

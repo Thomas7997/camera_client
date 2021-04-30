@@ -12,6 +12,9 @@ int main (void) {
     transferts_tmp = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     model = (char*) calloc(MAX_CAPTURES, sizeof(char));
     photos = (char**) calloc(MAX_CAPTURES, sizeof(char*));
+    add = (char**) calloc(MAX_CAPTURES, sizeof(char*));
+    supp = (char**) calloc(MAX_CAPTURES, sizeof(char*));
+    cld_files = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
     prevStatus = 0;
     status = 0;
@@ -38,6 +41,9 @@ int main (void) {
         transferts_send[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
         transferts_tmp[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
         photos[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        add[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        supp[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        cld_files[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
     context = sample_create_context();
@@ -93,6 +99,9 @@ int main (void) {
     for (int i = 0; i < MAX_CAPTURES; i++) {
         free(files[i]);
         free(liste_captures[i]);
+        free(add[i]);
+        free(supp[i]);
+        free(cld_files[i]);
     }
 
     for (unsigned int i = 0; i < PART_NB; i++) {
@@ -298,7 +307,17 @@ void cart_SD_mode (void * arg) {
             continue;
         }
 
-        status = sd_card_lecture_mode (files, camera, context);
+        // status = sd_card_lecture_mode (files, camera, context);
+
+        status = sd_refresh (files, supp, add, cld_files, camera, context);
+
+        if (status < 0) continue;
+
+        // Clear supp list
+
+        clearList(supp);
+        clearList(cld_files);
+        clearList(add);
 
         camera_usb_free_1(NULL);
 
