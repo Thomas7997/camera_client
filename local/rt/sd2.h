@@ -4,6 +4,7 @@
 #include "mods.h"
 #include "transactions.h"
 #include "usb_transactions.h"
+#include "net.h"
 
 int local_refresh(char ** supp, char ** add, unsigned int n_add, Camera * camera, GPContext * context);
 
