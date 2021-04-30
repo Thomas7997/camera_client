@@ -298,11 +298,11 @@ void cart_SD_mode (void * arg) {
             continue;
         }
 
-        status = sd_card_lecture_mode (dossiers, dirs_n, camera, context);
-
-        if (status < 0) continue;
+        status = sd_card_lecture_mode (files, camera, context);
 
         camera_usb_free_1(NULL);
+
+        if (status < 0) continue;
 
         if (transfert_choice != 4) return;
 

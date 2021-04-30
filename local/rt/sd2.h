@@ -5,29 +5,12 @@
 #include "transactions.h"
 #include "usb_transactions.h"
 
-typedef struct _Fichiers {
-    char * nom;
-    char * type;
-    struct _Fichiers * suiv;
-} Fichiers;
+void local_refresh(char ** supp, char ** add, unsigned int n_add, Camera * camera, GPContext * context);
 
-typedef struct _Dossiers {
-    char * nom;
-    Fichiers * fichiers;
-    struct _Dossiers * fils;
-    struct _Dossiers * suiv;
-} Dossiers;
-
-Fichiers* insertenqueue_Fichiers (Fichiers * liste, const char * valeur, const char * type);
-Dossiers* insertenqueue_Dossiers (Dossiers * liste, const char * valeur, Fichiers * fichiers, Dossiers * fils);
-Fichiers * new_fichiers_list (void);
-Dossiers * new_dossiers_list (void);
-void free_fichiers (Fichiers * fichiers);
-void free_dossiers (Dossiers * dossiers);
 int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context);
-int sd_card_lecture_mode (Camera * camera, GPContext * context);
-void afficher_fichiers_liste (Fichiers * fichiers);
-void afficher_carte_sd_liste (Dossiers * dossiers);
-int get_files_and_dirs (Dossiers ** dirs_b, Camera * camera, GPContext * context);
+void diff_sd_list_refresh (char ** supp, char ** add, char ** cld_files, char ** sd_files, unsigned int cld_size, unsigned int sd_size, unsigned int * n_add, unsigned int * n_supp);
+int sd_card_lecture_mode (char ** files, Camera * camera, GPContext * context); // Called for first read from the desk app
+
+void sd_refresh (char ** files, char ** supp, char ** add, char ** cld_files, Camera * camera, GPContext * context); // Called every refresh after the first read
 
 #endif
