@@ -107,8 +107,9 @@ void send_medias_transfert_online (int online) {
 
     unsigned int i = 0;
     char * commande = (char*) calloc(300, sizeof(char));
-    system("ls ../data/images/gets > ../data/images/gets.txt");
-    FILE * GETS = fopen("../data/images/gets.txt", "r");
+
+    // system("ls ../data/images/gets > ../data/images/gets.txt");
+    // FILE * GETS = fopen("../data/images/gets.txt", "r");
 
     char ** files = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
@@ -116,11 +117,7 @@ void send_medias_transfert_online (int online) {
         files[e] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
 
-    while (fgets(files[i], TAILLE_NOM, GETS)) {
-        enlever_last_car(files[i++]);
-    }
-
-    unsigned int transferts_nb = i;
+    unsigned int transferts_nb = listDir(files, "../data/images/gets");
 
     for (i = 0; i < transferts_nb; i++) {
         sprintf(commande, "mv ../data/images/gets/%s /home/remote/camera_server/public/gets", files[i]);
@@ -138,7 +135,6 @@ void send_medias_transfert_online (int online) {
         free(files[e]);
     }
 
-    fclose(GETS);
     fclose(NORMAL_FORMAT);
     fclose(RAW_FORMAT);
     free(files);

@@ -122,6 +122,8 @@ int sauvegarder_noms (char ** liste, unsigned int n_transferts, GPContext * cont
     free(commande);
 }
 
+// +
+// unused
 void select_medias () {
     system("cd data/images/cloud;ls *.JPG > ../cloud.txt;cd ../../..");
     FILE * CLOUD = fopen("./data/images/cloud.txt", "r");

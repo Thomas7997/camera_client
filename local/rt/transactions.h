@@ -4,9 +4,6 @@
 // LIBS
 
 #include "mods.h"
-#include <dirent.h>
-#include <errno.h>
-#include <sys/types.h>
 
 // Fonctions
 

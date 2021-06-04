@@ -14,5 +14,10 @@
 #include <gphoto2/gphoto2-list.h>
 #include <gphoto2/gphoto2-abilities-list.h>
 #include <errno.h>
+#include <dirent.h>
+#include <sys/types.h>
+
+// Common functions
+#include "transactions.h"
 
 #endif
