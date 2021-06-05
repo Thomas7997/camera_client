@@ -15,6 +15,7 @@ unsigned int filterVideos (char ** videos_l, char ** files_l, unsigned int files
         if (strcmp(ext, "VOM") == 0 || strcmp(ext, "4PM") == 0) {
             // Il s'agit donc d'une vidéo
             strcpy(videos_l[x++], files_l[i]);
+            printf("%s\n", files_l[i]);
         }
     }
 
@@ -106,6 +107,8 @@ int getVideoDatas (char ** videos, char ** files, char ** liste_captures, unsign
 
     if (status < 0) return status;
 
+    *files_nb = *files_nb + 1;
+
     // La matière sortante est la liste de vidéos totale
     return filterVideos(videos, files, *files_nb);
 }
@@ -114,6 +117,8 @@ int getPhotoDatas (char ** photos, char ** files, char ** liste_captures, unsign
     int status = get_files(files, camera, context, files_nb);
 
     if (status < 0) return status;
+
+    *files_nb = *files_nb + 1;
 
     // La matière sortante est la liste de vidéos totale
     return filterPhotos(photos, files, *files_nb);
