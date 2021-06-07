@@ -65,6 +65,9 @@ int main (void) {
     result = rt_task_spawn (&task_apply_choice, "APPLIQUER LE CHOIX DE L'UTILISATEUR", 4096, 99, TASK_PERM, &script_apply_choice, NULL);
     result = rt_task_spawn (&task_wifi_transfert, "APPLIQUER LE TRANSFERT WIFI AUTONOME", 4096, 99, TASK_PERM, &send_transferts_online, NULL);
 
+    // NOTIFICATION
+    result = rt_task_spawn(&task_send_model, "SEND CAMERA MODEL", 4096, 99, TASK_PERM, &send_model_fn, NULL);
+
     // Lancement des tâches et suspension de certaines
 
     while (1) {
@@ -510,11 +513,11 @@ void generateError (int status) {
     // Peut être sauvegarder dans les logs
 }
 
-void sendModel (void * arg) {
+void send_model_fn (void * arg) {
     while (1) {
-        if (send_model && wifi_status) {
-            sendModelHTTP(model);
-            send_model = 0;
+        if (model[0] && wifi_status) {
+            int st = sendModelHTTP(model);
+            if (!st) strcpy(model, "");
         }
     }
 }

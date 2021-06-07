@@ -6,6 +6,6 @@
 #include "mods.h"
 
 int getModel (char * model, Camera * camera, int * send);
-void sendModelHTTP (char * model);
+int sendModelHTTP (char * model);
 
 #endif

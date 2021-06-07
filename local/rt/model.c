@@ -25,38 +25,64 @@ int getModel (char * model, Camera * camera, int * send) {
 
     free(current_model);
 
-    if (*send == 1) {
-        CURL *curl;
-        CURLcode res;
+    // if (*send == 1) {
+    //     CURL *curl;
+    //     CURLcode res;
 
-        char * request_string = (char*) calloc(1000, sizeof(char));
-        sprintf(request_string, "model=%s", model);
+    //     char * request_string = (char*) calloc(1000, sizeof(char));
+    //     sprintf(request_string, "model=%s", model);
         
-        curl_global_init(CURL_GLOBAL_ALL);
+    //     curl_global_init(CURL_GLOBAL_ALL);
         
-        curl = curl_easy_init();
-        if(curl) {
-            curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/transfert/camera");
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_string);
+    //     curl = curl_easy_init();
+    //     if(curl) {
+    //         curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/transfert/camera");
+    //         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_string);
         
-            res = curl_easy_perform(curl);
-            if(res != CURLE_OK)
-            fprintf(stderr, "curl_easy_perform() failed: %s\n",
-            curl_easy_strerror(res));
+    //         res = curl_easy_perform(curl);
+    //         if(res != CURLE_OK)
+    //         fprintf(stderr, "curl_easy_perform() failed: %s\n",
+    //         curl_easy_strerror(res));
         
-            curl_easy_cleanup(curl);
-        }
-        curl_global_cleanup();
-        printf ("\n");
+    //         curl_easy_cleanup(curl);
+    //     }
+    //     curl_global_cleanup();
+    //     printf ("\n");
 
-        free(request_string);
+    //     free(request_string);
 
-        *send = res;
-    }
+    //     *send = res;
+    // }
 
     return 0;
 }
 
-void sendModelHTTP (char * model) {
-    // Requête à envoyer au serveur
+int sendModelHTTP (char * model) {
+    printf("Requêtes\n");
+    
+    CURL *curl;
+    CURLcode res;
+
+    char * request_string = (char*) calloc(1000, sizeof(char));
+    sprintf(request_string, "model=%s", model);
+
+    
+    curl_global_init(CURL_GLOBAL_ALL);
+    
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/transfert/model");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_string);
+    
+        res = curl_easy_perform(curl); 
+        if(res != CURLE_OK)
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+        curl_easy_strerror(res));
+    
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
+    free(request_string);
+    printf ("\n");
+    return res;
 }

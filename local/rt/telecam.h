@@ -42,6 +42,9 @@ RT_TASK task_save_files_offline, task_send_files_online, task_enable_transfert_i
 // Général
 RT_TASK task_apply_choice, task_wifi_transfert;
 
+// Notifications
+RT_TASK task_send_model;
+
 void enable_transfert_image_selection (void * arg);
 void enable_transfert_image_auto (void * arg);
 void enable_transfert_video_auto (void * arg);
@@ -56,6 +59,7 @@ void reconnexion_usb (void * arg);
 void free_usb (void * arg);
 void camera_usb_connection_1 (void * arg);
 void camera_usb_free_1(void * arg);
+void send_model_fn (void * arg);
 
 // Nouvelle version de fonction
 void generateError(int status);
