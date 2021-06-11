@@ -3,7 +3,7 @@
 int sd_card_lecture_mode (char ** files, Camera * camera, GPContext * context) {
     unsigned int nb_files = 0;
     int status = get_files (files, camera, context, &nb_files);
-    printf("%d\n", status);
+
     if (status < 0) handleError(status);
 
     printf ("LECTURE DE LA LISTE TERMINÉE.\n");
@@ -32,22 +32,21 @@ int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPCon
     char * dir = (char*) calloc(100, sizeof(char));
     char * targetPath = (char*) calloc(100, sizeof(char));
 
-    printf("%d\n", nb);
     for (i = 0; i < nb; i++) {
         char * filename = (char*) getName(files[i], dir);
-        printf("%s\n%s\n", dir, filename);
         status = gp_camera_file_get(camera, dir, filename, GP_FILE_TYPE_PREVIEW, file, context);
         printf("RECEPTION...\n");
 
         if (status < 0) return status;
 
         sprintf(targetPath, "/home/remote/camera_server/public/sd/%s", filename);
-        // sprintf(targetPath, "../data/images/cloud/%s", filename);
         status = gp_file_save(file, (const char*) targetPath);
 
         printf("SAUVEGARDE ...\n");
 
         if (status < 0) return status;
+
+        usleep(5000);
     }
 
     free(dir);
@@ -122,13 +121,19 @@ int sd_refresh (char ** files, char ** supp, char ** add, char ** cld_files, Cam
 
     get_files (files, camera, context, &sd_size); // Read
 
+    usleep(50000);
+
     cld_size = listDir(cld_files, "/home/remote/camera_server/public/sd");
+
+    usleep(50000);
 
     printf("STARTING ANALYSE ...\n");
 
     diff_sd_list_refresh (supp, add, cld_files, files, cld_size, sd_size, &n_add, &n_supp); // Analyse
 
     printf("ANALYSE ENDED\n");
+
+    usleep(50000);
 
     return local_refresh (supp, add, n_add, camera, context);
 }
@@ -143,8 +148,9 @@ int local_refresh(char ** supp, char ** add, unsigned int n_add, Camera * camera
         strcpy(path, "");
         sprintf(path, "/home/remote/camera_server/public/sd/%s", str);
         removeFile(path);
-
     }
+
+    usleep(50000);
 
     // Adding files to the local "cloud" directory with usb transactions
 

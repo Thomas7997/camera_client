@@ -107,8 +107,6 @@ int getVideoDatas (char ** videos, char ** files, char ** liste_captures, unsign
 
     if (status < 0) return status;
 
-    *files_nb = *files_nb + 1;
-
     // La matière sortante est la liste de vidéos totale
     return filterVideos(videos, files, *files_nb);
 }
@@ -117,8 +115,6 @@ int getPhotoDatas (char ** photos, char ** files, char ** liste_captures, unsign
     int status = get_files(files, camera, context, files_nb);
 
     if (status < 0) return status;
-
-    *files_nb = *files_nb + 1;
 
     // La matière sortante est la liste de vidéos totale
     return filterPhotos(photos, files, *files_nb);

@@ -26,6 +26,9 @@ static char ** cld_files;
 
 int send_model = 0;
 
+// status
+int prevCamera_status, camera_status;
+
 typedef struct {
     int currentStatus;
     int prevStatus;

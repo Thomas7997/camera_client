@@ -22,3 +22,9 @@ void clearList (char ** list) {
         strcpy(str, "");
     }
 }
+
+void clearStr (char * str) {
+    for (unsigned int i = 0; str[i]; i++) {
+        str[i] = 0;
+    }
+}

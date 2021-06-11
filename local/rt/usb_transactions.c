@@ -432,6 +432,8 @@ int get_files (char ** files, Camera * camera, GPContext * context, unsigned int
     int status = recursive_directory(files, camera, "/", context, x);
     handleError(status);
 
+    if (status < GP_OK) return status;
+
     return GP_OK;
 }
 
@@ -510,8 +512,8 @@ recursive_directory(char ** files, Camera *camera, const char *folder, GPContext
         printf("x : %d\npath : %s\n", x_sd, files[x_sd]);
     }
 
-    // Reset ici
-    *x = x_sd;
+    // Reset here
+    *x = x_sd + 1;
 
 	gp_list_free (list);
 	return GP_OK;

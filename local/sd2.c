@@ -192,9 +192,19 @@ int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPCon
     int i, j, status;
     CameraFile * file;
     status = gp_file_new(&file);
+    CameraAbilities abilities;
 
     char * dir = (char*) calloc(100, sizeof(char));
-    char * targetPath = (char*) calloc(100, sizeof(char));
+    char * targetPath = (char*) calloc(200, sizeof(char));
+    char * targetDirCMD = (char*) calloc(200, sizeof(char));
+
+    status = gp_camera_get_abilities (camera, &abilities);
+
+    if (status < 0) return status;
+
+    sprintf(targetDirCMD, "mkdir \"/home/remote/sd_files/c\" \"/home/remote/sd_files/c/sd\" \"/home/remote/sd_files/c/get\"", abilities.model, abilities.model, abilities.model);
+
+    system(targetDirCMD);
 
     for (i = 0; i < nb; i++) {
         char * filename = (char*) getName(files[i], dir);
@@ -205,7 +215,7 @@ int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPCon
         if (status < 0) return status;
 
         // sprintf(targetPath, "/home/remote/camera_server/public/sd/%s", filename);
-        sprintf(targetPath, "./data/images/cloud/%s", filename);
+        sprintf(targetPath, "/home/remote/sd_files/c/sd/%s", filename);
         status = gp_file_save(file, (const char*) targetPath);
 
         printf("SAUVEGARDE ...\n");
@@ -216,6 +226,7 @@ int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPCon
 
     free(dir);
     free(targetPath);
+    free(targetDirCMD);
     gp_file_free(file);
 }
 

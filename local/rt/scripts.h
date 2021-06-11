@@ -10,5 +10,6 @@
 void enlever_last_car(char *chaine);
 void mirroir (char * buf, unsigned int n);
 void clearList (char ** list);
+void clearStr (char * str);
 
 #endif

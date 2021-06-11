@@ -16,8 +16,9 @@ int main (void) {
     supp = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     cld_files = (char**) calloc(MAX_CAPTURES, sizeof(char*));
 
-    prevStatus = 0;
-    status = 0;
+    // For error handling
+    prevStatus = status = 0;
+    prevCamera_status = camera_status = 1;
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_DIR_CAPTURES, sizeof(char*));
@@ -67,6 +68,7 @@ int main (void) {
 
     // NOTIFICATION
     result = rt_task_spawn(&task_send_model, "SEND CAMERA MODEL", 4096, 99, TASK_PERM, &send_model_fn, NULL);
+    result = rt_task_spawn(&task_notify_camera_status, "SEND CAMERA STATUS", 4096, 99, TASK_PERM, &checkAndNotifyCameraStatus, NULL);
 
     // Lancement des tâches et suspension de certaines
 
@@ -188,24 +190,10 @@ void enable_transfert_image_selection (void * arg) {
 
         camera_usb_connection_1 (NULL);
 
-        // Avant de récupérer le modèle
-        // while (usb_connected != 1) {
-        //     usleep(500);
-        // }
-
-        status = getModel(model, camera, &send_model);
-
-        if (status != 0) {
-            generateError(status);
-            continue;
-        }
-
-        printf("%s\n", model);
-
         status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list, transferts_tmp, photos);
 
         if (status < 0) {
-            generateError(status);
+            camera_status = status;
             continue;
         }
 
@@ -230,21 +218,10 @@ void enable_transfert_image_auto (void * arg) {
             usleep(500);
         }
 
-        // Attention aux code d'erreurs des requêtes http
-        status = getModel(model, camera, &send_model);
-
-        if (status != 0) {
-            generateError(status);
-            continue;
-        }
-
-        printf("%s\n", model);
-
         status = photo_auto(camera, context, transferts_send, &nb_transferts, &nb_tours, liste_captures, &liste_captures_size);
 
         if (status < 0) {
-            handleError(status);
-            generateError(status);
+            camera_status = status;
             continue;
         }
 
@@ -252,7 +229,6 @@ void enable_transfert_image_auto (void * arg) {
 
         if (transfert_choice != 1) return;
 
-        printf("tours : %d\n", nb_tours++);
         usleep(500000);
     }
 }
@@ -268,19 +244,10 @@ void enable_transfert_video_auto (void * arg) {
 
         camera_usb_connection_1(NULL);
 
-        status = getModel(model, camera, &send_model);
-
-        if (status < 0) {
-            generateError(status);
-            continue;
-        }
-
-        printf("%s\n", model);
-
         status = video_auto(camera, context, transferts_send, &nb_transferts, &nb_tours, liste_captures, &liste_captures_size);
 
         if (status < 0) {
-            generateError(status);
+            camera_status = status;
             continue;
         }
 
@@ -288,7 +255,6 @@ void enable_transfert_video_auto (void * arg) {
 
         if (transfert_choice != 3) return;
 
-        printf("tours : %d\n", nb_tours++);
         usleep(500000);
     }
 }
@@ -306,7 +272,7 @@ void cart_SD_mode (void * arg) {
         status = getModel(model, camera, &send_model);
 
         if (status != 0) {
-            generateError(status);
+            camera_status = status;
             continue;
         }
 
@@ -314,7 +280,10 @@ void cart_SD_mode (void * arg) {
 
         status = sd_refresh (files, supp, add, cld_files, camera, context);
 
-        if (status < 0) continue;
+        if (status < 0) {
+            camera_status = status;
+            continue;
+        }
 
         // Clear supp list
 
@@ -324,9 +293,14 @@ void cart_SD_mode (void * arg) {
 
         camera_usb_free_1(NULL);
 
-        if (status < 0) continue;
+        if (status < 0) {
+            camera_status = status;
+            continue;
+        }
 
-        if (transfert_choice != 4) return;
+        if (transfert_choice != 4) {
+            return;
+        }
 
         usleep(500000);
     }
@@ -334,7 +308,7 @@ void cart_SD_mode (void * arg) {
 
 void reconnexion_usb (void * arg) {
     while (1) {
-        // printf("RECONNEXION USB ...\n");
+        printf("RECONNEXION USB ...\n");
 
         usleep(500000);
     }
@@ -356,6 +330,23 @@ void camera_usb_free_1(void * arg) {
     printf("LIBÉRATION USB ...\n");
     gp_camera_exit(camera, context);
     gp_camera_free(camera);
+}
+
+void checkAndNotifyCameraStatus (void * arg) {
+    int res = 0;
+    
+    while (1) {
+        if (wifi_status && camera_status != prevCamera_status) {
+            prevCamera_status = camera_status;
+
+            do {
+                res = send_camera_status(camera_status);
+                sleep(3);
+            } while (res != CURLE_OK);
+        }
+
+        usleep(100000);
+    }
 }
 
 void camera_usb_connection (void * arg) {
@@ -408,17 +399,29 @@ void camera_usb_connection_1 (void * arg) {
 
             if (status < 0) {
                 printf("ERREUR DE CONNEXION !\n");
+                camera_status = status;
                 status = gp_camera_exit(camera, context);
                 handleError(status);
                 status = gp_camera_free(camera);
                 handleError(status);
-                usleep(500000); // Important sinon le programme consomme trop de CPU
                 usb_connected = 0;
+                usleep(500000); // because too much CPU
             }
 
             else {
                 usb_connected = 1;
                 reset = 0;
+
+                status = getModel(model, camera, &send_model);
+
+                if (status != 0) {
+                    generateError(status);
+                    continue;
+                }
+
+                printf("%s\n", model);
+
+                camera_status = 0;
             }
         }
     }
@@ -517,8 +520,10 @@ void send_model_fn (void * arg) {
     while (1) {
         if (model[0] && wifi_status) {
             int st = sendModelHTTP(model);
-            if (!st) strcpy(model, "");
+            if (st == 0) clearStr(model);
         }
+
+        usleep(100000);
     }
 }
 

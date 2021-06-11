@@ -17,5 +17,6 @@ int send_request (char *name);
 // int generateError (int status);
 void send_medias_transfert_online (int online);
 void send_medias_sd_preview (char * name);
+int send_camera_status (int status);
 
 #endif
