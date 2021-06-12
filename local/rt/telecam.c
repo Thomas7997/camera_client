@@ -229,6 +229,8 @@ void enable_transfert_image_auto (void * arg) {
 
         if (transfert_choice != 1) return;
 
+        nb_tours++;
+
         usleep(500000);
     }
 }
@@ -254,6 +256,8 @@ void enable_transfert_video_auto (void * arg) {
         camera_usb_free_1(NULL);
 
         if (transfert_choice != 3) return;
+
+        nb_tours++;
 
         usleep(500000);
     }
