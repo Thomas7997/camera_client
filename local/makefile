@@ -105,5 +105,8 @@ REFRESH : sd_refresh.c sd_refresh.h
 DIRENT : dirent.c
 	gcc -o dirent dirent.c
 
+XMP : libxmp.c
+	gcc -o libxmp libxmp.c -lgphoto2
+
 CONSTRUCTION : architecture
 	./architecture
