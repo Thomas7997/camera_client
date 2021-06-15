@@ -1,0 +1,3 @@
+#define "libxmp.h"
+
+// Functions
