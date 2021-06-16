@@ -54,7 +54,7 @@ int main (int argc, char ** argv) {
 	printf("Common indexes\n");
 
 	for (i = 0; i < x; i++) {
-		if (1) printf("%d : %d %d\n", commonIndexes[i], datas[0][commonIndexes[i]], datas[1][commonIndexes[i]]);
+		if (1) printf("%d : %d %d\n", commonIndexes[i], datas[0][commonIndexes[i]], datas[1][commonIndexes[i]]); // Also check for the previous and next indexes
 	}
 
 	printf("\n");

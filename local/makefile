@@ -61,7 +61,7 @@ TRANSFERTS : transferts.c
 	gcc -Wall -o transferts transferts.c net.c -lcurl -lexiv2 -lgphoto2 -lgphoto2_port
 
 MANAGE_OPTIMALE : selection_optimale.cpp
-	g++ -o selection_optimale selection_optimale.cpp manage_selected.cpp -lcurl -lexiv2 -lgphoto2 -lgphoto2_port
+	g++ -o selection_optimale selection_optimale.cpp manage_selected.cpp framework/common/libxmp.c -lcurl -lexiv2 -lgphoto2 -lgphoto2_port
 
 ARCHITECTURE : architecture.o 
 	gcc -o architecture architecture.o

@@ -20,12 +20,17 @@
 #include <gphoto2/gphoto2-list.h>
 #include <gphoto2/gphoto2-abilities-list.h>
 
+// FRAMEWORK
+#include "framework/common/libxmp.h"
+
 #define MAX 80
 #define MAX_CAPTURES 10000
 #define TAILLE_NOM 100
 #define MIN_DIRS 10
 #define NB_PARTS 2
 #define PART_NB 50
+// #define TRUE 1 == 1
+// #define FALSE 1 == 0
 
 struct _Dossier {
     char * title;

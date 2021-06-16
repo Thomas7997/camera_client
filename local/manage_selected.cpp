@@ -418,68 +418,107 @@ GPContext* sample_create_context() {
 }
 
 // Retourne le status, le reste, dans les pointeurs
+
+// Create a function that assign an int to a mime type (like filter)
+
 int getPlacements(int * rating, char * dir, char * file, char * data, GPContext * context, Camera * camera)
 {
-    int status = 0;
+    CameraFile * cfile;
+    uint64_t size_l;
+    int start_byte;
+    int exiv;
+    const char * mtype;
     
-    uint64_t size_l = 64000;
-      status = gp_camera_file_read(camera,
+    int status;
+
+    if (strcmp(mtype, GP_MIME_CR2) == 0 || strcmp(mtype, GP_MIME_JPEG) == 0 || strcmp(mtype, GP_MIME_NEF) == 0 || strcmp(mtype, GP_MIME_CRW) == 0 || strcmp(mtype, GP_MIME_RAW) == 0 || strcmp(mtype, GP_MIME_AVI) == 0) {
+        start_byte = JPG_START_BYTE;
+        size_l = JPG_BYTE_LENGTH;
+        exiv = TRUE;
+    }
+
+    else if (strcmp(mtype, GP_MIME_MPEG) == 0) {
+        start_byte = MOV_START_BYTE;
+        size_l = MOV_BYTE_LENGTH;
+        exiv = FALSE;
+    }
+
+    else {
+        *rating = 0;
+        return -1;
+    }
+
+    size_l = 64000;
+    status = gp_camera_file_read(camera,
         dir,
         file,
         GP_FILE_TYPE_NORMAL,
-        0,
+        start_byte,
         data,
         &size_l,
         context
-      );
+    );
 
-      if (status < 0) return status;
+    if (status < 0) return status;
 
-      try {
-
-    Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open((const Exiv2::byte*) data, size_l);
-    // std::cout << image;
-    // assert (image.get() != 0);
-    image->readMetadata();
- 
-    Exiv2::XmpData &xmpData = image->xmpData();
-    if (xmpData.empty()) {
-        std::string error(dir);
-        error += ": No XMP data found in the file\n";
-        std::cout << error;
-        //throw Exiv2::Error(Exiv2::kerErrorMessage, error);
+    if (!exiv) {
+        if (strcmp(mtype, GP_MIME_MPEG) == 0) {
+            if (get_mov_5_stars(data)) {
+                *rating = 5;
+            }
+            else {
+                *rating = 0;
+            }
+        }
     }
-    if (xmpData.empty()) 
-      {
-        return -1; // Il faudrait trouver un code d'état spécial
-        // std::string error(argv[1]);
-        // error += ": No XMP properties found in the XMP packet";
-        // throw Exiv2::Error(Exiv2::kerErrorMessage, error);
-      }
+
+    else {
+        try {
+            Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open((const Exiv2::byte*) data, size_l);
+            // std::cout << image;
+            // assert (image.get() != 0);
+            image->readMetadata();
  
-        std::string stars = "";
-        Exiv2::XmpData::const_iterator md = xmpData.begin();
-        stars = md->toString();
-        *rating = std::stoi(stars);
+            Exiv2::XmpData &xmpData = image->xmpData();
+            if (xmpData.empty()) {
+                std::string error(dir);
+                error += ": No XMP data found in the file\n";
+                std::cout << error;
+                //throw Exiv2::Error(Exiv2::kerErrorMessage, error);
+            }
+            
+            if (xmpData.empty()) 
+            {
+                return -1; // Il faudrait trouver un code d'état spécial
+                // std::string error(argv[1]);
+                // error += ": No XMP properties found in the XMP packet";
+                // throw Exiv2::Error(Exiv2::kerErrorMessage, error);
+            }
+ 
+            std::string stars = "";
+            Exiv2::XmpData::const_iterator md = xmpData.begin();
+            stars = md->toString();
+            *rating = std::stoi(stars);
+
+            // std::cout << data;
+
+            // const std::vector<uint8_t> bytes = std::vector<uint8_t> vec(str.begin(), str.end());
+
+            // std::vector<uint8_t> bytes = static_assert(std::is_same<uint8_t, char>::value, "uint8_t is not unsigned char");
+            
+
+            // Exiv2::XmpParser::initialize();
+            // ::atexit(Exiv2::XmpParser::terminate);
+        }
+    
+        catch (Exiv2::AnyError& e) 
+        {
+            std::cout << "Caught Exiv2 exception '" << e << "'\n";
+            return -1;
+        }
     }
- 
-    
-catch (Exiv2::AnyError& e) 
-  {
-    std::cout << "Caught Exiv2 exception '" << e << "'\n";
-    return -1;
-  }
 
-
-    // std::cout << data;
-
-    // const std::vector<uint8_t> bytes = std::vector<uint8_t> vec(str.begin(), str.end());
-
-    // std::vector<uint8_t> bytes = static_assert(std::is_same<uint8_t, char>::value, "uint8_t is not unsigned char");
-    
-
-  // Exiv2::XmpParser::initialize();
-  // ::atexit(Exiv2::XmpParser::terminate);
+    gp_file_free(cfile);
 
    return 0;
 
@@ -620,6 +659,7 @@ int eachFileRating (char *** dossiers, char ** dirs, char ** transferts, unsigne
 
             if (rates == 5) {
                 sprintf(transferts[x++], "%s/%s", dirs[y], dossiers[y][i]);
+                printf("%s rated 5\n", transferts[x-1]);
             }
 
             fprintf(RATING, "%s : %d\n", dossiers[y][i], rates);
@@ -665,6 +705,7 @@ int eachFileRating_1 (char ** files, char ** transferts, unsigned int files_nb, 
 
         if (rates == 5) {
             sprintf(transferts[x++], "%s/%s", dirname, nom);
+            printf("%s rated 5 *\n", transferts[x-1]);
         }
 
         // fprintf(RATING, "%s : %d\n", files[y], rates);

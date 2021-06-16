@@ -194,6 +194,8 @@ recursive_directory(char ** files, Camera *camera, const char *folder, GPContext
 	return GP_OK;
 }
 
+// MOV SELECTION IS WORKING
+
 int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPContext * context) {
     int i, j, status;
     CameraFile * file;
@@ -221,12 +223,12 @@ int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPCon
         // printf("RECEPTION...\n");
 
         for (int j = 0; data[j]; j++) {
-            printf("%d ", data[j]);
+            // printf("%d ", data[j]);
         }
 
         if (get_mov_5_stars(data)) printf("%s\n", filename);
         else {
-            printf("None\n");
+            // printf("None\n");
         }
 
         if (status < 0) return status;
