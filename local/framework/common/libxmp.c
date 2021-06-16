@@ -1,4 +1,4 @@
-#define "libxmp.h"
+#include "libxmp.h"
 
 // Functions
 
@@ -23,7 +23,7 @@ int get_cr2_5_stars (const char * data) {
 }
 
 int get_mov_5_stars (const char * data) {
-	if (data[MOV_START_BYTE+MOV_BYTE_LENGTH-1] == MOV_INDEX_0_VAL && data[MOV_START_BYTE+MOV_BYTE_LENGTH] == MOV_INDEX_0_VAL) {
+	if (data[0] == MOV_INDEX_0_VAL && data[1] == MOV_INDEX_1_VAL) {
 		return 1;
 	}
 

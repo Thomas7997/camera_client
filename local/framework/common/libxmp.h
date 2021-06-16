@@ -13,7 +13,7 @@
 
 // Videos parsing
 // MOV
-#define MOV_START_BYTE // RATES indexes ...
+#define MOV_START_BYTE 65902 // RATES indexes ...
 #define MOV_BYTE_LENGTH 2
 #define MOV_INDEX_0_VAL	64
 #define MOV_INDEX_1_VAL 160
