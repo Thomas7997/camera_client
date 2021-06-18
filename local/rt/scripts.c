@@ -39,9 +39,50 @@ void dislpayList(char ** list) {
     printf("List displayed !\n");
 }
 
+char * getName (char * buf, char * dossier) {
+    unsigned int n = strlen(buf), x = 0, y = 0;
+    char * buffer = (char*) calloc(100, sizeof(char));
+
+    unsigned int i = n-1;
+
+    while (buf[i] != '/') {
+        buffer[x++] = buf[i--];
+    }
+
+    while (i > 0) {
+        dossier[y++] = buf[i-1];
+        i--;
+    }
+
+    mirroir(buffer, x);
+    mirroir(dossier, y);
+
+    return buffer;
+}
+
+int find_dir_filename (char ** files, const char * name, char * dir) {
+    char * tmpDir = (char*) calloc(50, sizeof(char));
+    
+    for (int f = 0; *files[f]; f++) {
+        char * filename = getName(files[f], tmpDir);
+        printf("%s\n", tmpDir);
+        if (!strcmp(filename, name)) {
+            strcpy(dir, tmpDir);
+            // free(tmpDir);
+            return f; // index
+        }
+
+        strcpy(tmpDir, "");
+        free(filename);
+    }
+
+    free(tmpDir);
+    
+    return -1; // Not found
+}
+
 void operation_finished (const char * path, const char * name) {
     FILE * R = fopen(path, "r");
-    FILE * W = fopen(path, "w");
 
     char ** names = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
 
@@ -50,7 +91,9 @@ void operation_finished (const char * path, const char * name) {
     }
 
     unsigned int x = 0, index, n;
-    while (names[x], 99, R) {
+    while (fgets(names[x], 99, R)) {
+        enlever_last_car(names[x]);
+        printf("%s\n%s\n%d\n", names[x], name, x);
         if (!strncmp(names[x], name, strlen(name))) index = x;
         x++;
     }
@@ -58,17 +101,16 @@ void operation_finished (const char * path, const char * name) {
     n = x;
     x = 0;
 
+    fclose(R);
+    FILE * W = fopen(path, "w");
+
     for (x = 0; x < index; x++) {
         fprintf(W, "%s\n", names[x]);
     }
 
-    printf("S FAULT START\n");
-
     for (x = index+1; x < n; x++) {
         fprintf(W, "%s\n", names[x]);
     }
-
-    printf("S FAULT END\n");
 
     for (int i = 0; i < MAX_DOWNLOADS; i++) {
         free(names[i]);
@@ -77,6 +119,5 @@ void operation_finished (const char * path, const char * name) {
 
     free(names);
     names = NULL;
-    fclose(R);
     fclose(W);
 }

@@ -405,27 +405,6 @@ int compare_file_historique (char * file, char ** historique, int lines) {
     return 0;
 }
 
-char * getName (char * buf, char * dossier) {
-    unsigned int n = strlen(buf), x = 0, y = 0;
-    char * buffer = (char*) calloc(100, sizeof(char));
-
-    unsigned int i = n-1;
-
-    while (buf[i] != '/') {
-        buffer[x++] = buf[i--];
-    }
-
-    while (i > 0) {
-        dossier[y++] = buf[i-1];
-        i--;
-    }
-
-    mirroir(buffer, x);
-    mirroir(dossier, y);
-
-    return buffer;
-}
-
 // Fonction principale pour la lecture de fichiers
 int get_files (char ** files, Camera * camera, GPContext * context, unsigned int * x) {
     x_sd = -1;
@@ -521,16 +500,16 @@ recursive_directory(char ** files, Camera *camera, const char *folder, GPContext
 
 // Need to test
 
-int download_file (char * name, Camera * camera, GPContext * context) {
-    char * folder;
+int download_file (char ** files, char * name, Camera * camera, GPContext * context) {
+    char * folder = (char*) calloc(100, sizeof(char));
     int status;
 
     // Find path
     printf("GETTING FOLDER ...\n");
-    status = gp_filesystem_get_folder (camera->fs, name, &folder, context);
-    printf("%s\n", folder);
 
-    if (status < 0) return status;
+    int index = find_dir_filename (files, name, folder);
+
+    if (index < 0) return -(index);
 
     printf("GOT FOLDER !\n");
 
@@ -541,7 +520,7 @@ int download_file (char * name, Camera * camera, GPContext * context) {
 
     if (status < 0) return status;
 
-    status = gp_filesystem_get_file (camera->fs, "/store_00020001/DCIM/103CANON", name, GP_FILE_TYPE_NORMAL, file, context);
+    status = gp_filesystem_get_file (camera->fs, folder, name, GP_FILE_TYPE_NORMAL, file, context);
 
     if (status < 0) return status;
 

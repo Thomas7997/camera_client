@@ -61,6 +61,13 @@ int main (void) {
 
 	// Main tasks
 
+    // SD
+    printf("SD SCRIPTS\n");
+    result = rt_task_spawn(&task_check_downloads, "CHECK SD DOWNLOADS", 4096, 99, TASK_PERM, &check_sd_downloads, NULL);
+    result = rt_task_spawn(&task_check_deletes, "CHECK SD DELETES", 4096, 99, TASK_PERM, &check_sd_deletes, NULL);
+    // result = rt_task_spawn(&task_sd_downloads, "SD DOWNLOADS", 4096, 99, TASK_PERM, &sd_downloads, NULL);
+    // result = rt_task_spawn(&task_sd_deletes, "SD DELETES", 4096, 99, TASK_PERM, &sd_deletes, NULL);
+
     // Scripts de vérification
 	result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
 	result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
@@ -83,13 +90,6 @@ int main (void) {
     result = rt_task_spawn(&task_send_model, "SEND CAMERA MODEL", 4096, 99, TASK_PERM, &send_model_fn, NULL);
     result = rt_task_spawn(&task_notify_camera_status, "SEND CAMERA STATUS", 4096, 99, TASK_PERM, &checkAndNotifyCameraStatus, NULL);
 
-    // SD
-    printf("SD SCRIPTS\n");
-    result = rt_task_spawn(&task_check_downloads, "CHECK SD DOWNLOADS", 4096, 99, TASK_PERM, &check_sd_downloads, NULL);
-    result = rt_task_spawn(&task_check_deletes, "CHECK SD DELETES", 4096, 99, TASK_PERM, &check_sd_deletes, NULL);
-    // result = rt_task_spawn(&task_sd_downloads, "SD DOWNLOADS", 4096, 99, TASK_PERM, &sd_downloads, NULL);
-    // result = rt_task_spawn(&task_sd_deletes, "SD DELETES", 4096, 99, TASK_PERM, &sd_deletes, NULL);
-
     while (1) {
 		pause();
 	}
@@ -102,7 +102,7 @@ int main (void) {
 
     free(transferts_send);
 
-    free_usb(NULL);
+    // free_usb(NULL);
     
 	rt_task_delete(&task_transfert_choice);
 	rt_task_delete(&task_wifi);
@@ -171,6 +171,7 @@ void check_transfert_choice (void * arg) {
         FILE * TRANSFERT_CHOICE; // Changera de chemin
 
         do {
+            printf("READING TRANSFERT CHOICE ...\n");
             TRANSFERT_CHOICE = fopen("../data/tmp/transfert_choice.txt", "r");
             if (TRANSFERT_CHOICE == NULL) {
                 printf("Erreur de lecture du fichier TRANSFERT CHOICE.\n");
@@ -183,7 +184,7 @@ void check_transfert_choice (void * arg) {
         prevTransfertChoice = transfert_choice;
 		printf ("CHECK TRANSFERT CHOICE\n");
         fclose(TRANSFERT_CHOICE);
-        usleep(500000);
+        usleep(50000);
 	}
 }
 
@@ -392,7 +393,7 @@ void checkAndNotifyCameraStatus (void * arg) {
             } while (res != CURLE_OK);
         }
 
-        usleep(100000);
+        usleep(10000);
     }
 }
 
@@ -593,12 +594,16 @@ void check_sd_downloads (void * arg) {
 
         int x = 0;
         while (fgets(downloads[x++], 99, R)) {
+            enlever_last_car(downloads[x-1]);
             printf("%s\n", downloads[x-1]);
         }
 
         if (x != 0) {
             all_downloaded = 0;
-            if (transfert_choice != 5) write_choice(5); // Later, we will store previous choice before doing it
+            if (transfert_choice != 5){
+                transfert_choice = 5;
+                write_choice(5); // Later, we will store previous choice before doing it
+            }
         }
 
         do {
@@ -621,7 +626,10 @@ void check_sd_deletes (void * arg) {
 
         if (x != 0) {
             all_deleted = 0;
-            if (transfert_choice != 6) write_choice(6); // Later, we will store previous choice before doing it
+            if (transfert_choice != 6) {
+                transfert_choice = 6;
+                write_choice(6); // Later, we will store previous choice before doing it
+            }
         }
 
         do {
@@ -638,31 +646,39 @@ void check_sd_deletes (void * arg) {
 void sd_downloads (void * arg) {
    while (1) {
         reset = 1;
+        unsigned int nb_sd = 0;
 
         camera_usb_connection_1(NULL);
 
         do {
             usleep(50000);
         } while (!usb_connected);
+
+        status = get_files (files, camera, context, &nb_sd);
+
+        if (status < 0) {
+            // And notity error
+            camera_status = status;
+            continue;
+        }
         
         // dislpayList(files);
 
         int x = 0, nb = 0;
 
-        for (int i = 0; downloads[i][0]; i++) {
-            status = download_file (downloads[i], camera, context);
+        for (int i = 0; *downloads[i]; i++) {
+            status = download_file (files, downloads[i], camera, context);
 
-            if (status < 0) {
+            if (status != 0) {
                 camera_status = status;
+                handleError(status);
                 break;
             }
 
             else {
                 // Remove name from file
                 operation_finished("../data/tmp/downloads.txt", downloads[i]);
-
                 printf("OPERATION FINISHED\n");
-
                 x++;
             }
 
@@ -677,6 +693,10 @@ void sd_downloads (void * arg) {
         usleep(50000);
 
         camera_usb_free_1 (NULL);
+
+        if (transfert_choice != 5) {
+            return;
+        }
     }
 }
 
@@ -708,6 +728,10 @@ void sd_deletes (void * arg) {
             }
             
             usleep(50000);
+
+            if (transfert_choice != 6) {
+                return;
+            }
         }
     }
 }
