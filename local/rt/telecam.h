@@ -71,6 +71,7 @@ void generateError(int status);
 void manage_errors (void * arg);
 void enable_transfert (void * arg);
 void trigger_request_status (Status * status);
+void write_choice (int choice);
 
 // Carte SD
 void cart_SD_mode (void * arg);

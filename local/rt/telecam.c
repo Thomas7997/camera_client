@@ -87,8 +87,8 @@ int main (void) {
     printf("SD SCRIPTS\n");
     result = rt_task_spawn(&task_check_downloads, "CHECK SD DOWNLOADS", 4096, 99, TASK_PERM, &check_sd_downloads, NULL);
     result = rt_task_spawn(&task_check_deletes, "CHECK SD DELETES", 4096, 99, TASK_PERM, &check_sd_deletes, NULL);
-    result = rt_task_spawn(&task_sd_downloads, "SD DOWNLOADS", 4096, 99, TASK_PERM, &sd_downloads, NULL);
-    result = rt_task_spawn(&task_sd_deletes, "SD DELETES", 4096, 99, TASK_PERM, &sd_deletes, NULL);
+    // result = rt_task_spawn(&task_sd_downloads, "SD DOWNLOADS", 4096, 99, TASK_PERM, &sd_downloads, NULL);
+    // result = rt_task_spawn(&task_sd_deletes, "SD DELETES", 4096, 99, TASK_PERM, &sd_deletes, NULL);
 
     while (1) {
 		pause();
@@ -513,6 +513,14 @@ void script_apply_choice (void * arg) {
                 printf("LECTURE CARTE SD\n");
                 cart_SD_mode(NULL);
             break;
+            case 5 :
+                printf("SD CARD DOWNLOADS\n");
+                sd_downloads(NULL);
+            break;
+            case 6 :
+                printf("SD CARD DELETES\n");
+                sd_deletes(NULL);
+            break;
             default : printf("Erreur\n");
             break;
         }
@@ -584,9 +592,14 @@ void check_sd_downloads (void * arg) {
         FILE * R = fopen("../data/tmp/downloads.txt", "r");
 
         int x = 0;
-        while (fgets(downloads[x++], 99, R));
+        while (fgets(downloads[x++], 99, R)) {
+            printf("%s\n", downloads[x-1]);
+        }
 
-        if (x != 0) all_downloaded = 0;
+        if (x != 0) {
+            all_downloaded = 0;
+            if (transfert_choice != 5) write_choice(5); // Later, we will store previous choice before doing it
+        }
 
         do {
             usleep(50000);
@@ -606,7 +619,10 @@ void check_sd_deletes (void * arg) {
         int x = 0;
         while (fgets(deletes[x++], 99, R));
 
-        if (x != 0) all_deleted = 0;
+        if (x != 0) {
+            all_deleted = 0;
+            if (transfert_choice != 6) write_choice(6); // Later, we will store previous choice before doing it
+        }
 
         do {
             usleep(50000);
@@ -621,9 +637,19 @@ void check_sd_deletes (void * arg) {
 
 void sd_downloads (void * arg) {
    while (1) {
+        reset = 1;
+
+        camera_usb_connection_1(NULL);
+
+        do {
+            usleep(50000);
+        } while (!usb_connected);
+        
+        // dislpayList(files);
+
         int x = 0, nb = 0;
 
-        for (int i = 0; *downloads[i]; i++) {
+        for (int i = 0; downloads[i][0]; i++) {
             status = download_file (downloads[i], camera, context);
 
             if (status < 0) {
@@ -635,6 +661,8 @@ void sd_downloads (void * arg) {
                 // Remove name from file
                 operation_finished("../data/tmp/downloads.txt", downloads[i]);
 
+                printf("OPERATION FINISHED\n");
+
                 x++;
             }
 
@@ -642,39 +670,52 @@ void sd_downloads (void * arg) {
         }
 
         if (x == nb) {
-            all_downloaded= 1;
+            all_downloaded = 1;
+            // Write the previous transfert choice
         }
         
         usleep(50000);
+
+        camera_usb_free_1 (NULL);
     }
 }
 
 void sd_deletes (void * arg) {
     while (1) {
-        int x = 0, nb = 0;
+        if (usb_connected) {
+            int x = 0, nb = 0;
 
-        for (int i = 0; *deletes[i]; i++) {
-            status = delete_file (deletes[i], camera, context);
+            for (int i = 0; *deletes[i]; i++) {
+                status = delete_file (deletes[i], camera, context); // Call rt_task_suspend_before
 
-            if (status < 0) {
-                camera_status = status;
-                break;
+                if (status < 0) {
+                    camera_status = status;
+                    break;
+                }
+
+                else {
+                    // Remove name from file
+                    operation_finished("../data/tmp/deletes.txt", deletes[i]);
+
+                    x++;
+                }
+
+                nb++;
             }
 
-            else {
-                // Remove name from file
-                operation_finished("../data/tmp/deletes.txt", deletes[i]);
-
-                x++;
+            if (x == nb) {
+                all_deleted = 1;
             }
-
-            nb++;
+            
+            usleep(50000);
         }
-
-        if (x == nb) {
-            all_deleted = 1;
-        }
-        
-        usleep(50000);
     }
+}
+
+void write_choice (int choice) {
+    FILE * W = fopen("../data/tmp/transfert_choice.txt", "w");
+
+    fprintf(W, "%d", choice);
+
+    fclose(W);
 }

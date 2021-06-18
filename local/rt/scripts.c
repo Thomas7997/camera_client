@@ -29,11 +29,21 @@ void clearStr (char * str) {
     }
 }
 
+void dislpayList(char ** list) {
+    printf("Displaying list ...\n");
+
+    for (unsigned int x = 0; *list[x]; x++) {
+        printf("%s\n", list[x]);
+    }
+
+    printf("List displayed !\n");
+}
+
 void operation_finished (const char * path, const char * name) {
     FILE * R = fopen(path, "r");
     FILE * W = fopen(path, "w");
 
-    char ** names = (char**) calloc(MAX_DOWNLOADS, sizeof(char));
+    char ** names = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
 
     for (int i = 0; i < MAX_DOWNLOADS; i++) {
         names[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
@@ -41,19 +51,24 @@ void operation_finished (const char * path, const char * name) {
 
     unsigned int x = 0, index, n;
     while (names[x], 99, R) {
-        if (!strcmp(names[x], name)) index = x;
+        if (!strncmp(names[x], name, strlen(name))) index = x;
         x++;
     }
 
     n = x;
+    x = 0;
 
     for (x = 0; x < index; x++) {
         fprintf(W, "%s\n", names[x]);
     }
 
-    for (x = index+1; x < n+1; x++) {
+    printf("S FAULT START\n");
+
+    for (x = index+1; x < n; x++) {
         fprintf(W, "%s\n", names[x]);
     }
+
+    printf("S FAULT END\n");
 
     for (int i = 0; i < MAX_DOWNLOADS; i++) {
         free(names[i]);

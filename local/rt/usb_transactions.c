@@ -523,21 +523,31 @@ recursive_directory(char ** files, Camera *camera, const char *folder, GPContext
 
 int download_file (char * name, Camera * camera, GPContext * context) {
     char * folder;
+    int status;
 
     // Find path
-    int status = gp_filesystem_get_folder (camera->fs, name, &folder, context);
+    printf("GETTING FOLDER ...\n");
+    status = gp_filesystem_get_folder (camera->fs, name, &folder, context);
+    printf("%s\n", folder);
 
     if (status < 0) return status;
 
+    printf("GOT FOLDER !\n");
+
     // Download
+    printf("GETTING FILE ...\n");
     CameraFile * file;
     status = gp_file_new(&file);
 
     if (status < 0) return status;
 
-    status = gp_filesystem_get_file (camera->fs, folder, name, GP_FILE_TYPE_NORMAL, file, context);
+    status = gp_filesystem_get_file (camera->fs, "/store_00020001/DCIM/103CANON", name, GP_FILE_TYPE_NORMAL, file, context);
 
     if (status < 0) return status;
+
+    printf("GOT FILE !\n");
+
+    printf("SAVING FILE ...\n");
 
     char * path = (char*) calloc(100, sizeof(char));
     sprintf(path, "../data/images/downloads/%s", name);
@@ -545,6 +555,8 @@ int download_file (char * name, Camera * camera, GPContext * context) {
     status = gp_file_save (file, (const char*) path);
 
     if (status < 0) return status;
+
+    printf("FILE SAVED !\n");
 
     gp_file_free(file);
     free(path);
