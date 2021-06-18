@@ -1,5 +1,69 @@
 #include "sd2.h"
 
+// Permissions list
+
+FilesPermissions * init_files_permissions (void) {
+    FilesPermissions * fp = malloc(1 * sizeof(FilesPermissions));
+    fp->path = calloc(100, sizeof(char));
+    fp->name = calloc(50, sizeof(char));
+    fp = NULL;
+
+    return fp;
+}
+
+void display_files_permissions (FilesPermissions * fp) {
+    if (fp) {
+        printf("Name : %s\n", fp->name);
+        printf("Path : %s\n", fp->path);
+
+        if (fp->permissions.read) {
+            printf("Read : yes\n");
+        }
+
+        if (fp->permissions.del) {
+            printf("Delete : yes");
+        }
+
+        display_files_permissions(fp->next);
+    }
+}
+
+FilesPermissions * addqueue_files_permissions (FilesPermissions * fp, char * name, char * path, Permissions permissions) {
+    FilesPermissions * P;
+    FilesPermissions * Q;
+    FilesPermissions * tete;
+
+    P = malloc(sizeof(FilesPermissions));
+
+    strcpy(P->name, name);
+    strcpy(P->path, path);
+    P->permissions = permissions;
+    P->next = NULL;
+
+    if (!fp) {
+        return P;
+    }
+
+    else {
+        Q = fp;
+        tete = fp;
+        while (Q->next) {
+            Q = Q->next;
+        }
+        Q->next = P;
+        return tete;
+    }
+}
+
+void free_files_permissions (FilesPermissions * fp) {
+    free(fp->name);
+    fp->name = NULL;
+    free(fp->path);
+    fp->path = NULL;
+    free(fp);
+    fp = NULL;
+}
+
 // Déclaration ici
 int x_sd = -1;
 
@@ -27,8 +91,10 @@ int main (void) {
 
     printf("LECTURE DE LA LISTE ...\n");
 
+    FilesPermissions * fp = init_files_permissions ();
+
     unsigned int files_nb;
-    status = get_files(files, camera, context, &files_nb);
+    status = get_files(files, camera, context, &files_nb, &fp);
     printf("%d\n", files_nb);
 
     if (status < 0) handleError(status);
@@ -41,19 +107,22 @@ int main (void) {
         printf("%s\n", files[j]);
     }
 
+    // display_files_permissions(fp);
+
     printf("AFFICHAGE DE LA LISTE TERMINÉ.\n");
 
     printf("%d\n", files_nb);
 
-    status = get_sd_card_previews (files, files_nb, camera, context);
+    // status = get_sd_card_previews (files, files_nb, camera, context);
 
-    if (status < 0) handleError(status);
+    // if (status < 0) handleError(status);
 
     for (int i = 0; i < 10000; i++) {
         free(files[i]);
     }
 
     free(files);
+    free_files_permissions (fp);
 
     // FIN RÉPÉTITIONS
 
@@ -96,12 +165,56 @@ GPContext* sample_create_context() {
 }
 
 // Fonction principale pour la lecture de fichiers
-int get_files (char ** files, Camera * camera, GPContext * context, unsigned int * x) {
+int get_files (char ** files, Camera * camera, GPContext * context, unsigned int * x, FilesPermissions ** fp) {
     x_sd = -1;
     int status = recursive_directory(files, camera, "/", context, x);
     handleError(status);
 
+    // Check file info(s)
 
+    for (int f = 0; f < *x; f++) {
+        CameraFileInfo info;
+
+        char * dir = calloc(100, sizeof(char));
+        char * filename = getName (files[f], dir);
+
+        printf("%s\n%s\n", dir, filename);
+
+        // We will work on the file permissions later (maybe with other versions of gphoto2)
+
+        // gp_camera_file_get_info (camera, dir, filename, NULL, context);
+
+        if (status < 0) return status;
+
+        Permissions permissions;
+
+        // Delete perm
+
+        if (info.file.permissions == GP_FILE_PERM_DELETE) {
+            permissions.del = 1;
+        }
+
+        else {
+            permissions.del = 0;
+        }
+
+        // Read perm
+
+        if (info.file.permissions == GP_FILE_PERM_DELETE) {
+            permissions.read = 1;
+        }
+
+        else {
+            permissions.read = 0;
+        }
+
+        // Add to files permissions
+
+        // *fp = addqueue_files_permissions(*fp, filename, files[f], permissions);
+
+        free(dir);
+        free(filename);
+    }
 
     return GP_OK;
 }

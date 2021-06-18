@@ -24,6 +24,18 @@
 #define MAX_FOLDER_LEN 100
 #define MAX_FILE_LEN 100
 
+typedef struct {
+    int read;
+    int del;
+} Permissions;
+
+typedef struct _FilesPermissions {
+    char * path;
+    char * name;
+    Permissions permissions;
+    struct _FilesPermissions * next;
+} FilesPermissions;
+
 void handleError(int status);
 static void
 ctx_error_func (GPContext *context, const char *str, void *data);
@@ -37,6 +49,6 @@ int get_sd_card_previews (char ** files, unsigned int nb, Camera * camera, GPCon
 // int sd_card_lecture_mode (Camera * camera, GPContext * context);
 int
 recursive_directory(char ** files, Camera *camera, const char * folder, GPContext *context, unsigned int * x);
-int get_files (char ** files, Camera * camera, GPContext * context, unsigned int * x);
+int get_files (char ** files, Camera * camera, GPContext * context, unsigned int * x, FilesPermissions ** fp);
 
 #endif

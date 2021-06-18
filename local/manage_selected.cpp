@@ -420,24 +420,57 @@ GPContext* sample_create_context() {
 // Retourne le status, le reste, dans les pointeurs
 
 // Create a function that assign an int to a mime type (like filter)
+int getMimeType (char * name) {
+    char * ext = (char*) calloc(5, sizeof(char));
+
+    for (int i = 0, j = 0; name[i]; i++) {
+        if (name[i-j-1] == '.') {
+            ext[j++] = name[i];
+        }
+    }
+
+    if (!strcmp(ext, "MOV") || !strcmp(ext, "mov")) {
+        free(ext);
+        return MOV_MIME_TYPE;
+    }
+
+    if (!strcmp(ext, "MP4") || !strcmp(ext, "mp4")) {
+        free(ext);
+        return MP4_MIME_TYPE;
+    }
+
+    if (!strcmp(ext, "JPG") || !strcmp(ext, "jpg") || !strcmp(ext, "jpeg") || !strcmp(ext, "JPEG")) {
+        free(ext);
+        return JPG_MIME_TYPE;
+    }
+
+    if (!strcmp(ext, "CR3") || !strcmp(ext, "cr2")) {
+        free(ext);
+        return CR2_MIME_TYPE;
+    }
+
+    free(ext);
+    return UNKNOWN_MIME_TYPE;
+}
 
 int getPlacements(int * rating, char * dir, char * file, char * data, GPContext * context, Camera * camera)
 {
-    CameraFile * cfile;
     uint64_t size_l;
     int start_byte;
     int exiv;
-    const char * mtype;
-    
+    int mtype;
     int status;
 
-    if (strcmp(mtype, GP_MIME_CR2) == 0 || strcmp(mtype, GP_MIME_JPEG) == 0 || strcmp(mtype, GP_MIME_NEF) == 0 || strcmp(mtype, GP_MIME_CRW) == 0 || strcmp(mtype, GP_MIME_RAW) == 0 || strcmp(mtype, GP_MIME_AVI) == 0) {
+    mtype = getMimeType (file);
+    printf("%d\n", mtype);
+
+    if (mtype == JPG_MIME_TYPE || mtype == CR2_MIME_TYPE) {
         start_byte = JPG_START_BYTE;
         size_l = JPG_BYTE_LENGTH;
         exiv = TRUE;
     }
 
-    else if (strcmp(mtype, GP_MIME_MPEG) == 0) {
+    else if (mtype == MOV_MIME_TYPE || mtype == MP4_MIME_TYPE) {
         start_byte = MOV_START_BYTE;
         size_l = MOV_BYTE_LENGTH;
         exiv = FALSE;
@@ -462,7 +495,7 @@ int getPlacements(int * rating, char * dir, char * file, char * data, GPContext 
     if (status < 0) return status;
 
     if (!exiv) {
-        if (strcmp(mtype, GP_MIME_MPEG) == 0) {
+        if (mtype == MOV_MIME_TYPE) {
             if (get_mov_5_stars(data)) {
                 *rating = 5;
             }
@@ -518,11 +551,7 @@ int getPlacements(int * rating, char * dir, char * file, char * data, GPContext 
         }
     }
 
-    gp_file_free(cfile);
-
    return 0;
-
-
 }
 
 int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context) {

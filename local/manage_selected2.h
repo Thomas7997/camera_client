@@ -31,6 +31,11 @@
 #define PART_NB 50
 // #define TRUE 1 == 1
 // #define FALSE 1 == 0
+#define UNKNOWN_MIME_TYPE 0
+#define MOV_MIME_TYPE 1
+#define MP4_MIME_TYPE 2
+#define JPG_MIME_TYPE 3
+#define CR2_MIME_TYPE 4
 
 struct _Dossier {
     char * title;
@@ -43,7 +48,7 @@ typedef struct _Dossier Dossier;
 
 // Création d'une fonction pour ne sélectionner que les X derniers éléments de la liste de photos
 void cut_list(char ** files, unsigned int size, char ** newList);
-
+int getMimeType (char * name);
 void mirroir (char * buf, unsigned int n);
 int generateError (int status);
 int getCameraModel (Camera * cam);
