@@ -23,8 +23,12 @@ static int * transfert_tasks;
 static char ** add;
 static char ** supp;
 static char ** cld_files;
+static char ** downloads;
+static char ** deletes;
 
 int send_model = 0;
+
+int all_deleted, all_downloaded;
 
 // status
 int prevCamera_status, camera_status;

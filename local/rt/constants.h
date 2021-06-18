@@ -9,5 +9,6 @@
 #define MIN_DIRS 10
 #define NB_PARTS 2
 #define PART_NB 49
+#define MAX_DOWNLOADS 100
 
 #endif

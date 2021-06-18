@@ -518,3 +518,52 @@ recursive_directory(char ** files, Camera *camera, const char *folder, GPContext
 	gp_list_free (list);
 	return GP_OK;
 }
+
+// Need to test
+
+int download_file (char * name, Camera * camera, GPContext * context) {
+    char * folder;
+
+    // Find path
+    int status = gp_filesystem_get_folder (camera->fs, name, &folder, context);
+
+    if (status < 0) return status;
+
+    // Download
+    CameraFile * file;
+    status = gp_file_new(&file);
+
+    if (status < 0) return status;
+
+    status = gp_filesystem_get_file (camera->fs, folder, name, GP_FILE_TYPE_NORMAL, file, context);
+
+    if (status < 0) return status;
+
+    char * path = (char*) calloc(100, sizeof(char));
+    sprintf(path, "../data/images/downloads/%s", name);
+
+    status = gp_file_save (file, (const char*) path);
+
+    if (status < 0) return status;
+
+    gp_file_free(file);
+    free(path);
+
+    return GP_OK;
+}
+
+int delete_file (char * name, Camera * camera, GPContext * context) {
+    char * folder;
+
+    // Find path
+    int status = gp_filesystem_get_folder (camera->fs, name, &folder, context);
+
+    if (status < 0) return status;
+
+    // Delete
+    status = gp_filesystem_delete_file (camera->fs, folder, name, context);
+
+    if (status < 0) return status;
+
+    return GP_OK;
+}

@@ -28,3 +28,40 @@ void clearStr (char * str) {
         str[i] = 0;
     }
 }
+
+void operation_finished (const char * path, const char * name) {
+    FILE * R = fopen(path, "r");
+    FILE * W = fopen(path, "w");
+
+    char ** names = (char**) calloc(MAX_DOWNLOADS, sizeof(char));
+
+    for (int i = 0; i < MAX_DOWNLOADS; i++) {
+        names[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+    }
+
+    unsigned int x = 0, index, n;
+    while (names[x], 99, R) {
+        if (!strcmp(names[x], name)) index = x;
+        x++;
+    }
+
+    n = x;
+
+    for (x = 0; x < index; x++) {
+        fprintf(W, "%s\n", names[x]);
+    }
+
+    for (x = index+1; x < n+1; x++) {
+        fprintf(W, "%s\n", names[x]);
+    }
+
+    for (int i = 0; i < MAX_DOWNLOADS; i++) {
+        free(names[i]);
+        names[i] = NULL;
+    }
+
+    free(names);
+    names = NULL;
+    fclose(R);
+    fclose(W);
+}

@@ -1,6 +1,5 @@
 #include "telecam.h"
 
-// Actuellement le switch de mode génère un bug sur lequel il faut travailller
 int main (void) {
 	// Initialisations
     dossiers = (char***) calloc(MIN_DIRS, sizeof(char**)); // A supprimer plus tard
@@ -15,6 +14,12 @@ int main (void) {
     add = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     supp = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     cld_files = (char**) calloc(MAX_CAPTURES, sizeof(char*));
+    downloads = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
+    deletes = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
+
+    // BOOLS
+    all_deleted = 1;
+    all_downloaded = 1;
 
     // For error handling
     prevStatus = status = 0;
@@ -34,6 +39,11 @@ int main (void) {
     for (unsigned int i = 0; i < MAX_CAPTURES; i++) {
         files[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
         liste_captures[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+    }
+
+    for (unsigned int i = 0; i < MAX_DOWNLOADS; i++) {
+        downloads[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        deletes[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
     
     transferts_send = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -57,20 +67,28 @@ int main (void) {
     // result = rt_task_spawn (&task_manage_errors, "MANAGE ERRORS", 4096, 99, TASK_PERM, &manage_errors, NULL);
 
 	// Scripts d'action
+    printf("ACTIONS SCRIPTS\n");
 	result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
 	result = rt_task_create (&task_send_files_online, "SEND MEDIAS", 4096, 99, TASK_PERM);
 
     result = rt_task_create (&task_enable_transfert, "LANCER TRANSFERT IMAGE AUTO", 10000, 99, TASK_PERM);
 
     // MAIN SCRIPTS
+    printf("MAIN SCRIPTS\n");
     result = rt_task_spawn (&task_apply_choice, "APPLIQUER LE CHOIX DE L'UTILISATEUR", 4096, 99, TASK_PERM, &script_apply_choice, NULL);
     result = rt_task_spawn (&task_wifi_transfert, "APPLIQUER LE TRANSFERT WIFI AUTONOME", 4096, 99, TASK_PERM, &send_transferts_online, NULL);
 
     // NOTIFICATION
+    printf("NOTIFICATION SCRIPTS\n");
     result = rt_task_spawn(&task_send_model, "SEND CAMERA MODEL", 4096, 99, TASK_PERM, &send_model_fn, NULL);
     result = rt_task_spawn(&task_notify_camera_status, "SEND CAMERA STATUS", 4096, 99, TASK_PERM, &checkAndNotifyCameraStatus, NULL);
 
-    // Lancement des tâches et suspension de certaines
+    // SD
+    printf("SD SCRIPTS\n");
+    result = rt_task_spawn(&task_check_downloads, "CHECK SD DOWNLOADS", 4096, 99, TASK_PERM, &check_sd_downloads, NULL);
+    result = rt_task_spawn(&task_check_deletes, "CHECK SD DELETES", 4096, 99, TASK_PERM, &check_sd_deletes, NULL);
+    result = rt_task_spawn(&task_sd_downloads, "SD DOWNLOADS", 4096, 99, TASK_PERM, &sd_downloads, NULL);
+    result = rt_task_spawn(&task_sd_deletes, "SD DELETES", 4096, 99, TASK_PERM, &sd_deletes, NULL);
 
     while (1) {
 		pause();
@@ -97,30 +115,55 @@ int main (void) {
     for (int d = 0; d < MIN_DIRS; d++) {
         for (int dy = 0; dy < MAX_DIR_CAPTURES; dy++) {
             free(dossiers[d][dy]);
+            dossiers[d][dy] = NULL;
         }
         free(dossiers[d]);
+        dossiers[d] = NULL;
     }
 
     for (int i = 0; i < MAX_CAPTURES; i++) {
         free(files[i]);
+        files[i] = NULL;
         free(liste_captures[i]);
+        liste_captures[i] =  NULL;
         free(add[i]);
+        add[i] = NULL;
         free(supp[i]);
+        supp[i] = NULL;
         free(cld_files[i]);
+        cld_files[i] = NULL;
+    }
+
+    for (unsigned int i = 0; i < MAX_DOWNLOADS; i++) {
+        free(downloads[i]);
+        downloads[i] = NULL;
+        free(deletes[i]);
+        deletes[i] = NULL;
     }
 
     for (unsigned int i = 0; i < PART_NB; i++) {
         free(images_list[i]);
+        images_list[i] = NULL;
     }
 
+    free(deletes);
+    deletes = NULL;
     free(dir_sizes);
+    dir_sizes = NULL;
     free(dossiers);
+    dossiers = NULL;
     free(files);
+    files = NULL;
     free(images_list);
+    images_list = NULL;
     free(liste_captures);
+    liste_captures = NULL;
     free(transferts_tmp);
+    transferts_tmp = NULL;
     free(model);
+    model = NULL;
     free(photos);
+    photos = NULL;
 }
 
 void check_transfert_choice (void * arg) {
@@ -489,17 +532,6 @@ void send_transferts_online (void * arg) {
 // Travailler dessus car trop de répétitions ou rectifier côté réception
 void manage_errors (void * arg) {
     while (1) {
-        // printf("\nstatus : %d et prevStatus : %d\n\n", status, prevStatus);
-        // if (status != prevStatus && error == 1 && status != 0) {
-        //     printf("prevStatus : %d\n", prevStatus);
-        //     prevStatus = status;
-        //     res = send_status_request(status);
-        //     printf("res : %d\n", res);
-        //     printf("status : %d\n", status);
-        //     handleError(status);
-        //     error = 0;
-        // }
-
         if (prevStatus != status) {
             printf("status : %d et prevStatus : %d\n", status, prevStatus);
             res = send_status_request(status);
@@ -544,5 +576,105 @@ void apply_networking (void * arg) {
         }
 
         usleep(100000);
+    }
+}
+
+void check_sd_downloads (void * arg) {
+    while (1) {
+        FILE * R = fopen("../data/tmp/downloads.txt", "r");
+
+        int x = 0;
+        while (fgets(downloads[x++], 99, R));
+
+        if (x != 0) all_downloaded = 0;
+
+        do {
+            usleep(50000);
+        } while (!all_downloaded);
+
+        clearList (downloads);
+        fclose (R);
+
+        usleep(50000);
+    }
+}
+
+void check_sd_deletes (void * arg) {
+    while (1) {
+        FILE * R = fopen("../data/tmp/deletes.txt", "r");
+
+        int x = 0;
+        while (fgets(deletes[x++], 99, R));
+
+        if (x != 0) all_deleted = 0;
+
+        do {
+            usleep(50000);
+        } while (!all_deleted);
+
+        clearList (deletes);
+        fclose (R);
+
+        usleep(50000);
+    }
+}
+
+void sd_downloads (void * arg) {
+   while (1) {
+        int x = 0, nb = 0;
+
+        for (int i = 0; *downloads[i]; i++) {
+            status = download_file (downloads[i], camera, context);
+
+            if (status < 0) {
+                camera_status = status;
+                break;
+            }
+
+            else {
+                // Remove name from file
+                operation_finished("../data/tmp/downloads.txt", downloads[i]);
+
+                x++;
+            }
+
+            nb++;
+        }
+
+        if (x == nb) {
+            all_downloaded= 1;
+        }
+        
+        usleep(50000);
+    }
+}
+
+void sd_deletes (void * arg) {
+    while (1) {
+        int x = 0, nb = 0;
+
+        for (int i = 0; *deletes[i]; i++) {
+            status = delete_file (deletes[i], camera, context);
+
+            if (status < 0) {
+                camera_status = status;
+                break;
+            }
+
+            else {
+                // Remove name from file
+                operation_finished("../data/tmp/deletes.txt", deletes[i]);
+
+                x++;
+            }
+
+            nb++;
+        }
+
+        if (x == nb) {
+            all_deleted = 1;
+        }
+        
+        usleep(50000);
     }
 }
