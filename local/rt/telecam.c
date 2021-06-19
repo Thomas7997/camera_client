@@ -622,7 +622,9 @@ void check_sd_deletes (void * arg) {
         FILE * R = fopen("../data/tmp/deletes.txt", "r");
 
         int x = 0;
-        while (fgets(deletes[x++], 99, R));
+        while (fgets(deletes[x++], 99, R)) {
+            enlever_last_car(deletes[x-1]);
+        }
 
         if (x != 0) {
             all_deleted = 0;
@@ -702,36 +704,57 @@ void sd_downloads (void * arg) {
 
 void sd_deletes (void * arg) {
     while (1) {
-        if (usb_connected) {
-            int x = 0, nb = 0;
+        reset = 1;
+        unsigned int nb_sd = 0;
 
-            for (int i = 0; *deletes[i]; i++) {
-                status = delete_file (deletes[i], camera, context); // Call rt_task_suspend_before
+        camera_usb_connection_1(NULL);
 
-                if (status < 0) {
-                    camera_status = status;
-                    break;
-                }
-
-                else {
-                    // Remove name from file
-                    operation_finished("../data/tmp/deletes.txt", deletes[i]);
-
-                    x++;
-                }
-
-                nb++;
-            }
-
-            if (x == nb) {
-                all_deleted = 1;
-            }
-            
+        do {
             usleep(50000);
+        } while (!usb_connected);
 
-            if (transfert_choice != 6) {
-                return;
+        status = get_files (files, camera, context, &nb_sd);
+
+        if (status < 0) {
+            // And notity error
+            camera_status = status;
+            continue;
+        }
+        
+        // dislpayList(files);
+
+        int x = 0, nb = 0;
+
+        for (int i = 0; *deletes[i]; i++) {
+            status = delete_file (files, deletes[i], camera, context);
+
+            if (status != 0) {
+                camera_status = status;
+                handleError(status);
+                break;
             }
+
+            else {
+                // Remove name from file
+                operation_finished("../data/tmp/deletes.txt", deletes[i]);
+                printf("OPERATION FINISHED\n");
+                x++;
+            }
+
+            nb++;
+        }
+
+        if (x == nb) {
+            all_downloaded = 1;
+            // Write the previous transfert choice
+        }
+        
+        usleep(50000);
+
+        camera_usb_free_1 (NULL);
+
+        if (transfert_choice != 6) {
+            return;
         }
     }
 }

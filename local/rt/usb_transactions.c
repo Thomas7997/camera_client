@@ -543,13 +543,18 @@ int download_file (char ** files, char * name, Camera * camera, GPContext * cont
     return GP_OK;
 }
 
-int delete_file (char * name, Camera * camera, GPContext * context) {
-    char * folder;
+int delete_file (char ** files, char * name, Camera * camera, GPContext * context) {
+    char * folder = (char*) calloc(100, sizeof(char));
+    int status;
 
     // Find path
-    int status = gp_filesystem_get_folder (camera->fs, name, &folder, context);
+    printf("GETTING FOLDER ...\n");
 
-    if (status < 0) return status;
+    int index = find_dir_filename (files, name, folder);
+
+    if (index < 0) return -(index);
+
+    printf("GOT FOLDER !\n");
 
     // Delete
     status = gp_filesystem_delete_file (camera->fs, folder, name, context);
