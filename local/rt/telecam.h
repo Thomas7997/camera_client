@@ -47,7 +47,7 @@ RT_TASK task_apply_choice, task_wifi_transfert;
 RT_TASK task_send_model, task_notify_camera_status;
 
 // SD
-RT_TASK task_check_downloads, task_check_deletes, task_sd_downloads, task_sd_deletes;
+RT_TASK task_check_downloads, task_check_deletes, task_sd_downloads, task_sd_deletes, task_send_downloads, task_send_deletes;
 
 void enable_transfert_image_selection (void * arg);
 void enable_transfert_image_auto (void * arg);
@@ -79,5 +79,8 @@ void check_sd_downloads (void * arg);
 void check_sd_deletes (void * arg);
 void sd_downloads (void * arg);
 void sd_deletes (void * arg);
+void sendOperationNotification (void * arg);
+void sendDeleted (void * arg);
+void sendDownloads (void * arg);
 
 #endif

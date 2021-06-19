@@ -31,9 +31,7 @@ int send_request (char *name) {
     return res;
 }
 
-int send_camera_status (int status) {
-    printf("Requêtes\n");
-    
+int send_camera_status (int status) {    
     CURL *curl;
     CURLcode res;
 
@@ -57,6 +55,48 @@ int send_camera_status (int status) {
     }
     curl_global_cleanup();
     free(request_string);
+    printf ("\n");
+    return res;
+}
+
+int send_operation_status (int status, int op) {    
+    CURL *curl;
+    CURLcode res;
+
+    char * uri = (char*) calloc(100, sizeof(char));
+    char * request_string = (char*) calloc(1000, sizeof(char));
+    sprintf(request_string, "status=%d", status);
+
+    if (op == OP_DOWNLOAD) {
+        strcpy (uri, "http://127.0.0.1:8000/transfert/download");
+    }
+
+    else if (op == OP_DELETE) {
+        strcpy (uri, "http://127.0.0.1:8000/transfert/delete");
+    }
+
+    else {
+        printf("Operation unknown.\n");
+        return -1; // Maybe change it later
+    }
+    
+    curl_global_init(CURL_GLOBAL_ALL);
+    
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, uri);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_string);
+    
+        res = curl_easy_perform(curl); 
+        if(res != CURLE_OK)
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+        curl_easy_strerror(res));
+    
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
+    free(request_string);
+    free(uri);
     printf ("\n");
     return res;
 }

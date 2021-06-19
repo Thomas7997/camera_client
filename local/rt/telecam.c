@@ -16,6 +16,8 @@ int main (void) {
     cld_files = (char**) calloc(MAX_CAPTURES, sizeof(char*));
     downloads = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
     deletes = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
+    downloaded_files = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
+    deleted_files = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
 
     // BOOLS
     all_deleted = 1;
@@ -24,6 +26,8 @@ int main (void) {
     // For error handling
     prevStatus = status = 0;
     prevCamera_status = camera_status = 1;
+    operation_status = prevOperation_status = OP_NO_STATUS;
+    operation_mode = OP_NONE;
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_DIR_CAPTURES, sizeof(char*));
@@ -44,6 +48,8 @@ int main (void) {
     for (unsigned int i = 0; i < MAX_DOWNLOADS; i++) {
         downloads[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
         deletes[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        downloaded_files[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
+        deleted_files[i] = (char*) calloc(TAILLE_NOM, sizeof(char));
     }
     
     transferts_send = (char**) calloc(MAX_CAPTURES, sizeof(char*));
@@ -65,8 +71,8 @@ int main (void) {
     printf("SD SCRIPTS\n");
     result = rt_task_spawn(&task_check_downloads, "CHECK SD DOWNLOADS", 4096, 99, TASK_PERM, &check_sd_downloads, NULL);
     result = rt_task_spawn(&task_check_deletes, "CHECK SD DELETES", 4096, 99, TASK_PERM, &check_sd_deletes, NULL);
-    // result = rt_task_spawn(&task_sd_downloads, "SD DOWNLOADS", 4096, 99, TASK_PERM, &sd_downloads, NULL);
-    // result = rt_task_spawn(&task_sd_deletes, "SD DELETES", 4096, 99, TASK_PERM, &sd_deletes, NULL);
+    result = rt_task_spawn(&task_send_downloads, "SEND DOWNLOADS", 4096, 99, TASK_PERM, &sendDownloads, NULL);
+    result = rt_task_spawn(&task_send_deletes, "SEND DOWNLOADS", 4096, 99, TASK_PERM, &sendDeleted, NULL);
 
     // Scripts de vérification
 	result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
@@ -139,6 +145,10 @@ int main (void) {
         downloads[i] = NULL;
         free(deletes[i]);
         deletes[i] = NULL;
+        free(downloaded_files[i]);
+        downloaded_files[i] = NULL;
+        free(deleted_files[i]);
+        deleted_files[i] = NULL;
     }
 
     for (unsigned int i = 0; i < PART_NB; i++) {
@@ -378,23 +388,6 @@ void camera_usb_free_1(void * arg) {
     printf("LIBÉRATION USB ...\n");
     gp_camera_exit(camera, context);
     gp_camera_free(camera);
-}
-
-void checkAndNotifyCameraStatus (void * arg) {
-    int res = 0;
-    
-    while (1) {
-        if (wifi_status && camera_status != prevCamera_status) {
-            prevCamera_status = camera_status;
-
-            do {
-                res = send_camera_status(camera_status);
-                sleep(3);
-            } while (res != CURLE_OK);
-        }
-
-        usleep(10000);
-    }
 }
 
 void camera_usb_connection (void * arg) {
@@ -759,10 +752,89 @@ void sd_deletes (void * arg) {
     }
 }
 
+void sendDownloads (void * arg) {
+    int res = 0;
+
+    while (1) {
+        unsigned int local_downloads_nb = fill_downloaded_files (downloaded_files);
+
+        if (wifi_status && local_downloads_nb > 0) {
+            for (int i = 0; i < local_downloads_nb; i++) {
+                send_download(downloaded_files[i]);
+            }
+        }
+
+        usleep(50000);
+    }
+}
+
+void sendDeleted (void * arg) {
+    int res = 0;
+
+    while (1) {
+        unsigned int local_deletes_nb = fill_deleted_files (deleted_files);
+
+        if (wifi_status && local_deletes_nb > 0) {
+            for (int i = 0; i < local_deletes_nb; i++) {
+                send_delete(deleted_files[i]);
+            }
+        }
+
+        usleep(50000);
+    }
+}
+
 void write_choice (int choice) {
     FILE * W = fopen("../data/tmp/transfert_choice.txt", "w");
 
     fprintf(W, "%d", choice);
 
     fclose(W);
+}
+
+void checkAndNotifyCameraStatus (void * arg) {
+    int res = 0;
+    
+    while (1) {
+        if (wifi_status && camera_status != prevCamera_status) {
+            prevCamera_status = camera_status;
+
+            do {
+                res = send_camera_status(camera_status);
+                
+                if (res != CURLE_OK) {
+                    printf("NO WIFI !\n");
+                    sleep(3);
+                }
+            } while (res != CURLE_OK);
+        }
+
+        usleep(10000);
+    }
+}
+
+void sendOperationNotification (void * arg) {
+    int res = 0;
+
+    while (1) {
+        if (wifi_status && operation_status != prevOperation_status && operation_mode) {
+            prevCamera_status = camera_status;
+
+            do {
+                res = send_operation_status(operation_status, operation_mode);
+
+                if (res != CURLE_OK) {
+                    printf("NO WIFI !\n");
+                    sleep(3);
+                }
+            } while (res != CURLE_OK && operation_mode);
+        }
+
+        else if (!wifi_status && operation_status != prevOperation_status && operation_status < OP_OK) {
+            // Led alert
+            
+        }
+
+        usleep(10000);
+    }
 }

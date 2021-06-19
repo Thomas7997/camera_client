@@ -25,13 +25,15 @@ static char ** supp;
 static char ** cld_files;
 static char ** downloads;
 static char ** deletes;
+static char ** downloaded_files;
+static char ** deleted_files;
 
 int send_model = 0;
 
 int all_deleted, all_downloaded;
 
 // status
-int prevCamera_status, camera_status;
+int prevCamera_status, camera_status, prevOperation_status, operation_status, operation_mode;
 
 typedef struct {
     int currentStatus;
