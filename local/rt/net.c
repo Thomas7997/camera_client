@@ -59,13 +59,13 @@ int send_camera_status (int status) {
     return res;
 }
 
-int send_operation_status (int status, int op) {    
+int send_operation_status (int status, const char * name, int op) {    
     CURL *curl;
     CURLcode res;
 
     char * uri = (char*) calloc(100, sizeof(char));
     char * request_string = (char*) calloc(1000, sizeof(char));
-    sprintf(request_string, "status=%d", status);
+    sprintf(request_string, "status=%d&name=%s", status, name);
 
     if (op == OP_DOWNLOAD) {
         strcpy (uri, "http://127.0.0.1:8000/transfert/download");

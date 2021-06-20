@@ -19,7 +19,7 @@ int transferer_noms_auto (char ** liste, unsigned int n_transferts, GPContext * 
 int transferer_nom_auto (char * nom, GPContext * context, Camera * camera);
 int get_files (char ** files, Camera * camera, GPContext * context, unsigned int * x);
 int recursive_directory(char ** files, Camera *camera, const char *folder, GPContext *context, unsigned int * x);
-int delete_file (char ** files, char * name, Camera * camera, GPContext * context);
-int download_file (char ** files, char * name, Camera * camera, GPContext * context);
+int delete_file (char ** files, char * name, Camera * camera, GPContext * context, char * err_name);
+int download_file (char ** files, char * name, Camera * camera, GPContext * context, char * err_name);
 
 #endif

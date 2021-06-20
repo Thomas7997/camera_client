@@ -18,6 +18,6 @@ int send_request (char *name);
 void send_medias_transfert_online (int online);
 void send_medias_sd_preview (char * name);
 int send_camera_status (int status);
-int send_operation_status (int status, int op);
+int send_operation_status (int status, const char * name, int op);
 
 #endif

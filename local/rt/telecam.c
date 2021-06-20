@@ -27,7 +27,9 @@ int main (void) {
     prevStatus = status = 0;
     prevCamera_status = camera_status = 1;
     operation_status = prevOperation_status = OP_NO_STATUS;
+    send_op_status = 0;
     operation_mode = OP_NONE;
+    operation_name = (char*) calloc(TAILLE_NOM, sizeof(char));
 
     for (unsigned int d = 0; d < MIN_DIRS; d++) {
         dossiers[d] = (char**) calloc(MAX_DIR_CAPTURES, sizeof(char*));
@@ -73,6 +75,7 @@ int main (void) {
     result = rt_task_spawn(&task_check_deletes, "CHECK SD DELETES", 4096, 99, TASK_PERM, &check_sd_deletes, NULL);
     result = rt_task_spawn(&task_send_downloads, "SEND DOWNLOADS", 4096, 99, TASK_PERM, &sendDownloads, NULL);
     result = rt_task_spawn(&task_send_deletes, "SEND DOWNLOADS", 4096, 99, TASK_PERM, &sendDeleted, NULL);
+    result = rt_task_spawn(&task_send_op_notifications, "SEND OP NOTIFICATIONS", 4096, 99, TASK_PERM, &sendOperationNotification, NULL);
 
     // Scripts de vérification
 	result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
@@ -107,6 +110,7 @@ int main (void) {
     }
 
     free(transferts_send);
+    free(operation_name);
 
     // free_usb(NULL);
     
@@ -633,7 +637,6 @@ void check_sd_deletes (void * arg) {
 
         clearList (deletes);
         fclose (R);
-
         usleep(50000);
     }
 }
@@ -662,11 +665,12 @@ void sd_downloads (void * arg) {
         int x = 0, nb = 0;
 
         for (int i = 0; *downloads[i]; i++) {
-            status = download_file (files, downloads[i], camera, context);
+            status = download_file (files, downloads[i], camera, context, operation_name);
 
             if (status != 0) {
                 camera_status = status;
                 handleError(status);
+                operation_status = handleOperationError(status);
                 break;
             }
 
@@ -674,6 +678,9 @@ void sd_downloads (void * arg) {
                 // Remove name from file
                 operation_finished("../data/tmp/downloads.txt", downloads[i]);
                 printf("OPERATION FINISHED\n");
+                operation_status = OP_OK;
+                operation_mode = OP_DOWNLOAD;
+                send_op_status = 1;
                 x++;
             }
 
@@ -686,7 +693,6 @@ void sd_downloads (void * arg) {
         }
         
         usleep(50000);
-
         camera_usb_free_1 (NULL);
 
         if (transfert_choice != 5) {
@@ -711,6 +717,7 @@ void sd_deletes (void * arg) {
         if (status < 0) {
             // And notity error
             camera_status = status;
+            operation_status = handleOperationError(status);
             continue;
         }
         
@@ -719,11 +726,12 @@ void sd_deletes (void * arg) {
         int x = 0, nb = 0;
 
         for (int i = 0; *deletes[i]; i++) {
-            status = delete_file (files, deletes[i], camera, context);
+            status = delete_file (files, deletes[i], camera, context, operation_name);
 
             if (status != 0) {
                 camera_status = status;
                 handleError(status);
+                operation_status = handleOperationError(status);
                 break;
             }
 
@@ -731,6 +739,9 @@ void sd_deletes (void * arg) {
                 // Remove name from file
                 operation_finished("../data/tmp/deletes.txt", deletes[i]);
                 printf("OPERATION FINISHED\n");
+                operation_status = OP_OK;
+                operation_mode = OP_DELETE;
+                send_op_status = 1;
                 x++;
             }
 
@@ -743,7 +754,6 @@ void sd_deletes (void * arg) {
         }
         
         usleep(50000);
-
         camera_usb_free_1 (NULL);
 
         if (transfert_choice != 6) {
@@ -817,22 +827,26 @@ void sendOperationNotification (void * arg) {
     int res = 0;
 
     while (1) {
-        if (wifi_status && operation_status != prevOperation_status && operation_mode) {
+        if ((wifi_status && operation_status != prevOperation_status && operation_mode) || send_op_status) {
             prevCamera_status = camera_status;
+            printf("OPERATION NOTIFICATION ...\n");
 
             do {
-                res = send_operation_status(operation_status, operation_mode);
+                res = send_operation_status(operation_status, operation_name, operation_mode);
 
                 if (res != CURLE_OK) {
                     printf("NO WIFI !\n");
                     sleep(3);
                 }
             } while (res != CURLE_OK && operation_mode);
+
+            if (send_op_status) send_op_status = 0;
         }
 
-        else if (!wifi_status && operation_status != prevOperation_status && operation_status < OP_OK) {
+        else if ((!wifi_status && operation_status != prevOperation_status && operation_status < OP_OK) || send_op_status) {
             // Led alert
-            
+
+            if (send_op_status) send_op_status = 0;
         }
 
         usleep(10000);

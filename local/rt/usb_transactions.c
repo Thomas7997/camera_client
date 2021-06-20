@@ -482,13 +482,13 @@ recursive_directory(char ** files, Camera *camera, const char *folder, GPContext
 	}
 
     int countFiles = gp_list_count(list);
-    printf("%d\n", countFiles);
+    // printf("%d\n", countFiles);
     if (countFiles < 0) return countFiles;
 
     for (int z = 0; z < countFiles; z++) {
         gp_list_get_name (list, z, &newfile);
         sprintf(files[++x_sd], "%s/%s", folder, newfile);
-        printf("x : %d\npath : %s\n", x_sd, files[x_sd]);
+        // printf("x : %d\npath : %s\n", x_sd, files[x_sd]);
     }
 
     // Reset here
@@ -500,7 +500,7 @@ recursive_directory(char ** files, Camera *camera, const char *folder, GPContext
 
 // Need to test
 
-int download_file (char ** files, char * name, Camera * camera, GPContext * context) {
+int download_file (char ** files, char * name, Camera * camera, GPContext * context, char * err_name) {
     char * folder = (char*) calloc(100, sizeof(char));
     int status;
 
@@ -509,7 +509,9 @@ int download_file (char ** files, char * name, Camera * camera, GPContext * cont
 
     int index = find_dir_filename (files, name, folder);
 
-    if (index < 0) return -(index);
+    if (index < 0) {
+        return -(index);
+    }
 
     printf("GOT FOLDER !\n");
 
@@ -518,14 +520,18 @@ int download_file (char ** files, char * name, Camera * camera, GPContext * cont
     CameraFile * file;
     status = gp_file_new(&file);
 
-    if (status < 0) return status;
+    if (status < 0) {
+        return status;
+    }
 
     status = gp_filesystem_get_file (camera->fs, folder, name, GP_FILE_TYPE_NORMAL, file, context);
 
-    if (status < 0) return status;
+    if (status < 0) {
+        strcpy(err_name, name);
+        return status;
+    }
 
     printf("GOT FILE !\n");
-
     printf("SAVING FILE ...\n");
 
     char * path = (char*) calloc(100, sizeof(char));
@@ -533,17 +539,19 @@ int download_file (char ** files, char * name, Camera * camera, GPContext * cont
 
     status = gp_file_save (file, (const char*) path);
 
-    if (status < 0) return status;
+    if (status < 0) {
+        strcpy(err_name, name);
+        return status;
+    }
 
     printf("FILE SAVED !\n");
-
     gp_file_free(file);
     free(path);
 
     return GP_OK;
 }
 
-int delete_file (char ** files, char * name, Camera * camera, GPContext * context) {
+int delete_file (char ** files, char * name, Camera * camera, GPContext * context, char * err_name) {
     char * folder = (char*) calloc(100, sizeof(char));
     int status;
 
@@ -559,7 +567,10 @@ int delete_file (char ** files, char * name, Camera * camera, GPContext * contex
     // Delete
     status = gp_filesystem_delete_file (camera->fs, folder, name, context);
 
-    if (status < 0) return status;
+    if (status < 0) {
+        strcpy(err_name, name);
+        return status;
+    }
 
     return GP_OK;
 }

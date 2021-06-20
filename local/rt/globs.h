@@ -33,7 +33,8 @@ int send_model = 0;
 int all_deleted, all_downloaded;
 
 // status
-int prevCamera_status, camera_status, prevOperation_status, operation_status, operation_mode;
+int prevCamera_status, camera_status, prevOperation_status, operation_status, operation_mode, send_op_status;
+char * operation_name;
 
 typedef struct {
     int currentStatus;

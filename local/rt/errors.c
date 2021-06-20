@@ -64,3 +64,26 @@ int send_status_request (int status) {
     printf ("\n");
     return res;
 }
+
+int handleOperationError (int status) {
+    switch (status) {
+        case GP_ERROR_DIRECTORY_NOT_FOUND :
+            return OP_USB_ERROR;
+        case GP_ERROR_FILE_NOT_FOUND :
+        case GP_ERROR_CAMERA_BUSY :
+        case GP_ERROR_CAMERA_ERROR :
+        case GP_ERROR_IO :
+        case GP_ERROR_IO_USB_CLAIM :
+        
+        break;
+        case 5 :
+            return OP_WIFI_ERROR;
+        case 6 :
+        case 7 :
+        case 12 :
+        break;
+        default : return OP_USB_ERROR;
+    }
+
+    return OP_NONE;
+}

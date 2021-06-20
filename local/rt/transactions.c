@@ -53,7 +53,7 @@ unsigned int fill_deleted_files (char ** files) {
 void send_download (char * file) {
   char * cmd = (char*) calloc(200, sizeof(char));
 
-  sprintf(cmd, "../data/images/download/%s mv /home/remote/camera_server/public/download", file);
+  sprintf(cmd, "mv ../data/images/downloads/%s /home/remote/camera_server/public/download", file);
   system(cmd);
 
   free(cmd);
@@ -62,7 +62,7 @@ void send_download (char * file) {
 void send_delete (char * file) {
   char * cmd = (char*) calloc(200, sizeof(char));
 
-  sprintf(cmd, "../data/images/deletes/%s mv /home/remote/camera_server/public/deletes", file);
+  sprintf(cmd, "mv ../data/images/deletes/%s /home/remote/camera_server/public/deletes", file);
   system(cmd);
 
   free(cmd);
