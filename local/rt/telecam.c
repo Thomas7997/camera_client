@@ -828,7 +828,7 @@ void sendOperationNotification (void * arg) {
 
     while (1) {
         if ((wifi_status && operation_status != prevOperation_status && operation_mode) || send_op_status) {
-            prevCamera_status = camera_status;
+            prevOperation_status = operation_status;
             printf("OPERATION NOTIFICATION ...\n");
 
             do {
@@ -840,13 +840,13 @@ void sendOperationNotification (void * arg) {
                 }
             } while (res != CURLE_OK && operation_mode);
 
-            if (send_op_status) send_op_status = 0;
+            send_op_status = 0;
         }
 
         else if ((!wifi_status && operation_status != prevOperation_status && operation_status < OP_OK) || send_op_status) {
             // Led alert
 
-            if (send_op_status) send_op_status = 0;
+            send_op_status = 0;
         }
 
         usleep(10000);
