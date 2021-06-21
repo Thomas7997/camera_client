@@ -17,7 +17,7 @@ static unsigned int * dir_sizes;
 static char ** images_list;
 static char ** liste_captures;
 static char ** transferts_tmp;
-static char * model;
+static char * model, * prevModel;
 static char ** photos;
 static int * transfert_tasks;
 static char ** add;

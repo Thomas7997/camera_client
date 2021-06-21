@@ -18,6 +18,7 @@ int main (void) {
     deletes = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
     downloaded_files = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
     deleted_files = (char**) calloc(MAX_DOWNLOADS, sizeof(char*));
+    prevModel = (char*) calloc(TAILLE_NOM, sizeof(char));
 
     // BOOLS
     all_deleted = 1;
@@ -86,7 +87,6 @@ int main (void) {
     printf("ACTIONS SCRIPTS\n");
 	result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
 	result = rt_task_create (&task_send_files_online, "SEND MEDIAS", 4096, 99, TASK_PERM);
-
     result = rt_task_create (&task_enable_transfert, "LANCER TRANSFERT IMAGE AUTO", 10000, 99, TASK_PERM);
 
     // MAIN SCRIPTS
@@ -178,6 +178,8 @@ int main (void) {
     model = NULL;
     free(photos);
     photos = NULL;
+    free(prevModel);
+    prevModel = NULL;
 }
 
 void check_transfert_choice (void * arg) {
@@ -185,7 +187,7 @@ void check_transfert_choice (void * arg) {
         FILE * TRANSFERT_CHOICE; // Changera de chemin
 
         do {
-            printf("READING TRANSFERT CHOICE ...\n");
+            // printf("READING TRANSFERT CHOICE ...\n");
             TRANSFERT_CHOICE = fopen("../data/tmp/transfert_choice.txt", "r");
             if (TRANSFERT_CHOICE == NULL) {
                 printf("Erreur de lecture du fichier TRANSFERT CHOICE.\n");
@@ -195,10 +197,10 @@ void check_transfert_choice (void * arg) {
         } while (TRANSFERT_CHOICE == NULL);
 
         fscanf(TRANSFERT_CHOICE, "%d", &transfert_choice);
-        prevTransfertChoice = transfert_choice;
-		printf ("CHECK TRANSFERT CHOICE\n");
+        // prevTransfertChoice = transfert_choice;
+		// printf ("CHECK TRANSFERT CHOICE\n");
         fclose(TRANSFERT_CHOICE);
-        usleep(50000);
+        usleep(5000);
 	}
 }
 
@@ -480,14 +482,9 @@ void script_apply_choice (void * arg) {
     while (1) {
         printf("USB CONNECTED : %d\n", usb_connected);
 
-        // Je pourrais mettre
-        // if (allowChoiceChange == 1)
-
         switch (transfert_choice) {
-            // Trouver un moyen de stoquer les historiques des tâches en TMP
-
             if (transfert_choice != prevTransfertChoice) {
-                transfert_tasks[ttsk++] = transfert_choice;
+                // transfert_tasks[ttsk++] = transfert_choice;
                 prevTransfertChoice = transfert_choice;
                 printf("Changement de transfert.\n");
             }
@@ -523,7 +520,7 @@ void script_apply_choice (void * arg) {
             break;
         }
 
-        usleep(500000);
+        usleep(5000);
 	}
 }
 
@@ -560,9 +557,10 @@ void generateError (int status) {
 
 void send_model_fn (void * arg) {
     while (1) {
-        if (model[0] && wifi_status) {
+        if (model[0] && wifi_status && strcmp(prevModel, model)) {
             int st = sendModelHTTP(model);
-            if (st == 0) clearStr(model);
+            // if (st == 0) clearStr(model);
+            strcpy(prevModel, model);
         }
 
         usleep(100000);
@@ -595,9 +593,10 @@ void check_sd_downloads (void * arg) {
             printf("%s\n", downloads[x-1]);
         }
 
-        if (x != 0) {
+        if (*downloads[0]) {
             all_downloaded = 0;
             if (transfert_choice != 5){
+                printf ("Transfert choice 5 !!!\n");
                 transfert_choice = 5;
                 write_choice(5); // Later, we will store previous choice before doing it
             }
@@ -623,7 +622,7 @@ void check_sd_deletes (void * arg) {
             enlever_last_car(deletes[x-1]);
         }
 
-        if (x != 0) {
+        if (*deletes[0]) {
             all_deleted = 0;
             if (transfert_choice != 6) {
                 transfert_choice = 6;
@@ -696,6 +695,7 @@ void sd_downloads (void * arg) {
         camera_usb_free_1 (NULL);
 
         if (transfert_choice != 5) {
+            printf("END OF DOWNLOAD.\n");
             return;
         }
     }
@@ -757,6 +757,7 @@ void sd_deletes (void * arg) {
         camera_usb_free_1 (NULL);
 
         if (transfert_choice != 6) {
+            printf("END OF DELETE.\n");
             return;
         }
     }
