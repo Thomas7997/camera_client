@@ -72,7 +72,9 @@ int compareFilesLists(char ** transferts, char ** files, char ** liste_captures,
         }
 
         if (newP == 0) {
-            printf("\n\n\n\n\n\n\n\n\nT : %s\n%d\n", files[i], i);
+            if (!files[i][0]) return -1;
+
+            printf("\n\n\n\n\n\n\n\n\nT : %s\n%d\n", files[i], nb_list);
             sprintf(transferts[a], "%s", files[i]);
             // Gérer le prochain return
             transferer_nom_auto(transferts[a], context, camera);
