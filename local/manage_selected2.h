@@ -1,9 +1,9 @@
 #ifndef MANAGE_SELECTED2_H
 #define MANAGE_SELECTED2_H
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <curl/curl.h>
 #include <unistd.h>
 #include <ctime>
