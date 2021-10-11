@@ -11,6 +11,10 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <linux/usbdevice_fs.h>
 
 #define MAX 80
 #define MAX_CAPTURES 10000
@@ -368,13 +372,13 @@ void RemplirLignes (char ** lns1, char ** lns2) {
 }
 
 static int
-selection_wait_event (Camera *camera, GPContext *context, unsigned int * nroftransferts, char ** files) {
+selection_wait_event (Camera **camera, GPContext *context, unsigned int * nroftransferts, char ** files, char * filename) {
     int waittime = 100;
     static int nrofqueue=0;
     static int nrdownloads=0;
 
+    static const char *bufferx;
     static const char *buffer;
-
 	CameraEventType	evtype;
 	CameraFilePath	*path;
 	void		*data;
@@ -383,14 +387,21 @@ selection_wait_event (Camera *camera, GPContext *context, unsigned int * nroftra
     unsigned int x = 0;
     int selectionInterrupted = 0;
 
+    int status = 0;
+    int fd, rc;
+
     gettimeofday (&start, NULL);
 	data = NULL;
 	if (nrofqueue) waittime = 10; /* just drain the event queue */
 
 	while (!selectionInterrupted) {
 		int timediff;
+		// timediff = ((curtime.tv_sec - start.tv_sec)*1000)+((curtime.tv_usec - start.tv_usec)/1000);
+		// if (timediff >= waittime) printf ("timediff error()");
+		//break;
 
-	    gettimeofday (&curtime, NULL);
+		retval = gp_camera_wait_for_event(*camera, 100, &evtype, &data, context);
+
 
 		timediff = ((curtime.tv_sec - start.tv_sec)*1000)+((curtime.tv_usec - start.tv_usec)/1000);
 		if (timediff >= waittime)
@@ -402,6 +413,82 @@ selection_wait_event (Camera *camera, GPContext *context, unsigned int * nroftra
 			return retval;
 		}
 		path = data;
+
+        selectionInterrupted = evtype == GP_EVENT_CAPTURE_COMPLETE;
+
+        if (evtype == GP_EVENT_CAPTURE_COMPLETE) {
+            printf("Capture complete !\n");
+            status = gp_camera_exit(*camera, context);
+            handleError(status);
+            if (status < 0) return status;
+            printf ("1\n");
+            //status = gp_camera_free(*camera);
+            //if (status < 0) return status;
+            //printf ("2\n");
+            //status = gp_camera_new(camera);
+            //if (status < 0) return status;
+            //printf ("3\n");
+
+            fd = open(filename, O_WRONLY);
+            if (fd < 0) {
+                perror("Error opening output file");
+                return 1;
+            }
+
+            printf("Resetting USB device %s\n", filename);
+            rc = ioctl(fd, USBDEVFS_RESET, 0);
+            if (rc < 0) {
+                perror("Error in ioctl");
+                return 1;
+            }
+            status = gp_camera_init(*camera, context);
+            if (status < 0) return status;
+            printf ("4\n");
+        }
+
+        if (evtype == GP_EVENT_FILE_CHANGED && path) {
+            printf("%s/%s changed !\n", path->folder, path->name);
+            sprintf(files[x++], "%s/%s", path->folder, path->name);
+        }
+    }
+
+    *nroftransferts = x;
+	return GP_OK+x;
+}
+
+int control_selection (Camera * camera, GPContext *context, unsigned int * nroftransferts, char ** files, char * filename) {
+    // Will be the new main process of a task
+    FILE * STATE;
+    int status = 0;
+    int st = 0;
+
+    while (1) {
+        STATE = fopen("./data/tmp/selection.txt", "r");
+        if (fscanf(STATE, "%d", &st) != 1) continue;
+
+        if (st) {
+            printf ("Working ...\n");
+
+            status = selection_wait_event(&camera, context, nroftransferts, files, filename);
+            fclose(STATE);
+            if (status < 0) {
+                // Go to usb connection
+                // Send alerts
+
+                handleError(status);
+            }
+
+            STATE = fopen("./data/tmp/selection.txt", "w");
+            fprintf(STATE, "0");
+            fclose (STATE);
+        }
+
+        else {
+		printf("Interrupted\n");
+		fclose(STATE);
+		usleep(500000);
+	}
+
         selectionInterrupted = GP_EVENT_CAPTURE_COMPLETE == evtype;
 		if (evtype == GP_EVENT_FILE_CHANGED && path) {
             printf("%s/%s changed !\n", path->folder, path->name);
@@ -476,7 +563,23 @@ int eachFileRating_2 (char ** files, char ** transferts, unsigned int files_nb, 
 }
 */
 
-int main (void) {
+int main (int argc, char ** argv) {
+    int status = 0;
+    char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
+    int fd, rc;
+    fd = open(argv[1], O_WRONLY);
+    if (fd < 0) {
+        perror("Error opening output file");
+        return 1;
+    }
+    printf("Resetting USB device %s\n", argv[1]);
+    rc = ioctl(fd, USBDEVFS_RESET, 0);
+    if (rc < 0) {
+        perror("Error in ioctl");
+        return 1;
+    }
+    close(fd);
+
     int status = 0;
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
 
@@ -556,7 +659,7 @@ int main (void) {
     
     status = get_files (files, camera, context, &files_nb);
 
-    status = control_selection (camera, context, &transferts_nb, files);
+    status = control_selection (camera, context, &transferts_nb, files, argv[1]);
 
     if (status < 0) return status;
 
