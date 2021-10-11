@@ -32,6 +32,22 @@
 
 int x_sd = -1;
 
+int reset_usb_dev (const char * filename) {
+    int fd, rc;
+    fd = open(filename, O_WRONLY);
+    if (fd < 0) {
+        perror("Error opening output file");
+        return 1;
+    }
+    printf("Resetting USB device %s\n", filename);
+    rc = ioctl(fd, USBDEVFS_RESET, 0);
+    if (rc < 0) {
+        perror("Error in ioctl");
+        return 1;
+    }
+    close(fd);
+}
+
 void handleError(int status) {
     printf ("%s\n", gp_result_as_string(status));
 }
@@ -372,7 +388,7 @@ void RemplirLignes (char ** lns1, char ** lns2) {
 }
 
 static int
-selection_wait_event (Camera **camera, GPContext *context, unsigned int * nroftransferts, char ** files, char * filename) {
+selection_wait_event (Camera ** camera, GPContext *context, unsigned int * nroftransferts, char ** files, const char * filename) {
     int waittime = 100;
     static int nrofqueue=0;
     static int nrdownloads=0;
@@ -396,18 +412,8 @@ selection_wait_event (Camera **camera, GPContext *context, unsigned int * nroftr
 
 	while (!selectionInterrupted) {
 		int timediff;
-		// timediff = ((curtime.tv_sec - start.tv_sec)*1000)+((curtime.tv_usec - start.tv_usec)/1000);
-		// if (timediff >= waittime) printf ("timediff error()");
-		//break;
 
-		retval = gp_camera_wait_for_event(*camera, 100, &evtype, &data, context);
-
-
-		timediff = ((curtime.tv_sec - start.tv_sec)*1000)+((curtime.tv_usec - start.tv_usec)/1000);
-		if (timediff >= waittime)
-			break;
-
-		retval = gp_camera_wait_for_event(camera, waittime - timediff, &evtype, &data, context);
+		retval = gp_camera_wait_for_event(*camera, 10, &evtype, &data, context);
 		if (retval != GP_OK) {
 			fprintf (stderr, "return from waitevent in trigger sample with %d\n", retval);
 			return retval;
@@ -422,25 +428,9 @@ selection_wait_event (Camera **camera, GPContext *context, unsigned int * nroftr
             handleError(status);
             if (status < 0) return status;
             printf ("1\n");
-            //status = gp_camera_free(*camera);
-            //if (status < 0) return status;
-            //printf ("2\n");
-            //status = gp_camera_new(camera);
-            //if (status < 0) return status;
-            //printf ("3\n");
 
-            fd = open(filename, O_WRONLY);
-            if (fd < 0) {
-                perror("Error opening output file");
-                return 1;
-            }
+            reset_usb_dev(filename);
 
-            printf("Resetting USB device %s\n", filename);
-            rc = ioctl(fd, USBDEVFS_RESET, 0);
-            if (rc < 0) {
-                perror("Error in ioctl");
-                return 1;
-            }
             status = gp_camera_init(*camera, context);
             if (status < 0) return status;
             printf ("4\n");
@@ -456,11 +446,12 @@ selection_wait_event (Camera **camera, GPContext *context, unsigned int * nroftr
 	return GP_OK+x;
 }
 
-int control_selection (Camera * camera, GPContext *context, unsigned int * nroftransferts, char ** files, char * filename) {
+int control_selection (Camera * camera, GPContext *context, unsigned int * nroftransferts, char ** files, const char * filename) {
     // Will be the new main process of a task
     FILE * STATE;
     int status = 0;
     int st = 0;
+    int x = 0;
 
     while (1) {
         STATE = fopen("./data/tmp/selection.txt", "r");
@@ -484,42 +475,14 @@ int control_selection (Camera * camera, GPContext *context, unsigned int * nroft
         }
 
         else {
-		printf("Interrupted\n");
-		fclose(STATE);
-		usleep(500000);
-	}
-
-        selectionInterrupted = GP_EVENT_CAPTURE_COMPLETE == evtype;
-		if (evtype == GP_EVENT_FILE_CHANGED && path) {
-            printf("%s/%s changed !\n", path->folder, path->name);
-            sprintf(files[x++], "%s/%s", path->folder, path->name);
+		    printf("Interrupted\n");
+		    fclose(STATE);
+		    usleep(500000);
         }
 	}
 
     *nroftransferts = x;
 	return GP_OK;
-}
-
-int control_selection (Camera * camera, GPContext *context, unsigned int * nroftransferts, char ** files) {
-    // Will be the new main process of a task
-    FILE * STATE;
-    int status = 0;
-
-    while (1) {
-        STATE = fopen("./data/tmp/selection.txt", "r");
-        
-        int st = 0;
-        if (fscanf(STATE, "%d", &st) != 1) continue;
-        if (st) status = selection_wait_event(camera, context, nroftransferts, files);
-        if (status < 0) {
-            // Go to usb connection
-            // Send alerts
-            
-            handleError(status);
-        }
-
-        fclose(STATE);
-    }
 }
 
 /*
@@ -566,22 +529,8 @@ int eachFileRating_2 (char ** files, char ** transferts, unsigned int files_nb, 
 int main (int argc, char ** argv) {
     int status = 0;
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
-    int fd, rc;
-    fd = open(argv[1], O_WRONLY);
-    if (fd < 0) {
-        perror("Error opening output file");
-        return 1;
-    }
-    printf("Resetting USB device %s\n", argv[1]);
-    rc = ioctl(fd, USBDEVFS_RESET, 0);
-    if (rc < 0) {
-        perror("Error in ioctl");
-        return 1;
-    }
-    close(fd);
 
-    int status = 0;
-    char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
+    reset_usb_dev(argv[1]);
 
     Camera * camera;
     GPContext *context = sample_create_context();
