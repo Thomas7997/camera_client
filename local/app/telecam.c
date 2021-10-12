@@ -247,6 +247,11 @@ void enable_transfert_on_metadata_change (void * arg) {
         // Add metadata change selection
 
         // status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list, transferts_tmp, photos);
+        int transferts_nb;
+
+        lsusb_find_camera(filename);
+
+        status = control_selection (camera, context, &nroftransferts, transferts_send, filename);
 
         if (status < 0) {
             camera_status = status;

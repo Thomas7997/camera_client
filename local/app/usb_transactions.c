@@ -2,94 +2,120 @@
 
 int x_sd = -1;
 
-// Segmentation fault généré quand il y a une déconnexion
-int get_files_and_dirs (char *** dirs_b, char ** dirs_n, unsigned int * nb, unsigned int * dir_sizes, Camera * camera, GPContext * context) {
-    CameraList * folderList;
-    char * folder = (char*) calloc(100, sizeof(char));
-    gp_list_new(&folderList);
-    const char * dir;
-    int status = gp_camera_folder_list_folders(camera, "/", folderList, context);
-    if (status < 0) return status;
-
-    status = gp_list_get_name(folderList, 0, (const char**) &dir);
-    if (status < 0) return status;
-
-    // status = gp_list_reset(folderList);
-
-    char * tmp = (char*) calloc(100, sizeof(char));
-    char * tmp_dir = (char*) calloc(100, sizeof(char));
-
-    CameraList * fileList;
-    gp_list_new(&fileList);
-
-    unsigned int n = strlen(dir)-1;
-    strcpy(tmp_dir, "/store_");
-
-    unsigned int x = 0, z = 0;
-
-    while (dir[z++] != '_');
-    while (dir[z] != 0) {
-        tmp_dir[7+x++] = dir[z++];
+int reset_usb_dev (const char * filename) {
+    int fd, rc;
+    fd = open(filename, O_WRONLY);
+    if (fd < 0) {
+        perror("Error opening output file");
+        return 1;
     }
+    printf("Resetting USB device %s\n", filename);
+    rc = ioctl(fd, USBDEVFS_RESET, 0);
+    if (rc < 0) {
+        perror("Error in ioctl");
+        return 1;
+    }
+    close(fd);
+}
 
-    sprintf(folder, "%s/DCIM", tmp_dir);
-    // printf ("%s\n", folder);
+static int
+selection_wait_event (Camera * camera, GPContext *context, unsigned int * nroftransferts, char ** files, const char * filename) {
+    int waittime = 100;
+    static int nrofqueue=0;
+    static int nrdownloads=0;
 
-    status = gp_camera_folder_list_folders(camera,
-		folder,
-		folderList,
-		context
-	);
-    if (status < 0) return status;
+    static const char *bufferx;
+    static const char *buffer;
+	CameraEventType	evtype;
+	CameraFilePath	*path;
+	void		*data;
+	int		retval;
+    struct timeval	start, curtime;
+    unsigned int x = 0;
+    int selectionInterrupted = 0;
 
-    int local_nb = gp_list_count(folderList);
-    int nb_files = 0;
+    int status = 0;
+    int fd, rc;
 
-    if (local_nb < 0) return local_nb;
-    *nb = local_nb;
+    gettimeofday (&start, NULL);
+	data = NULL;
+	if (nrofqueue) waittime = 10; /* just drain the event queue */
 
-    for (unsigned int i = 0; i < *nb; i++) {
-        // status = gp_list_reset(fileList);
+	while (!selectionInterrupted) {
+		int timediff;
 
-        const char * subdir;
-        status = gp_list_get_name(folderList, i, (const char**) &subdir);
-        if (status < 0) return status;
+		retval = gp_camera_wait_for_event(camera, 10, &evtype, &data, context);
+		if (retval != GP_OK) {
+			fprintf (stderr, "return from waitevent in trigger sample with %d\n", retval);
+			return retval;
+		}
+		path = data;
 
-        sprintf (tmp_dir, "%s/%s", folder, subdir);
-        // printf ("%s\n", tmp_dir);
+        selectionInterrupted = evtype == GP_EVENT_CAPTURE_COMPLETE;
 
-        strcpy(dirs_n[i], tmp_dir);
-
-        status = gp_list_reset(fileList);
-        if (status < 0) return status;
-
-        status = gp_camera_folder_list_files(camera, tmp_dir, fileList, context);
-        if (status < 0) return status;
-
-        nb_files = gp_list_count(fileList);
-        if (nb_files < 0) return status;
-
-        dir_sizes[i] = nb_files;
-
-        for (unsigned int j = 0; j < nb_files; j++) {
-            const char * file;
-            status = gp_list_get_name(fileList, j, (const char**) &file);
-            // handleError(status);
+        if (evtype == GP_EVENT_CAPTURE_COMPLETE) {
+            printf("Capture complete !\n");
+            status = gp_camera_exit(camera, context);
+            handleError(status);
             if (status < 0) return status;
-            strcpy(dirs_b[i][j], file);
-            // printf ("%s\n", dirs_b[i][j]);
+            printf ("1\n");
+
+            reset_usb_dev(filename);
+
+            status = gp_camera_init(camera, context);
+            if (status < 0) return status;
+            printf ("4\n");
         }
 
-        // sprintf(dirs_n[i], "/%s", dir);
+        if (evtype == GP_EVENT_FILE_CHANGED && path) {
+            printf("%s/%s changed !\n", path->folder, path->name);
+            sprintf(files[x++], "%s/%s", path->folder, path->name);
+        }
     }
 
-    free(tmp_dir);
-    free(folder);
-    free(tmp);
-    gp_list_free(folderList);
-    gp_list_free(fileList);
-    return 0; // Pas d'erreur
+    *nroftransferts = x;
+	return GP_OK+x;
+}  
+
+int control_selection (Camera * camera, GPContext *context, unsigned int * nroftransferts, char ** files, const char * filename) {
+    // Will be the new main process of a task
+    FILE * STATE;
+    int status = 0;
+    int st = 0;
+    int x = 0;
+
+    while (1) {
+        STATE = fopen("./data/tmp/selection.txt", "r");
+        if (fscanf(STATE, "%d", &st) != 1) continue;
+
+        if (st) {
+            printf ("Working ...\n");
+
+            status = selection_wait_event(&camera, context, nroftransferts, files, filename);
+            fclose(STATE);
+            if (status < 0) {
+                // Go to usb connection
+                // Send alerts
+
+                handleError(status);
+            }
+
+            STATE = fopen("./data/tmp/selection.txt", "w");
+            fprintf(STATE, "0");
+            fclose (STATE);
+        }
+
+        else {
+		    printf("Interrupted\n");
+		    fclose(STATE);
+		    usleep(500000);
+        }
+	}
+
+    *nroftransferts = x;
+	return GP_OK;
 }
+
 
 // Pour l'envoi
 int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera) {
@@ -573,4 +599,11 @@ int delete_file (char ** files, char * name, Camera * camera, GPContext * contex
     }
 
     return GP_OK;
+}
+
+int lsusb_find_camera (char * path) {
+    // List usb devices
+    // Find camera in the list
+
+    return 0;
 }
