@@ -601,7 +601,7 @@ int delete_file (char ** files, char * name, Camera * camera, GPContext * contex
     return GP_OK;
 }
 
-int lsusb_find_camera (char * path) {
+int lsusb_find_camera (char * p) {
     // List usb devices
     // Find camera in the list
 

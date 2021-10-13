@@ -245,11 +245,18 @@ void enable_transfert_on_metadata_change (void * arg) {
         camera_usb_connection_1 (NULL);
 
         // Add metadata change selection
+        char * filename = calloc(100, sizeof(char));
+        int ret = lsusb_find_camera(filename);
+
+        if (ret != 0) continue;
 
         // status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list, transferts_tmp, photos);
         int transferts_nb;
 
-        lsusb_find_camera(filename);
+        int ret = lsusb_find_camera (filename);
+        if (ret != 0) {
+            continue;
+        }
 
         status = control_selection (camera, context, &nroftransferts, transferts_send, filename);
 
@@ -258,6 +265,7 @@ void enable_transfert_on_metadata_change (void * arg) {
             continue;
         }
 
+        free(filename);
         camera_usb_free_1 (NULL);
 
         if (!transfert_choice) return;
