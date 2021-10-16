@@ -18,6 +18,48 @@ int reset_usb_dev (const char * filename) {
     close(fd);
 }
 
+int lsusb_find_camera (char * path) {
+    system("lsusb > ./data/tmp/lsusb.txt");
+    FILE * LSUSB = fopen("./data/tmp/lsusb.txt", "r");
+    char ** lines = calloc(30, sizeof(char*));
+    int x = 0;
+
+    for (int i = 0; i < 30; i++) {
+        lines[i] = calloc(100, sizeof(char));
+    }
+
+    while (fgets(lines[x++], 99, LSUSB));
+
+    int size = x;
+    char * nmbrStr = calloc(5, sizeof(char));
+
+    for (x = 0; x < size-1; x++) {
+        // Ports 1, 2, 3 or reserved
+        int y = 0;
+        strcpy(nmbrStr, "");
+        while (y<15) y++;
+        for (int c = 0; c < 3; c++) nmbrStr[c] = lines[x][y+c];
+
+        // Needs to be tested on A+
+
+        if (strcmp(nmbrStr, "001") && strcmp(nmbrStr, "002") && strcmp(nmbrStr, "003")) {
+            sprintf(path, "/dev/bus/usb/001/%s", nmbrStr);
+            return 0;
+        }
+    }
+
+    free(nmbrStr);
+
+    for (int i = 0; i < 30; i++) {
+        free(lines[i]);
+    }
+
+    fclose (LSUSB);
+    free(lines);
+
+    return -1;
+}
+
 static int
 selection_wait_event (Camera * camera, GPContext *context, unsigned int * nroftransferts, char ** files, const char * filename) {
     int waittime = 100;
@@ -601,9 +643,3 @@ int delete_file (char ** files, char * name, Camera * camera, GPContext * contex
     return GP_OK;
 }
 
-int lsusb_find_camera (char * p) {
-    // List usb devices
-    // Find camera in the list
-
-    return 0;
-}
