@@ -49,7 +49,7 @@ selection_wait_event (Camera * camera, GPContext *context, unsigned int * nroftr
 			fprintf (stderr, "return from waitevent in trigger sample with %d\n", retval);
 			return retval;
 		}
-		path = data;
+		path = (CameraFilePath*) data;
 
         selectionInterrupted = evtype == GP_EVENT_CAPTURE_COMPLETE;
 
@@ -69,7 +69,9 @@ selection_wait_event (Camera * camera, GPContext *context, unsigned int * nroftr
 
         if (evtype == GP_EVENT_FILE_CHANGED && path) {
             printf("%s/%s changed !\n", path->folder, path->name);
-            sprintf(files[x++], "%s/%s", path->folder, path->name);
+            sprintf(files[x], "%s/%s", path->folder, path->name);
+            printf("Transferring %s from path %s\n", path->name, files[x]);
+            transferer_nom_auto(files[x++], context, camera);
         }
     }
 
@@ -85,13 +87,13 @@ int control_selection (Camera * camera, GPContext *context, unsigned int * nroft
     int x = 0;
 
     while (1) {
-        STATE = fopen("./data/tmp/selection.txt", "r");
+        STATE = fopen("../data/tmp/selection.txt", "r");
         if (fscanf(STATE, "%d", &st) != 1) continue;
 
         if (st) {
             printf ("Working ...\n");
-
-            status = selection_wait_event(&camera, context, nroftransferts, files, filename);
+            printf ("usb path : %s\n", filename);
+            status = selection_wait_event(camera, context, nroftransferts, files, filename);
             fclose(STATE);
             if (status < 0) {
                 // Go to usb connection
@@ -100,7 +102,7 @@ int control_selection (Camera * camera, GPContext *context, unsigned int * nroft
                 handleError(status);
             }
 
-            STATE = fopen("./data/tmp/selection.txt", "w");
+            STATE = fopen("../data/tmp/selection.txt", "w");
             fprintf(STATE, "0");
             fclose (STATE);
         }
@@ -514,7 +516,6 @@ recursive_directory(char ** files, Camera *camera, const char *folder, GPContext
     for (int z = 0; z < countFiles; z++) {
         gp_list_get_name (list, z, &newfile);
         sprintf(files[++x_sd], "%s/%s", folder, newfile);
-        // printf("x : %d\npath : %s\n", x_sd, files[x_sd]);
     }
 
     // Reset here
@@ -605,5 +606,42 @@ int lsusb_find_camera (char * p) {
     // List usb devices
     // Find camera in the list
 
-    return 0;
+    system("lsusb > ../data/tmp/lsusb.txt");
+    FILE * LSUSB = fopen("../data/tmp/lsusb.txt", "r");
+    char ** lines = (char**) calloc(30, sizeof(char*));
+    int x = 0;
+
+    for (int i = 0; i < 30; i++) {
+        lines[i] = (char*) calloc(100, sizeof(char));
+    }
+
+    while (fgets(lines[x++], 99, LSUSB));
+
+    int size = x;
+    char * nmbrStr = (char*) calloc(5, sizeof(char));
+
+    for (x = 0; x < size-1; x++) {
+        // Ports 1, 2, 3 or reserved
+        int y = 0;
+        strcpy(nmbrStr, "");
+        while (y<15) y++;
+        // while (lines[x][y++] != ' ');
+        for (int c = 0; c < 3; c++) nmbrStr[c] = lines[x][y+c];
+
+        if (strcmp(nmbrStr, "001") && strcmp(nmbrStr, "002") && strcmp(nmbrStr, "003")) {
+            sprintf(p, "/dev/bus/usb/001/%s", nmbrStr);
+            return 0;
+        }
+    }
+
+    free(nmbrStr);
+
+    for (int i = 0; i < 30; i++) {
+        free(lines[i]);
+    }
+
+    fclose (LSUSB);
+    free(lines);
+
+    return -1;
 }

@@ -163,17 +163,21 @@ void send_medias_transfert_online (int online) {
     fscanf(NORMAL_FORMAT, "%u", &normal_format);
 
     int status = 0;
+    /*
     if (!online) {
         fclose(NORMAL_FORMAT);
         fclose(RAW_FORMAT);
         return;
     }
+    */
 
+    /*
     if (raw_format == 0 && normal_format == 0) {
         fclose(NORMAL_FORMAT);
         fclose(RAW_FORMAT);
         return;
     }
+    */
 
     unsigned int i = 0;
     char * commande = (char*) calloc(300, sizeof(char));

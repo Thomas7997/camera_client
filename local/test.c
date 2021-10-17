@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <libudev.h>
-#include <string.h>
 
 /*
 

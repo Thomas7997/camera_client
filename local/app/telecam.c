@@ -75,7 +75,7 @@ int main (void) {
 
     // Scripts de vérification
 	result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
-	result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
+	// result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
     // result = rt_task_spawn (&task_manage_errors, "MANAGE ERRORS", 4096, 99, TASK_PERM, &manage_errors, NULL);
 
 	// Scripts d'action
@@ -245,18 +245,14 @@ void enable_transfert_on_metadata_change (void * arg) {
         camera_usb_connection_1 (NULL);
 
         // Add metadata change selection
-        char * filename = calloc(100, sizeof(char));
-        int ret = lsusb_find_camera(filename);
-
-        if (ret != 0) continue;
-
-        // status = selection_optimale (camera, context, transferts_send, &nb_transferts, &command_usb_reconnexion, &usb_freed, dossiers, dirs_n, dir_sizes, files, images_list, transferts_tmp, photos);
-        int transferts_nb;
+        char * filename = (char*) calloc(100, sizeof(char));
 
         int ret = lsusb_find_camera (filename);
         if (ret != 0) {
             continue;
         }
+
+        unsigned int nroftransferts;
 
         status = control_selection (camera, context, &nroftransferts, transferts_send, filename);
 
@@ -265,7 +261,7 @@ void enable_transfert_on_metadata_change (void * arg) {
             continue;
         }
 
-        free(filename);
+        free (filename);
         camera_usb_free_1 (NULL);
 
         if (!transfert_choice) return;
