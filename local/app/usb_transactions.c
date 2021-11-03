@@ -20,12 +20,12 @@ int reset_usb_dev (const char * filename) {
 
 static int
 selection_wait_event (Camera * camera, GPContext *context, unsigned int * nroftransferts, char ** files, const char * filename) {
-    int waittime = 100;
-    static int nrofqueue=0;
-    static int nrdownloads=0;
+    	int waittime = 100;
+    	static int nrofqueue=0;
+    	static int nrdownloads=0;
 
-    static const char *bufferx;
-    static const char *buffer;
+    	static const char *bufferx;
+    	static const char *buffer;
 	CameraEventType	evtype;
 	CameraFilePath	*path;
 	void		*data;
@@ -49,33 +49,34 @@ selection_wait_event (Camera * camera, GPContext *context, unsigned int * nroftr
 			fprintf (stderr, "return from waitevent in trigger sample with %d\n", retval);
 			return retval;
 		}
+
 		path = (CameraFilePath*) data;
 
-        selectionInterrupted = evtype == GP_EVENT_CAPTURE_COMPLETE;
+        	selectionInterrupted = evtype == GP_EVENT_CAPTURE_COMPLETE;
 
-        if (evtype == GP_EVENT_CAPTURE_COMPLETE) {
-            printf("Capture complete !\n");
-            status = gp_camera_exit(camera, context);
-            handleError(status);
-            if (status < 0) return status;
-            printf ("1\n");
+        	if (evtype == GP_EVENT_CAPTURE_COMPLETE) {
+            		printf("Capture complete !\n");
+            		status = gp_camera_exit(camera, context);
+            		handleError(status);
+            		if (status < 0) return status;
+            		// printf ("1\n");
 
-            reset_usb_dev(filename);
+            		reset_usb_dev(filename);
 
-            status = gp_camera_init(camera, context);
-            if (status < 0) return status;
-            printf ("4\n");
-        }
+            		status = gp_camera_init(camera, context);
+            		if (status < 0) return status;
+            		// printf ("4\n");
+        	}
 
-        if (evtype == GP_EVENT_FILE_CHANGED && path) {
-            printf("%s/%s changed !\n", path->folder, path->name);
-            sprintf(files[x], "%s/%s", path->folder, path->name);
-            printf("Transferring %s from path %s\n", path->name, files[x]);
-            transferer_nom_auto(files[x++], context, camera);
-        }
-    }
+        	if (evtype == GP_EVENT_FILE_CHANGED && path) {
+            		printf("%s/%s changed !\n", path->folder, path->name);
+            		sprintf(files[x], "%s/%s", path->folder, path->name);
+            		printf("Transferring %s from path %s\n", path->name, files[x]);
+            		transferer_nom_auto(files[x++], context, camera);
+        	}
+    	}
 
-    *nroftransferts = x;
+   	*nroftransferts = x;
 	return GP_OK+x;
 }  
 
@@ -100,6 +101,7 @@ int control_selection (Camera * camera, GPContext *context, unsigned int * nroft
                 // Send alerts
 
                 handleError(status);
+		return status;
             }
 
             STATE = fopen("../data/tmp/selection.txt", "w");
@@ -108,14 +110,15 @@ int control_selection (Camera * camera, GPContext *context, unsigned int * nroft
         }
 
         else {
+		    // Execute a light operation here to check camera usb connection
 		    printf("Interrupted\n");
 		    fclose(STATE);
 		    usleep(500000);
         }
-	}
+    }
 
     *nroftransferts = x;
-	return GP_OK;
+    return GP_OK;
 }
 
 
