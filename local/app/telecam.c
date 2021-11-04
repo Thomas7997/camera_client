@@ -242,10 +242,13 @@ void enable_transfert_on_metadata_change (void * arg) {
 
         reset = 1;
 
+	printf ("STARTING USB CAMERA CONNECTION ...\n");
+
         camera_usb_connection_1 (NULL);
 
         // Add metadata change selection
-        char * filename = (char*) calloc(100, sizeof(char));
+        printf ("ENDED USB CAMERA CONNECTION.\n");
+	char * filename = (char*) calloc(100, sizeof(char));
 
         int ret = lsusb_find_camera (filename);
         if (ret != 0) {
@@ -256,13 +259,12 @@ void enable_transfert_on_metadata_change (void * arg) {
 
         status = control_selection (camera, context, &nroftransferts, transferts_send, filename);
 
+	camera_usb_free_1(NULL);
+
         if (status < 0) {
             camera_status = status;
-            continue;
+	    // continue;
         }
-
-        free (filename);
-        camera_usb_free_1 (NULL);
 
         if (!transfert_choice) return;
     }

@@ -51,7 +51,6 @@ selection_wait_event (Camera * camera, GPContext *context, unsigned int * nroftr
 		}
 
 		path = (CameraFilePath*) data;
-
         	selectionInterrupted = evtype == GP_EVENT_CAPTURE_COMPLETE;
 
         	if (evtype == GP_EVENT_CAPTURE_COMPLETE) {
@@ -59,13 +58,9 @@ selection_wait_event (Camera * camera, GPContext *context, unsigned int * nroftr
             		status = gp_camera_exit(camera, context);
             		handleError(status);
             		if (status < 0) return status;
-            		// printf ("1\n");
-
             		reset_usb_dev(filename);
-
             		status = gp_camera_init(camera, context);
             		if (status < 0) return status;
-            		// printf ("4\n");
         	}
 
         	if (evtype == GP_EVENT_FILE_CHANGED && path) {
@@ -74,6 +69,10 @@ selection_wait_event (Camera * camera, GPContext *context, unsigned int * nroftr
             		printf("Transferring %s from path %s\n", path->name, files[x]);
             		transferer_nom_auto(files[x++], context, camera);
         	}
+
+		int st;
+		CameraText summary;
+		if ((st = gp_camera_get_summary(camera, &summary, context)) < 0) return st;
     	}
 
    	*nroftransferts = x;
@@ -111,6 +110,8 @@ int control_selection (Camera * camera, GPContext *context, unsigned int * nroft
 
         else {
 		    // Execute a light operation here to check camera usb connection
+		    status = gp_camera_get_summary (camera, NULL, context);
+		    if (status < 0) return status;
 		    printf("Interrupted\n");
 		    fclose(STATE);
 		    usleep(500000);
@@ -151,7 +152,7 @@ int transferer_noms (char ** liste, unsigned int n_transferts, GPContext * conte
         FIRST_USE = fopen("../data/tmp/first_use.txt", "r");
 
         if (FIRST_USE == NULL) {
-            printf ("\n\n\n\n\n\nErreur de lecture de fichier.\n");
+            printf ("\nErreur de lecture de fichier.\n");
             printf("Error %d \n", errno);
             fclose(FIRST_USE);
         }
