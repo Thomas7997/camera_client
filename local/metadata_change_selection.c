@@ -14,7 +14,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <linux/usbdevice_fs.h>
+// #include <linux/usbdevice_fs.h>
 
 #define MAX 80
 #define MAX_CAPTURES 10000
@@ -30,23 +30,149 @@
 #define JPG_MIME_TYPE 3
 #define CR2_MIME_TYPE 4
 
-int x_sd = -1;
+#define LOG_FILE "data/tmp/log.txt"
 
-int reset_usb_dev (const char * filename) {
-    int fd, rc;
-    fd = open(filename, O_WRONLY);
-    if (fd < 0) {
-        perror("Error opening output file");
-        return 1;
+typedef int (*ControlSelectionFunc) (Camera * camera, GPContext *context, unsigned int * nroftransferts, char ** files, const char * filename);
+typedef int (*SelectionWaitEventFunc) (Camera ** camera, GPContext *context, unsigned int * nroftransferts, char ** files, const char * filename);
+typedef int (*TransfererNomsFunc) (char ** liste, unsigned int n_transferts, GPContext * context, Camera * camera, int online);
+
+typedef struct _TelecamOperations {
+    ControlSelectionFunc control_selection;
+    SelectionWaitEventFunc selection_wait_event;
+    TransfererNomsFunc transferer_noms;
+} TelecamOperations;
+
+typedef struct _Platform {
+    char os[50];
+    char device[50];
+} Platform;
+
+typedef struct _Log {
+    char description[500];
+    struct _Log * next;
+} Log;
+
+typedef struct _TelecamReport {
+    int id;
+    char title[300];
+    int priority;
+    Platform clientPlatform;
+    char cameraModel[100];
+    int expectedExitCode;
+    int exitCode;
+    char description[5000]; // Maybe gphoto context
+    char functionName[50];
+    Log log; 
+} TelecamReport;
+
+typedef struct _TelecamReports {
+    TelecamReport r;
+    struct _TelecamReports * next;
+} TelecamReports;
+
+// Above is the header
+
+int x_sd = -1;
+static TelecamReports * reports;
+
+int getCodePriority (int code) {
+    switch (code) {
+        case 0 :
+            return 0; // OK !
+        break;
+        case -1 :
+            return 5; // High severity
+        break;
+        case -2 :
+            return 5;
+        break;
+        case -53 :
+            return 3;
+        break;
+        case -105 :
+            return 0;
+        break;
+        default : return 2;
     }
-    printf("Resetting USB device %s\n", filename);
-    rc = ioctl(fd, USBDEVFS_RESET, 0);
-    if (rc < 0) {
-        perror("Error in ioctl");
-        return 1;
-    }
-    close(fd);
 }
+
+void send_report_http (TelecamReport r) {
+    printf ("This will send an HTTP Request with : {id : %d, title : %s, priority : %d, expectedExitCode : %d, exitCode : %d, function name : %s, desription : %s}\n\n", r.id, r.title, r.priority, r.expectedExitCode, r.exitCode, r.functionName, r.description);
+}
+
+void write_report_local (TelecamReport r) {
+    printf ("This will be written in a seperated file that the logs : {id : %d, title : %s, priority : %d, expectedExitCode : %d, exitCode : %d, function name : %s, desription : %s}\n\n", r.id, r.title, r.priority, r.expectedExitCode, r.exitCode, r.functionName, r.description);
+}
+
+TelecamReports * add_report (TelecamReports * rs, TelecamReport r) {
+    // TelecamReports * T;
+    // TelecamReports * P;
+    // TelecamReports * TMP;
+
+    // T = malloc(sizeof(TelecamReports));
+    // T->r = r;
+    // // T->next = NULL;
+
+    // if (rs == NULL) return T;
+
+    // else {
+    //     P = rs;
+    //     TMP = rs;
+    //     while (P->next != NULL) {
+    //         P = P->next;
+    //     }
+
+    //     P->next = T;
+    //     return TMP;
+    // }
+
+    send_report_http (r);
+    write_report_local (r);
+
+    return NULL;
+}
+
+int G_LOG (const char title[300], const int result) {
+    static int logId = 0;
+    TelecamReport report;
+    report.id = ++logId;
+    strcpy(report.title, title);
+    report.expectedExitCode = 0; // default
+    report.exitCode = result;
+    report.priority = getCodePriority(result);
+    strcpy(report.description, gp_result_as_string(result)); // get the context of gp
+    strcpy(report.functionName, "");
+    reports = add_report (reports, report);
+
+    return (int) result;
+} 
+
+void T_LOG (const char title[300]) {
+    static int logId = 0;
+    TelecamReport report;
+    report.id = ++logId;
+    strcpy(report.title, title);
+    report.expectedExitCode = 0; // default
+    // report.exitCode = result;
+    strcpy(report.functionName, "");
+    reports = add_report (reports, report);
+} 
+
+// int reset_usb_dev (const char * filename) {
+//     int fd, rc;
+//     fd = open(filename, O_WRONLY);
+//     if (fd < 0) {
+//         perror("Error opening output file");
+//         return 1;
+//     }
+//     printf("Resetting USB device %s\n", filename);
+//     rc = ioctl(fd, USBDEVFS_RESET, 0);
+//     if (rc < 0) {
+//         perror("Error in ioctl");
+//         return 1;
+//     }
+//     close(fd);
+// }
 
 void handleError(int status) {
     printf ("%s\n", gp_result_as_string(status));
@@ -80,7 +206,7 @@ unsigned int dossiers_to_list (char *** dossiers, char ** list, char ** dirs, un
     return item;
 }
 
-// Bonne version
+// Good version
 int
 recursive_directory(char ** files, Camera *camera, const char *folder, GPContext *context, unsigned int * x) {
 	int		i, ret;
@@ -387,7 +513,7 @@ void RemplirLignes (char ** lns1, char ** lns2) {
     return;
 }
 
-static int
+int
 selection_wait_event (Camera ** camera, GPContext *context, unsigned int * nroftransferts, char ** files, const char * filename) {
     int waittime = 100;
     static int nrofqueue=0;
@@ -429,7 +555,7 @@ selection_wait_event (Camera ** camera, GPContext *context, unsigned int * nroft
             if (status < 0) return status;
             printf ("1\n");
 
-            reset_usb_dev(filename);
+            // reset_usb_dev(filename);
 
             status = gp_camera_init(*camera, context);
             if (status < 0) return status;
@@ -454,19 +580,16 @@ int control_selection (Camera * camera, GPContext *context, unsigned int * nroft
     int x = 0;
 
     while (1) {
+        T_LOG ("Opening selection file");
         STATE = fopen("./data/tmp/selection.txt", "r");
         if (fscanf(STATE, "%d", &st) != 1) continue;
 
         if (st) {
-            printf ("Working ...\n");
-
-            status = selection_wait_event(&camera, context, nroftransferts, files, filename);
+            status = G_LOG ("Wait event of the selection mode", selection_wait_event(&camera, context, nroftransferts, files, filename));
             fclose(STATE);
             if (status < 0) {
                 // Go to usb connection
                 // Send alerts
-
-                handleError(status);
             }
 
             STATE = fopen("./data/tmp/selection.txt", "w");
@@ -476,7 +599,8 @@ int control_selection (Camera * camera, GPContext *context, unsigned int * nroft
 
         else {
 		    printf("Interrupted\n");
-		    fclose(STATE);
+		    T_LOG ("Closing selection file");
+            fclose(STATE);
 		    usleep(500000);
         }
 	}
@@ -485,52 +609,89 @@ int control_selection (Camera * camera, GPContext *context, unsigned int * nroft
 	return GP_OK;
 }
 
+void local_write_log (char desc[500]) {
+    FILE * F = fopen(LOG_FILE, "a");
+    time_t seconds;
+    seconds = time(NULL);
+    // sprintf(datetime, "%2d:%2d:%2d", , seconds / 3600, seconds / 60, seconds);
+    fprintf(F, "%s --- %s\n", ctime(&seconds), desc);
+    usleep(50000);
+
+    fclose(F);
+}
+
 /*
-int eachFileRating_2 (char ** files, char ** transferts, unsigned int files_nb, unsigned int * transferts_nb, Camera * camera, GPContext * context) {
-    printf("For each rating\n");
-    int y = 0;
-    int rates = 0;
 
-    char * nom = (char*) calloc(100, sizeof(char));
-    char * data = (char*) calloc(150000, sizeof(char));
-    char * dirname = (char*) calloc(100, sizeof(char));
+    liste_chainee * P;
+    liste_chainee * Q;
+    liste_chainee * tete;
 
-    // FILE * RATING = fopen("data/images/rating.txt", "w");
+    P = malloc(sizeof(liste_chainee));
 
-    int i, x = 0;
+    P->valeur = elem;
+    P->suivant = NULL;
 
-    for (int y = 0; y < PART_NB; y++) {
-        // Commande
-        nom = getName(files[y], dirname);
-        printf("%s\n%s\n", nom, dirname);
-        int status = getPlacements(&rates, dirname, nom, data, context, camera);
-
-        if (status < 0) return generateError(status);
-
-        if (rates == 5) {
-            sprintf(transferts[x++], "%s/%s", dirname, nom);
-            printf("%s rated 5 *\n", transferts[x-1]);
-        }
-
-        // fprintf(RATING, "%s : %d\n", files[y], rates);
+    if (P->suivant == NULL) {
+        return P;
     }
 
-    // fclose(RATING);
-    free(nom);
-    free(data);
-    free(dirname);
+    else {
+        Q = liste;
+        tete = liste;
+        while (Q->suivant == NULL) {
+            Q = Q->suivant;
+        }
+        Q->suivant = P;
+        return tete;
+    }
 
-    *transferts_nb = x;
-
-    return 0;
-}
 */
+
+Log * add_log (Log * l, char description[500]) {
+    Log * P = l;
+    Log * Q;
+    Log * TMP;
+
+    P = malloc(sizeof(Log));
+    strcpy(P->description, description);
+    P->next = NULL;
+
+    if (P->next == NULL) {
+        return P;
+    }
+
+    else {
+        Q = l;
+        TMP = l;
+        while (P != NULL) {
+            P = P->next;
+        }
+
+        local_write_log (description);
+        Q->next = P;
+        P->next = NULL;
+        return TMP;
+    }
+}
+
+
+void get_log_description (Log * l, char desc[500]) {
+    Log * P = l;
+
+    while (P->next) {
+        P = P->next;
+    }
+
+    strcpy(desc, P->description);
+}
 
 int main (int argc, char ** argv) {
     int status = 0;
     char *** dossiers = (char***) calloc(MIN_DIRS, sizeof(char**));
+    reports = malloc(sizeof(TelecamReports*));
+    reports = NULL;
 
-    reset_usb_dev(argv[1]);
+    // reset_usb_dev(argv[1]);
 
     Camera * camera;
     GPContext *context = sample_create_context();
@@ -569,9 +730,8 @@ int main (int argc, char ** argv) {
     status = 1;
 
     while (status != 0) {
-        gp_camera_new (&camera);
-        status = gp_camera_init(camera, context);
-        handleError(status);
+        G_LOG ("Init camera connection ...", gp_camera_new (&camera));
+        status = G_LOG ("Starting camera connection ...", gp_camera_init(camera, context));
 
         if (status < 0) {
             generateError(status);
@@ -606,20 +766,21 @@ int main (int argc, char ** argv) {
         strcpy(images_list[e], "");
     }
     
-    status = get_files (files, camera, context, &files_nb);
+    Log * log = malloc(sizeof(Log*));
 
-    status = control_selection (camera, context, &transferts_nb, files, argv[1]);
+    // status = get_files (files, camera, context, &files_nb);
+    G_LOG ("Getting files ...", get_files (files, camera, context, &files_nb));
+    status = G_LOG ("Controlling selection mode", control_selection (camera, context, &transferts_nb, files, argv[1]));
 
     if (status < 0) return status;
 
     int online = 0;
 
     status = transferer_noms(transferts, transferts_nb, context, camera, online);
-
     if (status < 0) return status;
 
-    gp_camera_exit(camera, context);
-    gp_camera_free(camera);
+    G_LOG ("Disconnecting camera", gp_camera_exit(camera, context));
+    G_LOG ("Freeing camera", gp_camera_free(camera));
 
     // FIN RÉPÉTITIONS
 
@@ -651,6 +812,7 @@ int main (int argc, char ** argv) {
     free(dossiers);
     free(files);
     free(images_list);
+    free(log);
 
     return 0;
 }
