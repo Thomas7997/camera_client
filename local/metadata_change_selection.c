@@ -14,6 +14,8 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <curl/curl.h>
+#define REPORT_URL "http://localhost:5000/bugs/metadata_change"
 // #include <linux/usbdevice_fs.h>
 
 #define MAX 80
@@ -98,6 +100,20 @@ int getCodePriority (int code) {
 
 void send_report_http (TelecamReport r) {
     printf ("This will send an HTTP Request with : {id : %d, title : %s, priority : %d, expectedExitCode : %d, exitCode : %d, function name : %s, desription : %s}\n\n", r.id, r.title, r.priority, r.expectedExitCode, r.exitCode, r.functionName, r.description);
+    CURL *curl;
+    CURLcode res;
+    char * opts = (char*) calloc(300, sizeof(char));
+    sprintf(opts, "execId=%d&title=%s&priority=%d&expectedExitCode=%d&exitCode=%d&functionName=%s&description=%s", r.id, r.title, r.priority, r.expectedExitCode, r.exitCode, r.functionName, r.description);
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, REPORT_URL);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, opts);
+        res = curl_easy_perform(curl);
+        if(res != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s\n",
+        curl_easy_strerror(res));
+    
+        curl_easy_cleanup(curl);
+    }
 }
 
 void write_report_local (TelecamReport r) {

@@ -109,7 +109,7 @@ XMP : libxmp.c
 	gcc -o libxmp libxmp.c -lgphoto2
 
 METADATA_CHANGE : metadata_change_selection.c
-	gcc -o metadata_change_selection metadata_change_selection.c -lgphoto2
+	gcc -o metadata_change_selection metadata_change_selection.c -lgphoto2 -lcurl
 
 CONSTRUCTION : architecture
 	./architecture
