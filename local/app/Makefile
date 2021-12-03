@@ -9,4 +9,4 @@ EXECUTABLE := telecam
 all: $(EXECUTABLE)
 
 %: $(SOURCES)
-	$(CC) -o $(EXECUTABLE) $(SOURCES) $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $(EXECUTABLE) $(SOURCES) -lgphoto2 -lcurl -lexiv2 -lpthread

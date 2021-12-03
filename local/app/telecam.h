@@ -5,7 +5,10 @@
 #include "mods.h"
 
 // RT LIB
-#include <alchemy/task.h>
+// #include <alchemy/task.h>
+
+// New multithreading lib
+#include <pthread.h>
 
 #include "globs.h"
 
@@ -28,47 +31,30 @@
 #define TASK_STKSZ 4096            /* Stack size (in bytes) */
 #define TASK_PERM T_JOINABLE
 
-// Reconnexion
-RT_TASK task_reconnexion, task_free_usb;
+// Function ids
 
-// Checking demands
-RT_TASK task_transfert_choice;
-
-// Checking connections
-RT_TASK task_wifi, task_usb_connection, task_manage_errors;
-
-// Procedures
-RT_TASK task_save_files_offline, task_send_files_online, task_enable_transfert_image_auto, task_enable_transfert_image_selection, task_enable_transfert_video_auto, task_enable_transfert;
-
-// Général
-RT_TASK task_apply_choice, task_wifi_transfert;
-
-// Notifications
-RT_TASK task_send_model, task_notify_camera_status;
-
-// SD
-RT_TASK task_check_downloads, task_check_deletes, task_sd_downloads, task_sd_deletes, task_send_downloads, task_send_deletes, task_send_op_notifications;
+pthread_t id_transfert_choice, id_save_files_offline, id_send_files_online, id_enable_transfert, id_apply_choice, id_wifi_transfert, id_send_model, id_notify_camera_status, id_wifi, id_manage_errors;
 
 void enable_transfert_image_selection (void * arg);
 void enable_transfert_image_auto (void * arg);
 void enable_transfert_video_auto (void * arg);
-void check_wifi_status (void * arg);
-void check_transfert_choice (void * arg);
-void send_transferts_online (void * arg);
+void * check_wifi_status (void * arg);
+void * check_transfert_choice (void * arg);
+void * send_transferts_online (void * arg);
 void send_medias (void * arg);
 void save_medias (void * arg);
 void camera_usb_connection (void * arg);
-void script_apply_choice (void * arg);
+void * script_apply_choice (void * arg);
 void reconnexion_usb (void * arg);
 void free_usb (void * arg);
 void camera_usb_connection_1 (void * arg);
 void camera_usb_free_1(void * arg);
 void send_model_fn (void * arg);
-void checkAndNotifyCameraStatus (void * arg);
+void * checkAndNotifyCameraStatus (void * arg);
 
 // Nouvelle version de fonction
 void generateError(int status);
-void manage_errors (void * arg);
+void * manage_errors (void * arg);
 void enable_transfert (void * arg);
 void trigger_request_status (Status * status);
 void write_choice (int choice);

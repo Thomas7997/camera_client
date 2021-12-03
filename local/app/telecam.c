@@ -74,25 +74,41 @@ int main (void) {
     printf("SD SCRIPTS\n");
 
     // Scripts de vérification
-	result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
-	// result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
-    // result = rt_task_spawn (&task_manage_errors, "MANAGE ERRORS", 4096, 99, TASK_PERM, &manage_errors, NULL);
+	// result = rt_task_spawn (&task_transfert_choice, "TRANSFERT CHOICE", 4096, 99, TASK_PERM, &check_transfert_choice, NULL);
+	// // result = rt_task_spawn (&task_wifi, "WIFI_STATUS", 4096, 99, TASK_PERM, &check_wifi_status, NULL);
+    // // result = rt_task_spawn (&task_manage_errors, "MANAGE ERRORS", 4096, 99, TASK_PERM, &manage_errors, NULL);
 
-	// Scripts d'action
-    printf("ACTIONS SCRIPTS\n");
-	result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
-	result = rt_task_create (&task_send_files_online, "SEND MEDIAS", 4096, 99, TASK_PERM);
-    result = rt_task_create (&task_enable_transfert, "LANCER TRANSFERT IMAGE AUTO", 10000, 99, TASK_PERM);
+	// // Scripts d'action
+    // printf("ACTIONS SCRIPTS\n");
+	// result = rt_task_create (&task_save_files_offline, "SAVE MEDIAS", 4096, 99, TASK_PERM);
+	// result = rt_task_create (&task_send_files_online, "SEND MEDIAS", 4096, 99, TASK_PERM);
+    // result = rt_task_create (&task_enable_transfert, "LANCER TRANSFERT IMAGE AUTO", 10000, 99, TASK_PERM);
 
-    // MAIN SCRIPTS
-    printf("MAIN SCRIPTS\n");
-    result = rt_task_spawn (&task_apply_choice, "APPLIQUER LE CHOIX DE L'UTILISATEUR", 4096, 99, TASK_PERM, &script_apply_choice, NULL);
-    result = rt_task_spawn (&task_wifi_transfert, "APPLIQUER LE TRANSFERT WIFI AUTONOME", 4096, 99, TASK_PERM, &send_transferts_online, NULL);
+    // // MAIN SCRIPTS
+    // printf("MAIN SCRIPTS\n");
+    // result = rt_task_spawn (&task_apply_choice, "APPLIQUER LE CHOIX DE L'UTILISATEUR", 4096, 99, TASK_PERM, &script_apply_choice, NULL);
+    // result = rt_task_spawn (&task_wifi_transfert, "APPLIQUER LE TRANSFERT WIFI AUTONOME", 4096, 99, TASK_PERM, &send_transferts_online, NULL);
 
-    // NOTIFICATION
-    printf("NOTIFICATION SCRIPTS\n");
-    result = rt_task_spawn(&task_send_model, "SEND CAMERA MODEL", 4096, 99, TASK_PERM, &send_model_fn, NULL);
-    result = rt_task_spawn(&task_notify_camera_status, "SEND CAMERA STATUS", 4096, 99, TASK_PERM, &checkAndNotifyCameraStatus, NULL);
+    // // NOTIFICATION
+    // printf("NOTIFICATION SCRIPTS\n");
+    // result = rt_task_spawn(&task_send_model, "SEND CAMERA MODEL", 4096, 99, TASK_PERM, &send_model_fn, NULL);
+    // result = rt_task_spawn(&task_notify_camera_status, "SEND CAMERA STATUS", 4096, 99, TASK_PERM, &checkAndNotifyCameraStatus, NULL);
+
+    // Thread creations
+    pthread_create(&id_transfert_choice, NULL, check_transfert_choice, NULL);
+    pthread_create(&id_wifi, NULL, check_wifi_status, NULL);
+    pthread_create(&id_manage_errors, NULL, manage_errors, NULL);
+    pthread_create(&id_apply_choice, NULL, script_apply_choice, NULL);
+    pthread_create(&id_wifi_transfert, NULL, send_transferts_online, NULL);
+    pthread_create(&id_notify_camera_status, NULL, checkAndNotifyCameraStatus, NULL);
+
+    // Thread calls
+    pthread_join(id_transfert_choice, NULL);
+    pthread_join(id_wifi, NULL);
+    pthread_join(id_manage_errors, NULL);
+    pthread_join(id_apply_choice, NULL);
+    pthread_join(id_wifi_transfert, NULL);
+    pthread_join(id_notify_camera_status, NULL);
 
     while (1) {
 		pause();
@@ -109,13 +125,13 @@ int main (void) {
 
     // free_usb(NULL);
     
-	rt_task_delete(&task_transfert_choice);
-	rt_task_delete(&task_wifi);
-	rt_task_delete(&task_save_files_offline);
-	rt_task_delete(&task_send_files_online);
-    rt_task_delete(&task_apply_choice);
-    rt_task_delete(&task_wifi_transfert);
-    rt_task_delete(&task_manage_errors);
+	// rt_task_delete(&task_transfert_choice);
+	// rt_task_delete(&task_wifi);
+	// rt_task_delete(&task_save_files_offline);
+	// rt_task_delete(&task_send_files_online);
+    // rt_task_delete(&task_apply_choice);
+    // rt_task_delete(&task_wifi_transfert);
+    // rt_task_delete(&task_manage_errors);
 
     for (int d = 0; d < MIN_DIRS; d++) {
         for (int dy = 0; dy < MAX_DIR_CAPTURES; dy++) {
@@ -177,7 +193,7 @@ int main (void) {
     prevModel = NULL;
 }
 
-void check_transfert_choice (void * arg) {
+void * check_transfert_choice (void * arg) {
 	while (1) {
         FILE * TRANSFERT_CHOICE; // Changera de chemin
 
@@ -199,7 +215,7 @@ void check_transfert_choice (void * arg) {
 	}
 }
 
-void check_wifi_status (void * arg) {
+void * check_wifi_status (void * arg) {
 	while (1) {
         FILE * WIFI;
 
@@ -376,7 +392,7 @@ void camera_usb_connection_1 (void * arg) {
 
 // Problème ici lors du passage d'un mode à un autre
 
-void script_apply_choice (void * arg) {
+void* script_apply_choice (void * arg) {
     int ret_task = 0;
 
     while (1) {
@@ -404,7 +420,7 @@ void script_apply_choice (void * arg) {
 	}
 }
 
-void send_transferts_online (void * arg) {
+void * send_transferts_online (void * arg) {
     while (1) {
         send_medias_transfert_online(wifi_status);
 
@@ -413,7 +429,7 @@ void send_transferts_online (void * arg) {
 }
 
 // Travailler dessus car trop de répétitions ou rectifier côté réception
-void manage_errors (void * arg) {
+void * manage_errors (void * arg) {
     while (1) {
         if (prevStatus != status) {
             printf("status : %d et prevStatus : %d\n", status, prevStatus);
@@ -435,28 +451,12 @@ void generateError (int status) {
     // Peut être sauvegarder dans les logs
 }
 
-void send_model_fn (void * arg) {
+void * end_model_fn (void * arg) {
     while (1) {
         if (model[0] && wifi_status && strcmp(prevModel, model)) {
             int st = sendModelHTTP(model);
             // if (st == 0) clearStr(model);
             strcpy(prevModel, model);
-        }
-
-        usleep(100000);
-    }
-}
-
-void apply_networking (void * arg) {
-    while (1) {
-        if (wifi_status == 1) {
-            rt_task_suspend(&task_send_files_online);
-            rt_task_start(&task_save_files_offline, &send_medias, NULL);
-        }
-
-        else {
-            rt_task_suspend(&task_save_files_offline);
-            rt_task_start(&task_send_files_online, &save_medias, NULL);
         }
 
         usleep(100000);
@@ -471,7 +471,7 @@ void write_choice (int choice) {
     fclose(W);
 }
 
-void checkAndNotifyCameraStatus (void * arg) {
+void * checkAndNotifyCameraStatus (void * arg) {
     int res = 0;
     
     while (1) {
