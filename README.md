@@ -7,7 +7,7 @@ During the offline mode, the USB transfers can keep be processed to save transfe
 Then, if some transfers has been made during the offline mode, the saved data can be emited to the connected desktop app over wifi when wireless connection turns on.  
 
 ### Global process of a WiFi connection management
-![Wifi sync on Smartphone - global](https://github.com/Thomas7997/camera_client/assets/45339466/e56e3584-de6f-4566-8f7b-a3c999c029cc)!
+![Wifi sync on Smartphone - global](https://github.com/Thomas7997/camera_client/assets/45339466/e56e3584-de6f-4566-8f7b-a3c999c029cc)
 
 ### Offline mode
 ![Offline mode](https://github.com/Thomas7997/camera_client/assets/45339466/ca1cce10-06af-4a65-8c35-b7fd92e6ba42)
